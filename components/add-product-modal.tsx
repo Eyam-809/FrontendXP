@@ -5,35 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Upload, X } from "lucide-react"
 import { useApp } from "@/contexts/app-context"
 
-const categories = [
-  { name: "Electronics", subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"] },
-  { name: "Fashion", subcategories: ["Men's Clothing", "Women's Clothing", "Shoes", "Accessories"] },
-  { name: "Home", subcategories: ["Kitchen", "Bedroom", "Living Room", "Garden"] },
-  { name: "Sports", subcategories: ["Fitness", "Outdoor", "Team Sports", "Water Sports"] },
-  { name: "Beauty", subcategories: ["Skincare", "Makeup", "Hair Care", "Fragrances"] },
-  { name: "Toys", subcategories: ["Educational", "Action Figures", "Board Games", "Outdoor Toys"] },
-  { name: "Gaming", subcategories: ["Consoles", "Games", "Accessories", "Collectibles"] },
-]
-
 interface AddProductForm {
   name: string
   description: string
   price: string
-  originalPrice: string
-  category: string
-  subcategory: string
-  condition: string
-  images: File[]
   stock: string
+  image: File | null
 }
 
-export default function AddProductModal() {
+interface AddProductModalProps {
+  onProductAdded?: () => void
+}
+
+export default function AddProductModal({ onProductAdded }: AddProductModalProps) {
   const { state } = useApp()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -41,12 +30,8 @@ export default function AddProductModal() {
     name: "",
     description: "",
     price: "",
-    originalPrice: "",
-    category: "",
-    subcategory: "",
-    condition: "",
-    images: [],
-    stock: "1"
+    stock: "1",
+    image: null
   })
 
   const handleInputChange = (field: keyof AddProductForm, value: string | File[]) => {
@@ -54,15 +39,24 @@ export default function AddProductModal() {
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    setForm(prev => ({ ...prev, images: [...prev.images, ...files] }))
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert(`El archivo ${file.name} no es una imagen válida`)
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert(`El archivo ${file.name} es demasiado grande. Máximo 10MB`)
+      return
+    }
+
+    setForm(prev => ({ ...prev, image: file }))
   }
 
-  const removeImage = (index: number) => {
-    setForm(prev => ({ 
-      ...prev, 
-      images: prev.images.filter((_, i) => i !== index) 
-    }))
+  const removeImage = () => {
+    setForm(prev => ({ ...prev, image: null }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,50 +64,73 @@ export default function AddProductModal() {
     setIsLoading(true)
 
     try {
-      // Aquí deberías hacer la llamada real a tu API
+      if (!form.name.trim()) {
+        throw new Error("El nombre del producto es requerido")
+      }
+      if (!form.price || parseFloat(form.price) <= 0) {
+        throw new Error("El precio debe ser mayor a 0")
+      }
+      if (!form.stock || parseInt(form.stock) <= 0) {
+        throw new Error("El stock debe ser mayor a 0")
+      }
+
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No hay token de autenticación. Por favor, inicia sesión nuevamente")
+      }
+
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+      if (!userData.id) {
+        throw new Error("No se encontró información del usuario. Por favor, inicia sesión nuevamente")
+      }
+
       const formData = new FormData()
       formData.append('name', form.name)
-      formData.append('description', form.description)
+      formData.append('description', form.description || '')
       formData.append('price', form.price)
-      formData.append('originalPrice', form.originalPrice)
-      formData.append('category', form.category)
-      formData.append('subcategory', form.subcategory)
-      formData.append('condition', form.condition)
       formData.append('stock', form.stock)
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
-      formData.append('user_id', userData.id || '')
+      formData.append('id_user', userData.id.toString())
 
-      form.images.forEach((image, index) => {
-        formData.append(`images[${index}]`, image)
+      if (form.image) {
+        formData.append('image', form.image)
+      }
+
+      const response = await fetch("https://backendxp-1.onrender.com/api/products", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
       })
 
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Error al crear el producto")
+      }
 
-      // Resetear formulario
+      const result = await response.json()
+      console.log("Producto creado exitosamente:", result)
+
       setForm({
         name: "",
         description: "",
         price: "",
-        originalPrice: "",
-        category: "",
-        subcategory: "",
-        condition: "",
-        images: [],
-        stock: "1"
+        stock: "1",
+        image: null
       })
-      
+
       setIsOpen(false)
-      // Aquí podrías mostrar un toast de éxito
+      alert("¡Producto agregado exitosamente!")
+
+      onProductAdded?.()
+
     } catch (error) {
       console.error("Error adding product:", error)
-      // Aquí podrías mostrar un toast de error
+      alert(`Error al agregar producto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setIsLoading(false)
     }
   }
-
-  const selectedCategory = categories.find(cat => cat.name === form.category)
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -132,53 +149,34 @@ export default function AddProductModal() {
           {/* Información básica */}
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre del producto *</Label>
-                  <Input
-                    id="name"
-                    value={form.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Ej: Nintendo Switch OLED"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="condition">Condición *</Label>
-                  <Select value={form.condition} onValueChange={(value) => handleInputChange('condition', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar condición" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">Nuevo</SelectItem>
-                      <SelectItem value="like_new">Como nuevo</SelectItem>
-                      <SelectItem value="good">Bueno</SelectItem>
-                      <SelectItem value="fair">Aceptable</SelectItem>
-                      <SelectItem value="poor">Usado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre del producto *</Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Ej: Nintendo Switch OLED"
+                  required
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descripción *</Label>
+                <Label htmlFor="description">Descripción (opcional)</Label>
                 <Textarea
                   id="description"
                   value={form.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Describe tu producto en detalle..."
                   rows={4}
-                  required
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Precios */}
+          {/* Precios y Stock */}
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <h3 className="font-semibold text-lg">Precios</h3>
+              <h3 className="font-semibold text-lg">Precio y Stock</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price">Precio de venta *</Label>
@@ -195,135 +193,61 @@ export default function AddProductModal() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="originalPrice">Precio original (opcional)</Label>
+                  <Label htmlFor="stock">Cantidad disponible *</Label>
                   <Input
-                    id="originalPrice"
+                    id="stock"
                     type="number"
-                    value={form.originalPrice}
-                    onChange={(e) => handleInputChange('originalPrice', e.target.value)}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
+                    value={form.stock}
+                    onChange={(e) => handleInputChange('stock', e.target.value)}
+                    placeholder="1"
+                    min="1"
+                    required
                   />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Categoría */}
+          {/* Imagen */}
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <h3 className="font-semibold text-lg">Categorización</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoría *</Label>
-                  <Select value={form.category} onValueChange={(value) => handleInputChange('category', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.name} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subcategory">Subcategoría *</Label>
-                  <Select 
-                    value={form.subcategory} 
-                    onValueChange={(value) => handleInputChange('subcategory', value)}
-                    disabled={!form.category}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar subcategoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedCategory?.subcategories.map((subcategory) => (
-                        <SelectItem key={subcategory} value={subcategory}>
-                          {subcategory}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stock */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <h3 className="font-semibold text-lg">Inventario</h3>
-              <div className="space-y-2">
-                <Label htmlFor="stock">Cantidad disponible *</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={form.stock}
-                  onChange={(e) => handleInputChange('stock', e.target.value)}
-                  placeholder="1"
-                  min="1"
-                  required
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Imágenes */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <h3 className="font-semibold text-lg">Imágenes del producto</h3>
+              <h3 className="font-semibold text-lg">Imagen del producto</h3>
               
-              {/* Área de subida */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <Label htmlFor="images" className="cursor-pointer">
-                  <span className="text-sm text-gray-600">
-                    Haz clic para subir imágenes o arrastra y suelta
-                  </span>
+                <Label htmlFor="image" className="cursor-pointer">
+                  <span className="text-sm text-gray-600">Haz clic para subir una imagen</span>
                   <Input
-                    id="images"
+                    id="image"
                     type="file"
-                    multiple
                     accept="image/*"
                     onChange={handleImageUpload}
                     className="hidden"
                   />
                 </Label>
-                <p className="text-xs text-gray-500 mt-1">
-                  PNG, JPG hasta 10MB. Máximo 5 imágenes.
-                </p>
+                <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 10MB</p>
               </div>
 
-              {/* Vista previa de imágenes */}
-              {form.images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {form.images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
+              {form.image && (
+                <div className="relative group">
+                  <img
+                    src={URL.createObjectURL(form.image)}
+                    alt="Preview"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Botones de acción */}
+          {/* Botones */}
           <div className="flex justify-end space-x-4">
             <Button
               type="button"
@@ -345,4 +269,4 @@ export default function AddProductModal() {
       </DialogContent>
     </Dialog>
   )
-} 
+}

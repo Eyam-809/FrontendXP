@@ -75,6 +75,34 @@ export default function PersonalInfoPage() {
   const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
   const [conversations, setConversations] = useState<any[]>([])
+  const [refresh, setRefresh] = useState(false)
+
+useEffect(() => {
+  async function fetchProducts() {
+    try {
+      const token = localStorage.getItem("token")
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+
+      if (!token || !userData.id) {
+        console.error("Falta token o ID del usuario")
+        return
+      }
+
+      const res = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+      setUserProducts(data.products || data) // Ajusta según la estructura de tu backend
+    } catch (err) {
+      console.error("Error al obtener productos:", err)
+    }
+  }
+
+  fetchProducts()
+}, [refresh])
 
   useEffect(() => {
     // Primero intenta obtener datos del localStorage
@@ -139,42 +167,97 @@ export default function PersonalInfoPage() {
     }
 
     fetchUserFromApi()
-    // Mock data para productos, favorites, cart, y conversaciones
-    const mockProducts: UserProduct[] = [
-      {
-        id: 1,
-        name: "Nintendo Switch OLED",
-        price: 8999,
-        image: "/nitendo.png",
-        category: "Gaming",
-        status: 'active',
-        views: 234,
-        likes: 18,
-        createdAt: "2024-02-15"
-      },
-      {
-        id: 2,
-        name: "Xbox Series X",
-        price: 12999,
-        image: "/xbox.png",
-        category: "Gaming",
-        status: 'active',
-        views: 189,
-        likes: 25,
-        createdAt: "2024-02-10"
-      },
-      {
-        id: 3,
-        name: "Pokemon Scarlet",
-        price: 1299,
-        image: "/poke.png",
-        category: "Gaming",
-        status: 'sold',
-        views: 156,
-        likes: 12,
-        createdAt: "2024-01-20"
+    
+    // Función para obtener productos del usuario
+    const fetchUserProducts = async () => {
+      console.log("🚀 Iniciando fetchUserProducts...")
+      try {
+        const token = localStorage.getItem("token")
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+        
+        console.log("🔑 Token:", token ? "Existe" : "No existe")
+        console.log("👤 UserData:", userData)
+        
+        if (token && userData.id) {
+          console.log("🔍 Buscando productos del usuario:", userData.id)
+          
+          // Intentar diferentes endpoints para obtener productos del usuario
+          let response = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          
+          // Si falla, intentar con endpoint alternativo
+          if (!response.ok) {
+            console.log("❌ Primer endpoint falló, intentando alternativo...")
+            response = await fetch(`https://backendxp-1.onrender.com/api/products?user_id=${userData.id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+          }
+          
+          // Si aún falla, intentar obtener todos los productos
+          if (!response.ok) {
+            console.log("❌ Segundo endpoint falló, intentando obtener todos los productos...")
+            response = await fetch(`https://backendxp-1.onrender.com/api/products`, {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+          }
+          
+          if (response.ok) {
+            const products = await response.json()
+            console.log("✅ Productos encontrados:", products)
+            console.log("📊 Cantidad de productos:", products.length || 0)
+            setUserProducts(products)
+            return
+          } else {
+            console.log("❌ Error obteniendo productos:", response.status)
+            console.log("❌ Response text:", await response.text())
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error en fetchUserProducts:", error)
       }
-    ]
+      
+      // Si no se pueden obtener productos reales, usar datos mock
+      console.log("⚠️ Usando datos mock para productos")
+      const mockProducts: UserProduct[] = [
+        {
+          id: 1,
+          name: "Nintendo Switch OLED",
+          price: 8999,
+          image: "/nitendo.png",
+          category: "Gaming",
+          status: 'active',
+          views: 234,
+          likes: 18,
+          createdAt: "2024-02-15"
+        },
+        {
+          id: 2,
+          name: "Xbox Series X",
+          price: 12999,
+          image: "/xbox.png",
+          category: "Gaming",
+          status: 'active',
+          views: 189,
+          likes: 25,
+          createdAt: "2024-02-10"
+        },
+        {
+          id: 3,
+          name: "Pokemon Scarlet",
+          price: 1299,
+          image: "/poke.png",
+          category: "Gaming",
+          status: 'sold',
+          views: 156,
+          likes: 12,
+          createdAt: "2024-01-20"
+        }
+      ]
+      setUserProducts(mockProducts)
+    }
+
+    fetchUserProducts()
 
     const mockConversations = [
       {
@@ -213,7 +296,6 @@ export default function PersonalInfoPage() {
       }
     ]
 
-    setUserProducts(mockProducts)
     setFavoriteProducts([])
     setPurchasedProducts([])
     setConversations(mockConversations)
@@ -244,6 +326,27 @@ export default function PersonalInfoPage() {
       })
     }
     setIsEditing(false)
+  }
+
+  // Función para recargar productos
+  const reloadUserProducts = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+      
+      if (token && userData.id) {
+        const response = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        
+        if (response.ok) {
+          const products = await response.json()
+          setUserProducts(products)
+        }
+      }
+    } catch (error) {
+      console.error("Error recargando productos:", error)
+    }
   }
 
   // Si no hay usuario, mostrar datos por defecto
@@ -498,7 +601,7 @@ export default function PersonalInfoPage() {
                             <Input
                               id="joinDate"
                               type="date"
-                              value={formData.joinDate}
+                              value={formData.joinDate ? new Date(formData.joinDate).toISOString().split('T')[0] : ''}
                               onChange={(e) => handleInputChange('joinDate', e.target.value)}
                               disabled={true}
                             />
@@ -585,7 +688,7 @@ export default function PersonalInfoPage() {
               <TabsContent value="products" className="mt-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold">Mis Productos</h2>
-                  <AddProductModal />
+                  <AddProductModal onProductAdded={() => setRefresh(r => !r)} />
                 </div>
 
                 <UserProductsGrid 
