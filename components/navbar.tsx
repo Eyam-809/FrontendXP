@@ -214,10 +214,13 @@ export default function Navbar() {
                         <span>Mi Perfil</span>
                       </DropdownMenuItem>
                     </Link>
+                    <Link href="/admin/dashboard">
                     <DropdownMenuItem>
                       <Settings className="mr-2 h-4 w-4" />
-                      <span>Configuración</span>
+                      <span>Panel Administrativo</span>
                     </DropdownMenuItem>
+                    </Link>
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                       <LogOut className="mr-2 h-4 w-4" />
