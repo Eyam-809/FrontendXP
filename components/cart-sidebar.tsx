@@ -119,10 +119,10 @@ export default function CartSidebar() {
                     <div className="border-t pt-4">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-lg font-semibold">Total:</span>
-                        <span className="text-xl font-bold text-purple-600">${getTotalPrice().toFixed(2)}</span>
+                        <span className="text-xl font-bold text-black-600">${getTotalPrice().toFixed(2)}</span>
                       </div>
                       <Button
-                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800"
+                        className="w-full bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
                         onClick={handleCheckout}
                       >
                         Proceder al Pago

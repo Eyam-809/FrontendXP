@@ -56,7 +56,7 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando producto...</p>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default function ProductPage() {
             </div>
 
             <div className="mb-6">
-              <span className="text-4xl font-bold text-purple-600">${price.toFixed(2)}</span>
+              <span className="text-4xl font-bold text-[#be0c0c]-600">${price.toFixed(2)}</span>
             </div>
 
             <div className="mb-6">
@@ -145,7 +145,7 @@ export default function ProductPage() {
 
             <div className="flex space-x-3 mb-6">
               <Button
-                className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800"
+                className="flex-1 bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
                 onClick={addToCart}
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />

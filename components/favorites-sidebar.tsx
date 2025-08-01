@@ -73,7 +73,7 @@ export default function FavoritesSidebar() {
                             <Button
                               size="sm"
                               onClick={() => addToCart(item)}
-                              className="bg-purple-600 hover:bg-purple-700"
+                              className="bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
                             >
                               <ShoppingCart className="h-4 w-4 mr-1" />
                               Añadir al Carrito
