@@ -10,7 +10,8 @@ import {
   MoreVertical,
   TrendingUp,
   Calendar,
-  Package
+  Package,
+  Trash2
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -173,7 +174,7 @@ export default function UserProductsGrid({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(product.createdAt)}</span>
+                <span>{formatDate(product.created_at)}</span>
               </div>
             </div>
 
@@ -201,10 +202,20 @@ export default function UserProductsGrid({
                   Ver
                 </Button>
               </Link>
+
+               {/*Boton de borrar articulo*/}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => onEdit?.(product.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+              </Button>
             </div>
           </CardContent>
         </Card>
       ))}
     </div>
   )
-} 
+}

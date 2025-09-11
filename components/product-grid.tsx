@@ -85,7 +85,7 @@ export default function ProductGrid() {
                   <motion.img
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "tween" }}
-                    src={`https://backendxp-1.onrender.com/storage/${product.image}`}
+                    src={product.image}
                     alt={product.name}
                     className="w-full h-48 object-contain p-4 cursor-pointer"
                   />

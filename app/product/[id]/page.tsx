@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus } from "lucide-react"
+import Link from "next/link"
+import { Star, Heart, ShoppingCart, ArrowLeft, ArrowRight, Plus, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Navbar from "@/components/navbar"
@@ -95,7 +96,7 @@ export default function ProductPage() {
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="relative">
               <img
-                src={`https://backendxp-1.onrender.com/storage/${product.image}`}
+                src={product.image}
                 alt={product.name}
                 className="w-full h-auto object-contain rounded-lg"
                 style={{ maxHeight: "400px" }}
@@ -174,9 +175,15 @@ export default function ProductPage() {
                     {product.stock ? "En Stock" : "Agotado"}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>ID del Producto:</span>
-                  <span>#{product.id}</span>
+                <div className="flex justify-between items-center">
+                  <span>Vendedor:</span>
+                  <Link 
+                    href={`/user/${product.id_user}`}
+                    className="text-red-600 hover:text-red-700 hover:underline flex items-center"
+                  >
+                    {product.userName || "Usuario"}
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Link>
                 </div>
               </div>
             </div>

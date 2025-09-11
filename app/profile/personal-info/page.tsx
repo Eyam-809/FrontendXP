@@ -76,6 +76,8 @@ export default function PersonalInfoPage() {
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
   const [conversations, setConversations] = useState<any[]>([])
   const [refresh, setRefresh] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
 useEffect(() => {
   async function fetchProducts() {
@@ -219,97 +221,80 @@ useEffect(() => {
       
       // Si no se pueden obtener productos reales, usar datos mock
       console.log("⚠️ Usando datos mock para productos")
-      const mockProducts: UserProduct[] = [
-        {
-          id: 1,
-          name: "Nintendo Switch OLED",
-          price: 8999,
-          image: "/nitendo.png",
-          category: "Gaming",
-          status: 'active',
-          views: 234,
-          likes: 18,
-          createdAt: "2024-02-15"
-        },
-        {
-          id: 2,
-          name: "Xbox Series X",
-          price: 12999,
-          image: "/xbox.png",
-          category: "Gaming",
-          status: 'active',
-          views: 189,
-          likes: 25,
-          createdAt: "2024-02-10"
-        },
-        {
-          id: 3,
-          name: "Pokemon Scarlet",
-          price: 1299,
-          image: "/poke.png",
-          category: "Gaming",
-          status: 'sold',
-          views: 156,
-          likes: 12,
-          createdAt: "2024-01-20"
-        }
-      ]
-      setUserProducts(mockProducts)
+      
     }
 
     fetchUserProducts()
 
-    const mockConversations = [
-      {
-        id: 1,
-        user: {
-          id: 1,
-          name: "María González",
-          avatar: "/placeholder-user.jpg",
-          isOnline: true
-        },
-        product: {
-          id: 1,
-          name: "Nintendo Switch OLED",
-          image: "/nitendo.png",
-          price: 8999
-        },
-        messages: [
-          {
-            id: 1,
-            sender: 'other',
-            content: "¡Hola! Vi tu Nintendo Switch OLED y me interesa mucho. ¿Todavía está disponible?",
-            timestamp: "14:30",
-            isRead: true
-          },
-          {
-            id: 2,
-            sender: 'user',
-            content: "¡Hola María! Sí, todavía está disponible. Está en perfecto estado, solo la usé un par de veces.",
-            timestamp: "14:32",
-            isRead: true
-          }
-        ],
-        unreadCount: 1,
-        lastMessage: "¿Podrías hacer envío a Guadalajara? Y otra pregunta, ¿aceptas pagos en efectivo al recibir?",
-        lastMessageTime: "2024-02-15T14:40:00"
-      }
-    ]
-
-    setFavoriteProducts([])
-    setPurchasedProducts([])
-    setConversations(mockConversations)
   }, [])
 
   const handleInputChange = (field: keyof UserData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    // Aquí guardarías los datos actualizados
-    localStorage.setItem("userData", JSON.stringify(formData))
-    setUser(formData)
-    setIsEditing(false)
+  const handleSave = async () => {
+    setIsSaving(true)
+    
+    try {
+      // Validaciones básicas
+      if (!formData.name.trim()) {
+        throw new Error("El nombre es requerido")
+      }
+      if (!formData.email.trim()) {
+        throw new Error("El email es requerido")
+      }
+      
+      const token = localStorage.getItem("token")
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+      
+      if (!token || !userData.id) {
+        throw new Error("No hay token de autenticación o ID de usuario")
+      }
+
+      // Preparar datos para enviar al backend
+      const updateData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone || null,
+        address: formData.address || null
+      }
+
+      console.log("Enviando datos de actualización:", updateData)
+
+      const response = await fetch("https://backendxp-1.onrender.com/api/usuario", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("Usuario actualizado exitosamente:", result)
+
+      // Actualizar el estado local con los datos del backend
+      const updatedUser = { ...currentUser, ...result }
+      setUser(updatedUser)
+      
+      // Actualizar localStorage con los nuevos datos
+      const updatedUserData = { ...userData, ...result }
+      localStorage.setItem("userData", JSON.stringify(updatedUserData))
+
+      setIsEditing(false)
+      alert("¡Datos actualizados exitosamente!")
+
+    } catch (error) {
+      console.error("Error updating user:", error)
+      alert(`Error al actualizar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancel = () => {
@@ -396,7 +381,7 @@ useEffect(() => {
                 </div>
                 <div className="flex items-center space-x-1">
                   <Package className="h-4 w-4" />
-                  <span className="text-sm">{currentUser.totalProducts} productos</span>
+                  <span className="text-sm">{userProducts.length} productos</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4" />
@@ -457,7 +442,7 @@ useEffect(() => {
                 <div className="pt-4 border-t">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-red-600">{currentUser.totalProducts}</div>
+                      <div className="text-2xl font-bold text-red-600">{userProducts.length}</div>
                       <div className="text-sm text-gray-500">Productos</div>
                     </div>
                     <div>
@@ -471,7 +456,7 @@ useEffect(() => {
 
             {/* Estadísticas */}
             <UserStats
-              totalProducts={currentUser.totalProducts || 12}
+              totalProducts={userProducts.length}
               totalSales={currentUser.totalSales || 45}
               rating={currentUser.rating || 4.8}
               followers={156}
@@ -565,7 +550,7 @@ useEffect(() => {
                               id="name"
                               value={formData.name}
                               onChange={(e) => handleInputChange('name', e.target.value)}
-                              disabled={!isEditing}
+                              disabled={!isEditing || isSaving}
                               placeholder="Tu nombre completo"
                             />
                           </div>
@@ -577,7 +562,7 @@ useEffect(() => {
                               type="email"
                               value={formData.email}
                               onChange={(e) => handleInputChange('email', e.target.value)}
-                              disabled={!isEditing}
+                              disabled={!isEditing || isSaving}
                               placeholder="tu@email.com"
                             />
                           </div>
@@ -667,12 +652,20 @@ useEffect(() => {
                   <div className="flex justify-end space-x-4">
                     {isEditing ? (
                       <>
-                        <Button variant="outline" onClick={handleCancel}>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleCancel}
+                          disabled={isSaving}
+                        >
                           Cancelar
                         </Button>
-                        <Button onClick={handleSave} className="bg-red-600 hover:bg-red-700">
+                        <Button 
+                          onClick={handleSave} 
+                          className="bg-red-600 hover:bg-red-700"
+                          disabled={isSaving}
+                        >
                           <Save className="h-4 w-4 mr-2" />
-                          Guardar cambios
+                          {isSaving ? "Guardando..." : "Guardar cambios"}
                         </Button>
                       </>
                     ) : (
