@@ -59,6 +59,52 @@ interface UserProduct {
 }
 
 export default function PersonalInfoPage() {
+  // Método para guardar solo datos del usuario (sin imagen)
+  const saveUserInfo = async () => {
+    setIsSaving(true);
+    try {
+      if (!formData.name.trim()) throw new Error("El nombre es requerido");
+      if (!formData.email.trim()) throw new Error("El email es requerido");
+      const token = localStorage.getItem("token");
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      if (!token || !userData.id) throw new Error("No hay token de autenticación o ID de usuario");
+
+      const updateData = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        telefono: formData.phone || "",
+        direccion: formData.address || ""
+      };
+
+      const response = await fetch("https://backendxp-1.onrender.com/api/usuario", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      // Actualizar el estado local y localStorage
+      const updatedUser = { ...user, ...result };
+      setUser(updatedUser);
+      const updatedUserData = { ...userData, ...result };
+      localStorage.setItem("userData", JSON.stringify(updatedUserData));
+      setIsEditing(false);
+      alert("¡Datos actualizados exitosamente!");
+    } catch (error) {
+      console.error("Error al guardar datos:", error);
+      alert(`Error al guardar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const [user, setUser] = useState<UserData | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState<UserData>({
@@ -71,6 +117,7 @@ export default function PersonalInfoPage() {
     totalProducts: 12,
     totalSales: 45
   })
+    const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
   const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
@@ -232,6 +279,12 @@ useEffect(() => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setSelectedImage(e.target.files[0])
+    }
+  }
+
   const handleSave = async () => {
     setIsSaving(true)
     
@@ -252,6 +305,15 @@ useEffect(() => {
       }
 
       // Preparar datos para enviar al backend
+        // FormData para enviar texto + archivo solo si hay imagen
+        const body = new FormData()
+        body.append("name", formData.name.trim())
+        body.append("email", formData.email.trim())
+        body.append("telefono", formData.phone || "")
+        body.append("direccion", formData.address || "")
+        if (selectedImage) {
+          body.append("imagen", selectedImage)
+        }
       const updateData = {
         name: formData.name.trim(),
         email: formData.email.trim(),
@@ -333,6 +395,39 @@ useEffect(() => {
       console.error("Error recargando productos:", error)
     }
   }
+
+//Metodo para eliminar un producto
+const deleteUserProduct = async (productId: number) => {
+  // ⚠️ Mostrar confirmación
+  const confirmed = window.confirm("¿Seguro que deseas eliminar este producto?");
+  if (!confirmed) return;
+
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      `https://backendxp-1.onrender.com/api/products/${productId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (response.ok) {
+      console.log("Producto eliminado");
+      reloadUserProducts();
+    } else {
+      const errorData = await response.json();
+      console.error("Error al eliminar producto:", errorData);
+    }
+  } catch (error) {
+    console.error("Error de red:", error);
+  }
+};
+
+
+
 
   // Si no hay usuario, mostrar datos por defecto
   const currentUser = user || {
@@ -665,7 +760,15 @@ useEffect(() => {
                           disabled={isSaving}
                         >
                           <Save className="h-4 w-4 mr-2" />
-                          {isSaving ? "Guardando..." : "Guardar cambios"}
+                          {isSaving ? "Guardando..." : "Guardar cambios con imagen"}
+                        </Button>
+                        <Button 
+                          onClick={saveUserInfo} 
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          disabled={isSaving}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSaving ? "Guardando..." : "Guardar solo datos"}
                         </Button>
                       </>
                     ) : (
@@ -689,9 +792,7 @@ useEffect(() => {
                   onEdit={(productId) => {
                     console.log('Editar producto:', productId)
                   }}
-                  onDelete={(productId) => {
-                    console.log('Eliminar producto:', productId)
-                  }}
+                  onDelete={deleteUserProduct} 
                   onToggleStatus={(productId, status) => {
                     console.log('Cambiar estado del producto:', productId, status)
                   }}

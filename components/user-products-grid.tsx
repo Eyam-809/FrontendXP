@@ -44,7 +44,7 @@ export default function UserProductsGrid({
   products, 
   onEdit, 
   onDelete, 
-  onToggleStatus 
+  onToggleStatus,
 }: UserProductsGridProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -208,7 +208,7 @@ export default function UserProductsGrid({
                 variant="outline" 
                 size="sm" 
                 className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onEdit?.(product.id)}
+                onClick={() => onDelete?.(product.id)}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
               </Button>
