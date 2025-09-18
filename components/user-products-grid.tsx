@@ -174,7 +174,7 @@ export default function UserProductsGrid({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(product.created_at)}</span>
+                {/*<span>{formatDate(product.created_at)}</span> */}
               </div>
             </div>
 
