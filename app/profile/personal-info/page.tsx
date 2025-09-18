@@ -442,13 +442,8 @@ useEffect(() => {
                 <div className="pt-4 border-t">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-<<<<<<< Updated upstream
                       <div className="text-2xl font-bold text-red-600">{userProducts.length}</div>
                       <div className="text-sm text-gray-500">Productos</div>
-=======
-                      <div className="text-2xl font-bold text-[#1B3C53]">{currentUser.totalProducts}</div>
-                      <div className="text-sm text-[#456882]">Productos</div>
->>>>>>> Stashed changes
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-[#1B3C53]">{currentUser.totalSales}</div>
@@ -664,15 +659,11 @@ useEffect(() => {
                         >
                           Cancelar
                         </Button>
-<<<<<<< Updated upstream
                         <Button 
                           onClick={handleSave} 
                           className="bg-red-600 hover:bg-red-700"
                           disabled={isSaving}
                         >
-=======
-                        <Button onClick={handleSave} className="bg-[#E63946] hover:bg-[#D62828] text-white">
->>>>>>> Stashed changes
                           <Save className="h-4 w-4 mr-2" />
                           {isSaving ? "Guardando..." : "Guardar cambios"}
                         </Button>
