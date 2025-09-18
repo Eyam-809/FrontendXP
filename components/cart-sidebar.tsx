@@ -51,7 +51,7 @@ export default function CartSidebar() {
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold flex items-center">
+                  <h2 className="text-xl font-bold flex items-center text-[#1B3C53]">
                     <ShoppingBag className="mr-2" />
                     Carrito de Compras ({state.cart.reduce((sum, item) => sum + item.quantity, 0)})
                   </h2>

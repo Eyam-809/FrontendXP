@@ -8,30 +8,15 @@ import { motion, AnimatePresence } from "framer-motion"
 const carouselItems = [
   {
     id: 1,
-    title: "DOOM: The Dark Ages",
-    description: "Lucha en la piel del slayer en una guerra medieval contra el infierno",
-    bgColor: "from-purple-500 to-indigo-600",
-    textColor: "text-white",
-    buttonColor: "bg-yellow-400 hover:bg-yellow-500 text-black",
-    image: "/dum.png",
+    image: "/mari.png",
   },
   {
     id: 2,
-    title: "Mario Kart World",
-    description: "¡Acelera a través de un mundo abierto con Mario y sus amigos!",
-    bgColor: "from-red-500 to-pink-600",
-    textColor: "text-white",
-    buttonColor: "bg-green-400 hover:bg-green-500 text-black",
-    image: "/mario.png",
+    image: "/ps.png",
   },
   {
     id: 3,
-    title: "Pokemón Legends Z-A",
-    description: "Descubre los secretos de la megaevolución y aprovecha su poder en los combates",
-    bgColor: "from-yellow-500 to-orange-600",
-    textColor: "text-white",
-    buttonColor: "bg-blue-400 hover:bg-blue-500 text-white",
-    image: "/poke.png",
+    image: "/gears.png",
   },
 ]
 
@@ -95,44 +80,16 @@ export default function HeroCarousel() {
             className="absolute inset-0 w-full h-full"
           >
             {/* Background Image */}
-            <div className="absolute inset-0 w-full h-full">
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
               <img
                 src={item.image}
                 alt={item.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
               />
-              {/* Overlay for better text readability */}
-              <div className="absolute inset-0 bg-black/30"></div>
+              {/* Overlay sutil para armonía con el diseño */}
+              <div className="absolute inset-0 bg-black/5"></div>
             </div>
             
-            {/* Content */}
-            <div className="relative z-10 h-full flex items-center">
-              <div className="container mx-auto px-4 md:px-10 flex flex-col md:flex-row items-center">
-                <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0">
-                  <motion.h2
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className={`text-3xl md:text-5xl font-bold mb-4 ${item.textColor}`}
-                  >
-                    {item.title}
-                  </motion.h2>
-                  <motion.p
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className={`text-lg md:text-xl mb-6 ${item.textColor}`}
-                  >
-                    {item.description}
-                  </motion.p>
-                  <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-                    <Button className={`${item.buttonColor} font-medium text-lg px-6 py-2 rounded-full`}>
-                      Comprar Ahora
-                    </Button>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
           </motion.div>
         </AnimatePresence>
       </div>

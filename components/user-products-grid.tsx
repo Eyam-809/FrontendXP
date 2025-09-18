@@ -49,9 +49,9 @@ export default function UserProductsGrid({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500'
+        return 'bg-[#1B3C53]'
       case 'sold':
-        return 'bg-red-500'
+        return 'bg-[#E63946]'
       case 'pending':
         return 'bg-yellow-500'
       default:
@@ -132,7 +132,7 @@ export default function UserProductsGrid({
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => onDelete?.(product.id)}
-                  className="text-red-600"
+                  className="text-[#E63946]"
                 >
                   Eliminar
                 </DropdownMenuItem>

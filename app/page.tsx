@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import HeroCarousel from "@/components/hero-carousel"
 import Navbar from "@/components/navbar"
+import CategoryNavbar from "@/components/category-navbar"
 import CategorySection from "@/components/category-section"
 import ProductGrid from "@/components/product-grid"
 import PromoBanner from "@/components/promo-banner"
@@ -25,11 +26,11 @@ export default function Home() {
   }, [dispatch])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
+      <CategoryNavbar />
       <CategoryPanel />
       <main className="container mx-auto px-4">
-        {!isMobile && <CategorySection />}
         <HeroCarousel />
         {/* <PromoBanner /> */}
         <ProductGrid />

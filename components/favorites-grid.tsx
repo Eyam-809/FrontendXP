@@ -52,7 +52,7 @@ export default function FavoritesGrid({ products }: FavoritesGridProps) {
             
             {/* Badge de descuento si existe */}
             {product.discount > 0 && (
-              <Badge className="absolute top-2 left-2 bg-red-500">
+              <Badge className="absolute top-2 left-2 bg-[#E63946] text-white">
                 -{product.discount}%
               </Badge>
             )}

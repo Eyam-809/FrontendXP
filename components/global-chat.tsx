@@ -105,7 +105,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
-            <Globe className="h-6 w-6 text-red-600" />
+            <Globe className="h-6 w-6 text-[#1B3C53]" />
             <div>
               <h2 className="text-xl font-bold">Chat Global</h2>
               <p className="text-sm text-gray-500">Descubre productos de toda la comunidad</p>
@@ -139,7 +139,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B3C53]"></div>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-8">
@@ -158,7 +158,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                       className="w-full h-48 object-cover"
                     />
                     {product.originalPrice && (
-                      <Badge className="absolute top-2 left-2 bg-red-500">
+                      <Badge className="absolute top-2 left-2 bg-[#E63946]">
                         -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                       </Badge>
                     )}
@@ -167,7 +167,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                     </Badge>
                   </div>
                   <CardHeader>
-                    <CardTitle className="text-lg font-semibold text-red-700 truncate">{product.name}</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-[#1B3C53] truncate">{product.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center space-x-2 mb-2">
@@ -177,7 +177,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                           {product.seller.name.split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-semibold text-sm text-red-700">{product.seller.name}</span>
+                      <span className="font-semibold text-sm text-[#1B3C53]">{product.seller.name}</span>
                       <div className="flex items-center space-x-1">
                         <Star className="h-3 w-3 text-yellow-400 fill-current" />
                         <span className="text-xs text-yellow-600">{product.seller.rating}</span>
@@ -187,7 +187,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                     </div>
                     <p className="text-sm text-gray-700 mb-3">{product.description}</p>
                     <div className="flex items-center space-x-2 mb-3">
-                      <p className="text-xl font-bold text-red-600">${product.price.toLocaleString()}</p>
+                      <p className="text-xl font-bold text-[#1B3C53]">${product.price.toLocaleString()}</p>
                       {product.originalPrice && (
                         <p className="text-sm text-gray-400 line-through">
                           ${product.originalPrice.toLocaleString()}
@@ -211,8 +211,8 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button 
-                        className="flex-1 bg-red-600 hover:bg-red-700"
+                        <Button 
+                        className="flex-1 bg-[#1B3C53] hover:bg-[#456882]"
                         size="sm"
                         onClick={() => startChat(product.seller.id, product.id)}
                       >
@@ -220,7 +220,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                         Iniciar Chat
                       </Button>
                       <Link href={`/product/${product.id}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full border-yellow-400 text-yellow-700 hover:bg-yellow-50">
+                        <Button variant="outline" size="sm" className="w-full border-[#E8DDD4] text-[#1B3C53] hover:bg-[#F9F3EF]">
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Producto
                         </Button>

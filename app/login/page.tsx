@@ -177,7 +177,7 @@ useEffect(() => {
           <div className="flex h-20 items-center justify-between"> {/* Cambia h-16 por h-20 */}
             <Link href="/" className="flex items-center">
               <img
-                src="/sinfondo.png"
+                src="/logonuevo.png"
                 alt="XpMarket Logo"
                 className="h-16 w-auto" // Cambia h-10 por h-16 para hacerlo más grande
               />

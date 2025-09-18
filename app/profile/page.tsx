@@ -65,35 +65,35 @@ export default function ProfilePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Profile Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {profileSections.map((section) => (
             <Link key={section.id} href={section.href}>
-              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer bg-white">
+              <Card className="h-full hover:shadow-md transition-shadow cursor-pointer bg-white border-[#E8DDD4]">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gray-100 rounded-lg">
+                      <div className="p-2 bg-[#E8DDD4] rounded-lg">
                         {section.icon}
                       </div>
                       <div>
-                        <CardTitle className="text-base font-semibold text-gray-900">
+                        <CardTitle className="text-base font-semibold text-[#1B3C53]">
                           {section.title}
                         </CardTitle>
                       </div>
                     </div>
                     {section.hasAlert && (
-                      <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                      <Badge variant="destructive" className="bg-[#E63946] hover:bg-[#D62828]">
                         <AlertTriangle className="h-3 w-3" />
                       </Badge>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <CardDescription className="text-sm text-gray-600">
+                  <CardDescription className="text-sm text-[#456882]">
                     {section.description}
                   </CardDescription>
                 </CardContent>
@@ -104,9 +104,9 @@ export default function ProfilePage() {
 
         {/* Bottom Text */}
         <div className="mt-8 text-center">
-          <p className="text-gray-600 text-sm">
+          <p className="text-[#456882] text-sm">
             Puedes{" "}
-            <button className="text-gray-800 font-medium hover:underline">
+            <button className="text-[#1B3C53] font-medium hover:underline">
               cancelar tu cuenta
             </button>{" "}
             siempre que lo desees.

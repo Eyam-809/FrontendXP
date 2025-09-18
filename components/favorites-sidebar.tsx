@@ -35,7 +35,7 @@ export default function FavoritesSidebar() {
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold flex items-center">
+                <h2 className="text-xl font-bold flex items-center text-[#1B3C53]">
                   <Heart className="mr-2" />
                   Favoritos ({state.favorites.length})
                 </h2>

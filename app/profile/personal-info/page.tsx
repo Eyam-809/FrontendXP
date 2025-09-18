@@ -347,11 +347,11 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       {/* Botón de volver */}
       <div className="absolute top-4 left-4 z-10">
         <Link href="/">
-          <Button variant="outline" className="bg-white/90 hover:bg-white text-gray-900">
+          <Button variant="outline" className="bg-[#F9F3EF] hover:bg-white text-[#1B3C53] border-[#E8DDD4]">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
@@ -359,7 +359,7 @@ useEffect(() => {
       </div>
 
       {/* Header con imagen de portada */}
-      <div className="relative h-64 bg-gradient-to-r from-red-600 to-red-800">
+      <div className="relative h-64 bg-gradient-to-r from-[#1B3C53] to-[#456882]">
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-end space-x-4">
@@ -367,7 +367,7 @@ useEffect(() => {
               {currentUser.avatar ? (
                 <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
               ) : null}
-              <AvatarFallback className="text-2xl font-bold bg-red-600 text-white">
+              <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
                 {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
               </AvatarFallback>
             </Avatar>
@@ -376,7 +376,7 @@ useEffect(() => {
               <p className="text-lg opacity-90">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
               <div className="flex items-center space-x-4 mt-2">
                 <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                  <Star className="h-4 w-4 text-[#E8DDD4] fill-current" />
                   <span className="text-sm">{currentUser.rating}</span>
                 </div>
                 <div className="flex items-center space-x-1">
@@ -389,7 +389,7 @@ useEffect(() => {
                 </div>
               </div>
             </div>
-            <Button variant="outline" className="bg-white text-gray-900 hover:bg-gray-100">
+            <Button variant="outline" className="bg-white text-[#1B3C53] hover:bg-[#F9F3EF] border-[#E8DDD4]">
               <Edit className="h-4 w-4 mr-2" />
               Editar perfil
             </Button>
@@ -411,30 +411,30 @@ useEffect(() => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-[#456882] text-sm">
                     Actualiza tu información personal y datos de contacto para mantener tu perfil actualizado.
                   </p>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
-                    <Mail className="h-4 w-4 text-gray-500" />
+                    <Mail className="h-4 w-4 text-[#456882]" />
                     <span className="text-sm">{currentUser.email}</span>
                   </div>
                   {currentUser.phone && (
                     <div className="flex items-center space-x-3">
-                      <Phone className="h-4 w-4 text-gray-500" />
+                      <Phone className="h-4 w-4 text-[#456882]" />
                       <span className="text-sm">{currentUser.phone}</span>
                     </div>
                   )}
                   {currentUser.address && (
                     <div className="flex items-center space-x-3">
-                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <MapPin className="h-4 w-4 text-[#456882]" />
                       <span className="text-sm">{currentUser.address}</span>
                     </div>
                   )}
                   <div className="flex items-center space-x-3">
-                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <Calendar className="h-4 w-4 text-[#456882]" />
                     <span className="text-sm">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -442,12 +442,17 @@ useEffect(() => {
                 <div className="pt-4 border-t">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
+<<<<<<< Updated upstream
                       <div className="text-2xl font-bold text-red-600">{userProducts.length}</div>
                       <div className="text-sm text-gray-500">Productos</div>
+=======
+                      <div className="text-2xl font-bold text-[#1B3C53]">{currentUser.totalProducts}</div>
+                      <div className="text-sm text-[#456882]">Productos</div>
+>>>>>>> Stashed changes
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-red-600">{currentUser.totalSales}</div>
-                      <div className="text-sm text-gray-500">Ventas</div>
+                      <div className="text-2xl font-bold text-[#1B3C53]">{currentUser.totalSales}</div>
+                      <div className="text-sm text-[#456882]">Ventas</div>
                     </div>
                   </div>
                 </div>
@@ -471,24 +476,24 @@ useEffect(() => {
           {/* Contenido principal con tabs */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="personal-info" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="personal-info" className="flex items-center space-x-2">
+              <TabsList className="grid w-full grid-cols-5 bg-[#E8DDD4]">
+                <TabsTrigger value="personal-info" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
                   <User className="h-4 w-4" />
                   <span>Mi Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="products" className="flex items-center space-x-2">
+                <TabsTrigger value="products" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
                   <Package className="h-4 w-4" />
                   <span>Mis Productos</span>
                 </TabsTrigger>
-                <TabsTrigger value="favorites" className="flex items-center space-x-2">
+                <TabsTrigger value="favorites" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
                   <Heart className="h-4 w-4" />
                   <span>Favoritos</span>
                 </TabsTrigger>
-                <TabsTrigger value="cart" className="flex items-center space-x-2">
+                <TabsTrigger value="cart" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
                   <ShoppingCart className="h-4 w-4" />
                   <span>Carrito</span>
                 </TabsTrigger>
-                <TabsTrigger value="conversations" className="flex items-center space-x-2">
+                <TabsTrigger value="conversations" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
                   <MessageCircle className="h-4 w-4" />
                   <span>Conversaciones</span>
                 </TabsTrigger>
@@ -513,7 +518,7 @@ useEffect(() => {
                           {currentUser.avatar ? (
                             <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
                           ) : null}
-                          <AvatarFallback className="bg-gray-200 text-gray-700 text-2xl font-semibold">
+                          <AvatarFallback className="bg-[#E8DDD4] text-[#1B3C53] text-2xl font-semibold">
                             {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
                           </AvatarFallback>
                         </Avatar>
@@ -522,7 +527,7 @@ useEffect(() => {
                             <Edit className="h-4 w-4 mr-2" />
                             Cambiar foto
                           </Button>
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className="text-sm text-[#456882] mt-1">
                             JPG, PNG hasta 5MB
                           </p>
                         </div>
@@ -620,7 +625,7 @@ useEffect(() => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-3 bg-[#E8DDD4] rounded-lg">
                           <div className="flex items-center space-x-3">
                             <Mail className="h-5 w-5 text-gray-500" />
                             <div>
@@ -633,7 +638,7 @@ useEffect(() => {
                           </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-3 bg-[#E8DDD4] rounded-lg">
                           <div className="flex items-center space-x-3">
                             <Calendar className="h-5 w-5 text-gray-500" />
                             <div>
@@ -659,17 +664,21 @@ useEffect(() => {
                         >
                           Cancelar
                         </Button>
+<<<<<<< Updated upstream
                         <Button 
                           onClick={handleSave} 
                           className="bg-red-600 hover:bg-red-700"
                           disabled={isSaving}
                         >
+=======
+                        <Button onClick={handleSave} className="bg-[#E63946] hover:bg-[#D62828] text-white">
+>>>>>>> Stashed changes
                           <Save className="h-4 w-4 mr-2" />
                           {isSaving ? "Guardando..." : "Guardar cambios"}
                         </Button>
                       </>
                     ) : (
-                      <Button onClick={() => setIsEditing(true)} className="bg-red-600 hover:bg-red-700">
+                      <Button onClick={() => setIsEditing(true)} className="bg-[#E63946] hover:bg-[#D62828] text-white">
                         <Edit className="h-4 w-4 mr-2" />
                         Editar información
                       </Button>
@@ -680,7 +689,7 @@ useEffect(() => {
 
               <TabsContent value="products" className="mt-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold">Mis Productos</h2>
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mis Productos</h2>
                   <AddProductModal onProductAdded={() => setRefresh(r => !r)} />
                 </div>
 
@@ -699,17 +708,17 @@ useEffect(() => {
               </TabsContent>
 
               <TabsContent value="favorites" className="mt-6">
-                <h2 className="text-2xl font-bold mb-6">Mis Favoritos</h2>
+                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Favoritos</h2>
                 <FavoritesGrid products={favoriteProducts} />
               </TabsContent>
 
               <TabsContent value="cart" className="mt-6">
-                <h2 className="text-2xl font-bold mb-6">Mi Carrito</h2>
+                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mi Carrito</h2>
                 <CartItemsList items={purchasedProducts} />
               </TabsContent>
 
               <TabsContent value="conversations" className="mt-6">
-                <h2 className="text-2xl font-bold mb-6">Mis Conversaciones</h2>
+                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Conversaciones</h2>
                 <ChatConversations conversations={conversations} />
               </TabsContent>
             </Tabs>

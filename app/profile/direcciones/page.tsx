@@ -225,36 +225,36 @@ export default function DireccionesPage() {
 
   const getAddressTypeColor = (type: string) => {
     switch (type) {
-      case "home": return "bg-blue-100 text-blue-800"
+      case "home": return "bg-[#E8DDD4] text-[#1B3C53]"
       case "work": return "bg-green-100 text-green-800"
-      default: return "bg-gray-100 text-gray-800"
+      default: return "bg-[#E8DDD4] text-[#1B3C53]"
     }
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9F3EF] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Cargando direcciones...</p>
+          <p className="text-[#456882]">Cargando direcciones...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Top Section */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/profile">
-            <Button variant="outline" className="bg-gray-100 border-gray-300 hover:bg-gray-200">
+            <Button variant="outline" className="bg-[#E8DDD4] border-[#E8DDD4] hover:bg-[#F9F3EF] text-[#1B3C53]">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
           </Link>
           <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Tus Direcciones</h1>
-            <p className="text-gray-600">Gestiona tus direcciones de envío de forma segura</p>
+            <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Tus Direcciones</h1>
+            <p className="text-[#456882]">Gestiona tus direcciones de envío de forma segura</p>
           </div>
           <div className="w-24"></div>
         </div>
@@ -263,7 +263,7 @@ export default function DireccionesPage() {
         <div className="mb-8">
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF]">
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar Nueva Dirección
               </Button>
@@ -427,10 +427,10 @@ export default function DireccionesPage() {
         {addresses.length === 0 ? (
           <Card className="bg-white shadow-md">
             <CardContent className="text-center py-12">
-              <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes direcciones registradas</h3>
-              <p className="text-gray-500 mb-6">Agrega tu primera dirección para comenzar a recibir tus pedidos</p>
-              <Button onClick={() => setShowAddDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+              <MapPin className="h-16 w-16 text-[#456882] mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-[#1B3C53] mb-2">No tienes direcciones registradas</h3>
+              <p className="text-[#456882] mb-6">Agrega tu primera dirección para comenzar a recibir tus pedidos</p>
+              <Button onClick={() => setShowAddDialog(true)} className="bg-[#1B3C53] hover:bg-[#456882]">
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar Primera Dirección
               </Button>
@@ -447,8 +447,8 @@ export default function DireccionesPage() {
                         {getAddressTypeIcon(address.type)}
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{address.name}</h3>
-                        <p className="text-sm text-gray-500 capitalize">{address.type}</p>
+                        <h3 className="font-medium text-[#1B3C53]">{address.name}</h3>
+                        <p className="text-sm text-[#456882] capitalize">{address.type}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -477,17 +477,17 @@ export default function DireccionesPage() {
                   </div>
                   
                   <div className="space-y-2 mb-4">
-                    <p className="text-gray-700">
+                    <p className="text-[#1B3C53]">
                       {address.street} {address.number}
                       {address.apartment && `, ${address.apartment}`}
                     </p>
-                    <p className="text-gray-700">
+                    <p className="text-[#1B3C53]">
                       {address.city}, {address.state} {address.zipCode}
                     </p>
-                    <p className="text-gray-700">{address.country}</p>
-                    <p className="text-gray-600">{address.phone}</p>
+                    <p className="text-[#1B3C53]">{address.country}</p>
+                    <p className="text-[#456882]">{address.phone}</p>
                     {address.instructions && (
-                      <p className="text-sm text-gray-500 italic">
+                      <p className="text-sm text-[#456882] italic">
                         Instrucciones: {address.instructions}
                       </p>
                     )}
@@ -666,13 +666,13 @@ export default function DireccionesPage() {
         </Dialog>
 
         {/* Security Notice */}
-        <Card className="mt-8 bg-blue-50 border-blue-200">
+        <Card className="mt-8 bg-[#E8DDD4] border-[#E8DDD4]">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
-              <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+              <Shield className="h-5 w-5 text-[#1B3C53] mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900 mb-2">Seguridad de tus direcciones</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+                <h4 className="font-medium text-[#1B3C53] mb-2">Seguridad de tus direcciones</h4>
+                <ul className="text-sm text-[#1B3C53] space-y-1">
                   <li>• Tus direcciones están protegidas y solo se usan para envíos</li>
                   <li>• Puedes editar o eliminar direcciones en cualquier momento</li>
                   <li>• La dirección predeterminada se usará automáticamente en tus compras</li>

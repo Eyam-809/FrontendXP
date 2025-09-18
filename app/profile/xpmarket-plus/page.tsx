@@ -38,15 +38,15 @@ export default function XPmarketPlusPage() {
   }, [])
 
   const gamingApps = [
-    { name: "Steam", color: "bg-gray-800", icon: "🎮" },
-    { name: "Epic", color: "bg-blue-600", icon: "🎯" },
+    { name: "Steam", color: "bg-[#1B3C53]", icon: "🎮" },
+    { name: "Epic", color: "bg-[#456882]", icon: "🎯" },
     { name: "Xbox", color: "bg-green-600", icon: "🎮" },
-    { name: "PlayStation", color: "bg-blue-500", icon: "🎮" },
-    { name: "Nintendo", color: "bg-red-600", icon: "🎮" },
+    { name: "PlayStation", color: "bg-[#1B3C53]", icon: "🎮" },
+    { name: "Nintendo", color: "bg-[#E63946]", icon: "🎮" },
     { name: "Discord", color: "bg-purple-600", icon: "💬" },
     { name: "Twitch", color: "bg-purple-500", icon: "📺" },
     { name: "Spotify", color: "bg-green-500", icon: "🎵" },
-    { name: "Netflix", color: "bg-red-500", icon: "🎬" }
+    { name: "Netflix", color: "bg-[#E63946]", icon: "🎬" }
   ]
 
   const familyPlan = {
@@ -84,7 +84,7 @@ export default function XPmarketPlusPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9F3EF] flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Cargando planes de suscripción...</p>
         </div>
@@ -98,7 +98,7 @@ export default function XPmarketPlusPage() {
         {/* Top Section */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/profile">
-            <Button variant="outline" className="bg-gray-100 border-gray-300 hover:bg-gray-200">
+            <Button variant="outline" className="bg-[#E8DDD4] border-[#E8DDD4] hover:bg-[#F9F3EF] text-[#1B3C53]">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
@@ -153,14 +153,14 @@ export default function XPmarketPlusPage() {
               </ul>
               
               <div className="pt-6 space-y-3">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="w-full bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF]">
                   Iniciar ahora
                 </Button>
                 <div className="text-center space-y-2">
-                  <Link href="#" className="text-blue-600 hover:underline text-sm block">
+                  <Link href="#" className="text-[#1B3C53] hover:underline text-sm block">
                     {familyPlan.monthlyPrice}
                   </Link>
-                  <Link href="#" className="text-blue-600 hover:underline text-sm flex items-center justify-center">
+                  <Link href="#" className="text-[#1B3C53] hover:underline text-sm flex items-center justify-center">
                   
                   </Link>
                 </div>
@@ -202,11 +202,11 @@ export default function XPmarketPlusPage() {
               </ul>
               
               <div className="pt-6 space-y-3">
-                <Button variant="outline" className="w-full border-blue-600 text-blue-600 hover:bg-blue-50">
+                <Button variant="outline" className="w-full border-[#1B3C53] text-[#1B3C53] hover:bg-[#F9F3EF]">
                   Comprar ahora
                 </Button>
                 <div className="text-center">
-                  <Link href="#" className="text-blue-600 hover:underline text-sm block">
+                  <Link href="#" className="text-[#1B3C53] hover:underline text-sm block">
                     O comprar por {personalPlan.monthlyPrice}
                   </Link>
                 </div>
