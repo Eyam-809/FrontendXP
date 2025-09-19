@@ -113,7 +113,7 @@ export default function Navbar() {
               </SheetContent>
             </Sheet>
             <Link href="/" className="flex items-center">
-              <img src="/logonuevo.png" alt="XpMarket Logo" className="h-12 w-auto ml-2 md:h-24 md:ml-0 transition-all duration-200" />
+              <img src="/logonuevo.png" alt="XpMarket Logo" className="h-16 w-auto ml-2 md:h-32 md:ml-0 transition-all duration-200" />
             </Link>
           </div>
 

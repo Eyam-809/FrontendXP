@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [name, setName] = useState("");
   const [emailR, setEmailR] = useState("");
@@ -118,9 +118,16 @@ const handleLogin = (e: React.FormEvent) => {
     console.error("❌ Error en login:", error);
     if (error.response) {
       console.error("📨 Mensaje del backend:", error.response.data.message);
-      setError(error.response.data.message);
+      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
+      // Limpiar los campos de entrada
+      setEmail("");
+      setPassword("");
     } else {
       console.error("⚠️ Error inesperado:", error.message);
+      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
+      // Limpiar los campos de entrada
+      setEmail("");
+      setPassword("");
     }
   });
   };
@@ -171,15 +178,15 @@ useEffect(() => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50 flex flex-col">
-      <header className="bg-gradient-to-r from-[#be0c0c] to-[#8B0000] shadow-md">
+    <div className="min-h-screen bg-gradient-to-br from-[#F9F3EF] to-[#E8DDD4] flex flex-col">
+      <header className="bg-gradient-to-r from-[#1B3C53] to-[#456882] shadow-md">
         <div className="container mx-auto px-4">
-          <div className="flex h-20 items-center justify-between"> {/* Cambia h-16 por h-20 */}
+          <div className="flex h-24 items-center justify-center"> {/* Centrado y más alto */}
             <Link href="/" className="flex items-center">
               <img
                 src="/logonuevo.png"
                 alt="XpMarket Logo"
-                className="h-16 w-auto" // Cambia h-10 por h-16 para hacerlo más grande
+                className="h-40 w-auto" // Más grande: h-20
               />
             </Link>
           </div>
@@ -194,23 +201,33 @@ useEffect(() => {
           className="w-full max-w-md"
         >
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-[#8B0000] to-[#be0c0c] p-6 text-center">
+            <div className="bg-gradient-to-r from-[#1B3C53] to-[#456882] p-6 text-center">
               <h1 className="text-2xl font-bold text-white">Bienvenido de Nuevo</h1>
-              <p className="text-purple-100 mt-2">Inicia sesión para acceder a tu cuenta</p>
+              <p className="text-white/90 mt-2">Inicia sesión para acceder a tu cuenta</p>
             </div>
 
             <Tabs defaultValue="login" className="p-6">
-              <TabsList className="grid grid-cols-2 mb-6">
-                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="register">Registrarse</TabsTrigger>
+              <TabsList className="grid grid-cols-2 mb-6 bg-[#E8DDD4]">
+                <TabsTrigger 
+                  value="login" 
+                  className="data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53] font-medium"
+                >
+                  Iniciar Sesión
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="register" 
+                  className="data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53] font-medium"
+                >
+                  Registrarse
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Correo Electrónico</Label>
+                     <Label htmlFor="email" className="text-[#1B3C53] font-medium">Correo Electrónico</Label>
                     <Input
-                      className="input2"
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                       type="email"
                       value={email}
                       placeholder="user@gmail.com"
@@ -221,11 +238,11 @@ useEffect(() => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Contraseña</Label>
+                     <Label htmlFor="password" className="text-[#1B3C53] font-medium">Contraseña</Label>
                     <div className="relative">
                       <Input
-                         className="input2"
-                          type="password"
+                         className="text-[#1B3C53] placeholder:text-[#456882]"
+                          type={showPassword ? "text" : "password"}
                           value={password}
                           placeholder="*******"
                           onChange={(e) => setPassword(e.target.value)}
@@ -234,7 +251,7 @@ useEffect(() => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#456882] hover:text-[#1B3C53]"
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -255,18 +272,18 @@ useEffect(() => {
                         checked={loginForm.rememberMe}
                         onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
                       />
-                      <Label htmlFor="remember-me" className="text-sm">
-                        Recordarme
-                      </Label>
+                       <Label htmlFor="remember-me" className="text-sm text-[#1B3C53] font-medium">
+                         Recordarme
+                       </Label>
                     </div>
-                    <Link href="#" className="text-sm text-purple-600 hover:text-purple-800">
+                    <Link href="#" className="text-sm text-[#1B3C53] hover:text-[#456882]">
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000] text-white"
+                    className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
@@ -277,98 +294,108 @@ useEffect(() => {
                       <div className="w-full border-t border-gray-300"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">O continuar con</span>
+                      <span className="px-2 bg-white text-[#456882]">O continuar con</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <Button variant="outline" className="w-full">
-                      <Facebook size={18} className="mr-2" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">Facebook</span>
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Mail size={18} className="mr-2" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">Google</span>
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Github size={18} className="mr-2" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
-                    </Button>
-                  </div>
+                   <div className="grid grid-cols-3 gap-3">
+                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
+                       <Facebook size={18} className="mr-2" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">Facebook</span>
+                     </Button>
+                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
+                       <Mail size={18} className="mr-2" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">Google</span>
+                     </Button>
+                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
+                       <Github size={18} className="mr-2" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                     </Button>
+                   </div>
                 </form>
               </TabsContent>
 
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre Completo</Label>
+                     <Label htmlFor="name" className="text-[#1B3C53] font-medium">Nombre Completo</Label>
                     <Input
                       id="name"
                      type="text" 
                      placeholder="Nombre" 
                      value={name} onChange={(e) => setName(e.target.value)}
-                      className={errors.register.name ? "border-red-500" : ""}
+                      className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.name ? "border-red-500" : ""}`}
                     />
                     {errors.register.name && <p className="text-red-500 text-sm">{errors.register.name}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-email">Correo Electrónico</Label>
+                     <Label htmlFor="register-email" className="text-[#1B3C53] font-medium">Correo Electrónico</Label>
                     <Input
                       id="register-email"
                       type="email"
                       placeholder="Email" 
                       value={emailR} onChange={(e) => setEmailR(e.target.value)}
-                      className={errors.register.email ? "border-red-500" : ""}
+                      className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.email ? "border-red-500" : ""}`}
                     />
                     {errors.register.email && <p className="text-red-500 text-sm">{errors.register.email}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="register-password">Contraseña</Label>
+                     <Label htmlFor="register-password" className="text-[#1B3C53] font-medium">Contraseña</Label>
                     <div className="relative">
                       <Input
                         id="register-password"
-                        type="password" 
+                        type={showPassword ? "text" : "password"}
                         placeholder="Contraseña" 
                         value={passwordR} onChange={(e) => setPasswordR(e.target.value)}
-                        className={errors.register.password ? "border-red-500" : ""}
+                        className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.password ? "border-red-500" : ""}`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#456882] hover:text-[#1B3C53]"
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
+                    {passwordR && passwordR.length < 6 && (
+                      <p className="text-red-500 text-sm">
+                        Caracteres mínimos para tu contraseña: 6
+                      </p>
+                    )}
                     {errors.register.password && <p className="text-red-500 text-sm">{errors.register.password}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirmar Contraseña</Label>
+                     <Label htmlFor="confirm-password" className="text-[#1B3C53] font-medium">Confirmar Contraseña</Label>
                     <Input
                       id="confirm-password"
                       type="password"
                       placeholder="Confirmar Contraseña"
                       value={password_confirmation}
                       onChange={(e) => setPasswordConfirmation(e.target.value)}
-                      className={errors.register.confirmPassword ? "border-red-500" : ""}
+                      className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.confirmPassword ? "border-red-500" : ""}`}
                     />
+                    {password_confirmation && passwordR && password_confirmation !== passwordR && (
+                      <p className="text-red-500 text-sm">
+                        Las contraseñas no coinciden
+                      </p>
+                    )}
                     {errors.register.confirmPassword && (
                       <p className="text-red-500 text-sm">{errors.register.confirmPassword}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Número telefónico</Label>
+                     <Label htmlFor="confirm-password" className="text-[#1B3C53] font-medium">Número telefónico</Label>
                     <Input
                       id="confirm-password"
                       type="number" 
                       placeholder="Teléfono" 
                       value={telefono} 
                       onChange={(e) => setTelefono(e.target.value)} 
-                      className={errors.register.confirmPassword ? "border-red-500" : ""}
+                      className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.confirmPassword ? "border-red-500" : ""}`}
                     />
                     {errors.register.confirmPassword && (
                       <p className="text-red-500 text-sm">{errors.register.confirmPassword}</p>
@@ -376,14 +403,14 @@ useEffect(() => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Direccion</Label>
+                     <Label htmlFor="confirm-password" className="text-[#1B3C53] font-medium">Direccion</Label>
                     <Input
                       id="confirm-password"
                       type="text" 
                       placeholder="Dirección" 
                       value={direccion} 
                       onChange={(e) => setDireccion(e.target.value)} 
-                      className={errors.register.confirmPassword ? "border-red-500" : ""}
+                      className={`text-[#1B3C53] placeholder:text-[#456882] ${errors.register.confirmPassword ? "border-red-500" : ""}`}
                     />
                     {errors.register.confirmPassword && (
                       <p className="text-red-500 text-sm">{errors.register.confirmPassword}</p>
@@ -391,8 +418,12 @@ useEffect(() => {
                   </div>
 
                    <div>
-                      <label>Elija un plan:</label>
-                      <select value={planSeleccionado} onChange={(e) => setPlanSeleccionado(e.target.value)}>
+                       <label className="text-[#1B3C53] font-medium">Elija un plan:</label>
+                      <select 
+                        value={planSeleccionado} 
+                        onChange={(e) => setPlanSeleccionado(e.target.value)}
+                        className="w-full mt-2 p-2 border border-[#E8DDD4] rounded-md bg-white text-[#1B3C53] focus:border-[#456882] focus:outline-none"
+                      >
                         <option value="">-- Selecciona una opción --</option>
                         {planes.map((plan) => (
                           <option key={plan.nombre} value={plan.id}>
@@ -402,19 +433,21 @@ useEffect(() => {
                       </select>
 
                         {planSeleccionado && (
-                            <p>
-                              Esto trae el plan:{" "}
-                              <strong>
+                            <div className="mt-4 p-4 bg-[#E8DDD4] rounded-lg border border-[#1B3C53]">
+                              <p className="text-[#1B3C53] font-bold text-lg mb-2 text-center">
+                                Plan Seleccionado:
+                              </p>
+                              <p className="text-[#1B3C53] font-semibold text-base mb-2">
                                 {
                                   planes.find((plan) => plan.id === parseInt(planSeleccionado))?.nombre
                                 }
-                              </strong>
-                              <strong>
+                              </p>
+                              <p className="text-[#456882] text-sm leading-relaxed">
                                 {
                                   planes.find((plan) => plan.id === parseInt(planSeleccionado))?.descripcion
                                 }
-                              </strong>
-                            </p>
+                              </p>
+                            </div>
                           )}
                       </div>
 
@@ -430,14 +463,14 @@ useEffect(() => {
                     <div className="grid gap-1.5 leading-none">
                       <Label
                         htmlFor="terms"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                         className="text-sm font-medium text-[#1B3C53] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Acepto los{" "}
-                        <Link href="#" className="text-purple-600 hover:text-purple-800">
+                        <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
                           términos de servicio
                         </Link>{" "}
                         y la{" "}
-                        <Link href="#" className="text-purple-600 hover:text-purple-800">
+                        <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
                           política de privacidad
                         </Link>
                       </Label>
@@ -449,7 +482,7 @@ useEffect(() => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000] text-white"
+                    className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
@@ -463,15 +496,15 @@ useEffect(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-center mt-6 text-gray-600"
+            className="text-center mt-6 text-[#456882]"
           >
             <p>
               Al continuar, aceptas los{" "}
-              <Link href="#" className="text-purple-600 hover:text-purple-800">
+              <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
                 Términos de Servicio
               </Link>{" "}
               y la{" "}
-              <Link href="#" className="text-purple-600 hover:text-purple-800">
+              <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
                 Política de Privacidad
               </Link>{" "}
               de SuperMercado
@@ -480,7 +513,7 @@ useEffect(() => {
         </motion.div>
       </main>
 
-      <footer className="bg-gray-900 text-gray-300 py-6">
+      <footer className="bg-[#1B3C53] text-[#F9F3EF] py-6">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; {new Date().getFullYear()} SuperMercado. Todos los derechos reservados.</p>
         </div>
