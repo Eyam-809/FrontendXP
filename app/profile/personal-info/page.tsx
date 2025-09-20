@@ -33,6 +33,7 @@ import UserProductsGrid from "@/components/user-products-grid"
 import FavoritesGrid from "@/components/favorites-grid"
 import CartItemsList from "@/components/cart-items-list"
 import ChatConversations from "@/components/chat-conversations"
+import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
 
 interface UserData {
   name: string
@@ -125,6 +126,17 @@ export default function PersonalInfoPage() {
   const [refresh, setRefresh] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean
+    productId: number | null
+    productName: string
+    isLoading: boolean
+  }>({
+    isOpen: false,
+    productId: null,
+    productName: "",
+    isLoading: false
+  })
 
 useEffect(() => {
   async function fetchProducts() {
@@ -398,16 +410,31 @@ useEffect(() => {
 
 //Metodo para eliminar un producto
 const deleteUserProduct = async (productId: number) => {
-  // ⚠️ Mostrar confirmación
-  const confirmed = window.confirm("¿Seguro que deseas eliminar este producto?");
-  if (!confirmed) return;
+  const product = userProducts.find(p => p.id === productId);
+  if (!product) return;
+
+  setDeleteModal({
+    isOpen: true,
+    productId,
+    productName: product.name,
+    isLoading: false
+  });
+};
+
+const handleConfirmDelete = async () => {
+  if (!deleteModal.productId) return;
+
+  setDeleteModal(prev => ({ ...prev, isLoading: true }));
 
   const token = localStorage.getItem("token");
-  if (!token) return;
+  if (!token) {
+    setDeleteModal(prev => ({ ...prev, isLoading: false }));
+    return;
+  }
 
   try {
     const response = await fetch(
-      `https://backendxp-1.onrender.com/api/products/${productId}`,
+      `https://backendxp-1.onrender.com/api/products/${deleteModal.productId}`,
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -417,13 +444,31 @@ const deleteUserProduct = async (productId: number) => {
     if (response.ok) {
       console.log("Producto eliminado");
       reloadUserProducts();
+      setDeleteModal({
+        isOpen: false,
+        productId: null,
+        productName: "",
+        isLoading: false
+      });
     } else {
       const errorData = await response.json();
       console.error("Error al eliminar producto:", errorData);
+      setDeleteModal(prev => ({ ...prev, isLoading: false }));
     }
   } catch (error) {
     console.error("Error de red:", error);
+    setDeleteModal(prev => ({ ...prev, isLoading: false }));
   }
+};
+
+const handleCloseDeleteModal = () => {
+  if (deleteModal.isLoading) return;
+  setDeleteModal({
+    isOpen: false,
+    productId: null,
+    productName: "",
+    isLoading: false
+  });
 };
 
 
@@ -817,6 +862,17 @@ const deleteUserProduct = async (productId: number) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="¿Eliminar producto?"
+        description="Esta acción no se puede deshacer. El producto será eliminado permanentemente de tu perfil."
+        itemName={deleteModal.productName}
+        isLoading={deleteModal.isLoading}
+      />
     </div>
   )
 }

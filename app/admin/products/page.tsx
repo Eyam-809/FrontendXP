@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Footer from "@/components/footer"
 import { products } from "@/data/products"
 import type { Product } from "@/contexts/app-context"
+import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
 
 export default function AdminProducts() {
   const router = useRouter()
@@ -32,6 +33,17 @@ export default function AdminProducts() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean
+    productId: number | null
+    productName: string
+    isLoading: boolean
+  }>({
+    isOpen: false,
+    productId: null,
+    productName: "",
+    isLoading: false
+  })
 
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -176,9 +188,42 @@ export default function AdminProducts() {
   }
 
   const handleDeleteProduct = (productId: number) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-      setProductList(productList.filter((p) => p.id !== productId))
-    }
+    const product = productList.find(p => p.id === productId);
+    if (!product) return;
+
+    setDeleteModal({
+      isOpen: true,
+      productId,
+      productName: product.name,
+      isLoading: false
+    });
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteModal.productId) return;
+
+    setDeleteModal(prev => ({ ...prev, isLoading: true }));
+
+    // Simular delay para mostrar el loading
+    setTimeout(() => {
+      setProductList(productList.filter((p) => p.id !== deleteModal.productId))
+      setDeleteModal({
+        isOpen: false,
+        productId: null,
+        productName: "",
+        isLoading: false
+      });
+    }, 1000);
+  }
+
+  const handleCloseDeleteModal = () => {
+    if (deleteModal.isLoading) return;
+    setDeleteModal({
+      isOpen: false,
+      productId: null,
+      productName: "",
+      isLoading: false
+    });
   }
 
   return (
@@ -543,6 +588,17 @@ export default function AdminProducts() {
       </main>
 
       <Footer />
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="¿Eliminar producto?"
+        description="Esta acción no se puede deshacer. El producto será eliminado permanentemente del sistema."
+        itemName={deleteModal.productName}
+        isLoading={deleteModal.isLoading}
+      />
     </div>
   )
 }
