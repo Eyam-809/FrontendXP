@@ -109,7 +109,7 @@ export default function CategoryPanel() {
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">{translateCategory(state.selectedCategory || "")}</h2>
+              <h2 className="text-2xl font-bold text-[#1B3C53]">{translateCategory(state.selectedCategory || "")}</h2>
               <Button variant="ghost" size="icon" onClick={() => dispatch({ type: "TOGGLE_CATEGORY_PANEL" })}>
                 <X className="h-6 w-6" />
               </Button>
@@ -117,7 +117,7 @@ export default function CategoryPanel() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-700">Subcategorías</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Subcategorías</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {categoryInfo.subcategories.map((subcategory) => (
                     <button
@@ -125,7 +125,7 @@ export default function CategoryPanel() {
                       onClick={() => handleSubcategoryClick(subcategory)}
                       className="text-left p-3 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors border border-gray-200 hover:border-purple-200"
                     >
-                      <span className="font-medium">{translateSubcategory(subcategory)}</span>
+                      <span className="font-medium text-[#1B3C53]">{translateSubcategory(subcategory)}</span>
                       <div className="text-xs text-gray-500 mt-1">10 productos</div>
                     </button>
                   ))}
@@ -133,7 +133,7 @@ export default function CategoryPanel() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-700">Productos Destacados</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Productos Destacados</h3>
                 <div className="space-y-2">
                   {categoryInfo.featured.map((item) => (
                     <button
@@ -141,14 +141,14 @@ export default function CategoryPanel() {
                       onClick={() => handleFeaturedClick(item)}
                       className="block w-full text-left p-2 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors"
                     >
-                      {item}
+                      <span className="font-medium text-[#1B3C53]">{item}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="hidden lg:block">
-                <h3 className="text-lg font-semibold mb-4 text-gray-700">Ofertas Especiales</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Ofertas Especiales</h3>
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg p-4 text-white">
                   <h4 className="font-semibold mb-2">Hasta 50% de Descuento</h4>
                   <p className="text-sm mb-3">
