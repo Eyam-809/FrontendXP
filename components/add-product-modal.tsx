@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ interface AddProductForm {
   price: string
   stock: string
   image: File | null
+  categoria_id?: string
 }
 
 interface AddProductModalProps {
@@ -26,13 +27,34 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
   const { state } = useApp()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
   const [form, setForm] = useState<AddProductForm>({
     name: "",
     description: "",
     price: "",
     stock: "1",
-    image: null
+    image: null,
+    categoria_id: ""
   })
+
+  // Traer categorías cuando se abra el modal
+  useEffect(() => {
+    if (!isOpen) return
+
+    const fetchCategorias = async () => {
+      try {
+        const res = await fetch("https://backendxp-1.onrender.com/api/categorias")
+        if (!res.ok) throw new Error("Error al cargar categorías")
+        const data = await res.json()
+        setCategorias(data)
+      } catch (error) {
+        console.error(error)
+        alert("No se pudieron cargar las categorías")
+      }
+    }
+
+    fetchCategorias()
+  }, [isOpen])
 
   const handleInputChange = (field: keyof AddProductForm, value: string | File[]) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -64,25 +86,15 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
     setIsLoading(true)
 
     try {
-      if (!form.name.trim()) {
-        throw new Error("El nombre del producto es requerido")
-      }
-      if (!form.price || parseFloat(form.price) <= 0) {
-        throw new Error("El precio debe ser mayor a 0")
-      }
-      if (!form.stock || parseInt(form.stock) <= 0) {
-        throw new Error("El stock debe ser mayor a 0")
-      }
+      if (!form.name.trim()) throw new Error("El nombre del producto es requerido")
+      if (!form.price || parseFloat(form.price) <= 0) throw new Error("El precio debe ser mayor a 0")
+      if (!form.stock || parseInt(form.stock) <= 0) throw new Error("El stock debe ser mayor a 0")
 
       const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("No hay token de autenticación. Por favor, inicia sesión nuevamente")
-      }
+      if (!token) throw new Error("No hay token de autenticación. Por favor, inicia sesión nuevamente")
 
       const userData = JSON.parse(localStorage.getItem("userData") || "{}")
-      if (!userData.id) {
-        throw new Error("No se encontró información del usuario. Por favor, inicia sesión nuevamente")
-      }
+      if (!userData.id) throw new Error("No se encontró información del usuario. Por favor, inicia sesión nuevamente")
 
       const formData = new FormData()
       formData.append('name', form.name)
@@ -91,15 +103,12 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       formData.append('stock', form.stock)
       formData.append('id_user', userData.id.toString())
 
-      if (form.image) {
-        formData.append('image', form.image)
-      }
+      if (form.image) formData.append('image', form.image)
+      if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
 
       const response = await fetch("https://backendxp-1.onrender.com/api/products", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData
       })
 
@@ -111,19 +120,10 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       const result = await response.json()
       console.log("Producto creado exitosamente:", result)
 
-      setForm({
-        name: "",
-        description: "",
-        price: "",
-        stock: "1",
-        image: null
-      })
-
+      setForm({ name: "", description: "", price: "", stock: "1", image: null, categoria_id: "" })
       setIsOpen(false)
       alert("¡Producto agregado exitosamente!")
-
       onProductAdded?.()
-
     } catch (error) {
       console.error("Error adding product:", error)
       alert(`Error al agregar producto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -142,7 +142,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar nuevo producto</DialogTitle>
+          <DialogTitle className="text-[#1B3C53]">Agregar nuevo producto</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -169,6 +169,24 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
                   placeholder="Describe tu producto en detalle..."
                   rows={4}
                 />
+              </div>
+
+              {/* Select Categoría */}
+              <div className="space-y-2">
+                <Label htmlFor="categoria">Categoría (opcional)</Label>
+                <select
+                  id="categoria"
+                  value={form.categoria_id || ""}
+                  onChange={(e) => handleInputChange("categoria_id", e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {categorias.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
               </div>
             </CardContent>
           </Card>
@@ -250,6 +268,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
           {/* Botones */}
           <div className="flex justify-end space-x-4">
             <Button
+              className="text-[#1B3C53]"
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
