@@ -17,6 +17,7 @@ interface AddProductForm {
   stock: string
   image: File | null
   categoria_id?: string
+  subcategoria_id?: string
 }
 
 interface AddProductModalProps {
@@ -28,16 +29,19 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
+  const [subcategorias, setSubcategorias] = useState<{ id: number; nombre: string }[]>([])
+
   const [form, setForm] = useState<AddProductForm>({
     name: "",
     description: "",
     price: "",
     stock: "1",
     image: null,
-    categoria_id: ""
+    categoria_id: "",
+    subcategoria_id: ""
   })
 
-  // Traer categorías cuando se abra el modal
+  // 🔹 Traer categorías cuando se abre el modal
   useEffect(() => {
     if (!isOpen) return
 
@@ -55,6 +59,25 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
 
     fetchCategorias()
   }, [isOpen])
+
+  // 🔹 Traer subcategorías al seleccionar categoría
+  useEffect(() => {
+    if (!form.categoria_id) return
+
+    const fetchSubcategorias = async () => {
+      try {
+        const res = await fetch(`https://backendxp-1.onrender.com/api/subcategories/${form.categoria_id}`)
+        if (!res.ok) throw new Error("Error al cargar subcategorías")
+        const data = await res.json()
+        setSubcategorias(data)
+      } catch (error) {
+        console.error(error)
+        alert("No se pudieron cargar las subcategorías")
+      }
+    }
+
+    fetchSubcategorias()
+  }, [form.categoria_id])
 
   const handleInputChange = (field: keyof AddProductForm, value: string | File[]) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -105,6 +128,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
 
       if (form.image) formData.append('image', form.image)
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
+      if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
       const response = await fetch("https://backendxp-1.onrender.com/api/products", {
         method: "POST",
@@ -120,7 +144,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       const result = await response.json()
       console.log("Producto creado exitosamente:", result)
 
-      setForm({ name: "", description: "", price: "", stock: "1", image: null, categoria_id: "" })
+      setForm({ name: "", description: "", price: "", stock: "1", image: null, categoria_id: "", subcategoria_id: "" })
       setIsOpen(false)
       alert("¡Producto agregado exitosamente!")
       onProductAdded?.()
@@ -171,9 +195,9 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
                 />
               </div>
 
-              {/* Select Categoría */}
+              {/* Categoría */}
               <div className="space-y-2">
-                <Label htmlFor="categoria">Categoría (opcional)</Label>
+                <Label htmlFor="categoria">Categoría</Label>
                 <select
                   id="categoria"
                   value={form.categoria_id || ""}
@@ -188,10 +212,30 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
                   ))}
                 </select>
               </div>
+
+              {/* Subcategoría */}
+              {subcategorias.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="subcategoria">Subcategoría</Label>
+                  <select
+                    id="subcategoria"
+                    value={form.subcategoria_id || ""}
+                    onChange={(e) => handleInputChange("subcategoria_id", e.target.value)}
+                    className="w-full border border-gray-300 rounded-md p-2"
+                  >
+                    <option value="">Selecciona una subcategoría</option>
+                    {subcategorias.map(sub => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Precios y Stock */}
+          {/* Precio y Stock */}
           <Card>
             <CardContent className="pt-6 space-y-4">
               <h3 className="font-semibold text-lg">Precio y Stock</h3>
