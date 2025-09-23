@@ -1,21 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
-
-const translateCategory = (category: string) => {
-  const translations: Record<string, string> = {
-    Electronics: "Electrónicos",
-    Fashion: "Moda",
-    Home: "Hogar",
-    Sports: "Deportes",
-    Beauty: "Belleza",
-    Toys: "Juguetes",
-  }
-  return translations[category] || category
-}
 
 const translateSubcategory = (subcategory: string) => {
   const translations: Record<string, string> = {
@@ -47,48 +36,56 @@ const translateSubcategory = (subcategory: string) => {
   return translations[subcategory] || subcategory
 }
 
-const categoryData = {
-  Electronics: {
-    subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"],
-    featured: ["iPhone 15", "MacBook Pro", "AirPods Pro", "PlayStation 5"],
-  },
-  Fashion: {
-    subcategories: ["Men's Clothing", "Women's Clothing", "Shoes", "Accessories"],
-    featured: ["Summer Collection", "Designer Shoes", "Luxury Watches", "Handbags"],
-  },
-  Home: {
-    subcategories: ["Kitchen", "Bedroom", "Living Room", "Garden"],
-    featured: ["Smart Kitchen", "Bedroom Sets", "Garden Tools", "Home Decor"],
-  },
-  Sports: {
-    subcategories: ["Fitness", "Outdoor", "Team Sports", "Water Sports"],
-    featured: ["Gym Equipment", "Camping Gear", "Soccer Balls", "Swimwear"],
-  },
-  Beauty: {
-    subcategories: ["Skincare", "Makeup", "Hair Care", "Fragrances"],
-    featured: ["Anti-Aging", "Foundation", "Shampoo", "Perfumes"],
-  },
-  Toys: {
-    subcategories: ["Educational", "Action Figures", "Board Games", "Outdoor Toys"],
-    featured: ["LEGO Sets", "Dolls", "Puzzles", "Remote Control"],
-  },
-}
-
 export default function CategoryPanel() {
   const { state, dispatch } = useApp()
+  // 👇 ahora subcategories y featured guardan {id, name}
+  const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
+  const [featured, setFeatured] = useState<{ id: number; name: string }[]>([])
+  const [loading, setLoading] = useState(false)
 
-  if (!state.isCategoryPanelOpen || !state.selectedCategory) return null
+  useEffect(() => {
+    if (!state.selectedCategory?.id) return
 
-  const categoryInfo = categoryData[state.selectedCategory as keyof typeof categoryData]
+    setLoading(true)
+    setSubcategories([])
+    setFeatured([])
 
-  const handleSubcategoryClick = (subcategory: string) => {
+    const fetchSubcategories = async () => {
+      try {
+        const res = await fetch(
+          `https://backendxp-1.onrender.com/api/subcategories/${state.selectedCategory.id}`
+        )
+        if (!res.ok) throw new Error("Error al cargar subcategorías")
+        const data = await res.json()
+
+        // 👇 guardamos id (forzado a número) + nombre
+        const mapped = data.map((item: any) => ({
+          id: Number(item.id),
+          name: item.nombre,
+        }))
+
+        setSubcategories(mapped)
+        setFeatured(mapped.slice(0, 4))
+      } catch (error) {
+        console.error(error)
+        alert("No se pudieron cargar las subcategorías")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSubcategories()
+  }, [state.selectedCategory])
+
+  if (!state.isCategoryPanelOpen) return null
+
+  // 👇 ahora recibimos también el id
+  const handleSubcategoryClick = (subcategory: { id: number; name: string }) => {
     dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: subcategory })
-    dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
   }
 
-  const handleFeaturedClick = (item: string) => {
-    dispatch({ type: "SET_SEARCH_QUERY", payload: item })
-    dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
+  const handleFeaturedClick = (item: { id: number; name: string }) => {
+    dispatch({ type: "SET_SEARCH_QUERY", payload: item.name })
   }
 
   return (
@@ -109,52 +106,77 @@ export default function CategoryPanel() {
         >
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#1B3C53]">{translateCategory(state.selectedCategory || "")}</h2>
-              <Button variant="ghost" size="icon" onClick={() => dispatch({ type: "TOGGLE_CATEGORY_PANEL" })}>
+              <h2 className="text-2xl font-bold text-[#1B3C53]">
+                {state.selectedCategory?.name || "Categoría"}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => dispatch({ type: "TOGGLE_CATEGORY_PANEL" })}
+              >
                 <X className="h-6 w-6" />
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Subcategorías */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Subcategorías</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">
+                  Subcategorías
+                </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {categoryInfo.subcategories.map((subcategory) => (
-                    <button
-                      key={subcategory}
-                      onClick={() => handleSubcategoryClick(subcategory)}
-                      className="text-left p-3 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors border border-gray-200 hover:border-purple-200"
-                    >
-                      <span className="font-medium text-[#1B3C53]">{translateSubcategory(subcategory)}</span>
-                      <div className="text-xs text-gray-500 mt-1">10 productos</div>
-                    </button>
-                  ))}
+                  {loading
+                    ? Array(4)
+                        .fill(0)
+                        .map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-16 bg-gray-200 rounded-md animate-pulse"
+                          ></div>
+                        ))
+                    : subcategories.map((subcategory) => (
+                        <button
+                          key={subcategory.id}
+                          onClick={() => handleSubcategoryClick(subcategory)}
+                          className="text-left p-3 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors border border-gray-200 hover:border-purple-200"
+                        >
+                          <span className="font-medium text-[#1B3C53]">
+                            {translateSubcategory(subcategory.name)}
+                          </span>
+                          <div className="text-xs text-gray-500 mt-1">
+                          
+                          </div>
+                        </button>
+                      ))}
                 </div>
               </div>
 
+              {/* Productos Destacados */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Productos Destacados</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">
+                  Productos Destacados
+                </h3>
                 <div className="space-y-2">
-                  {categoryInfo.featured.map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => handleFeaturedClick(item)}
-                      className="block w-full text-left p-2 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors"
-                    >
-                      <span className="font-medium text-[#1B3C53]">{item}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="hidden lg:block">
-                <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">Ofertas Especiales</h3>
-                <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg p-4 text-white">
-                  <h4 className="font-semibold mb-2">Hasta 50% de Descuento</h4>
-                  <p className="text-sm mb-3">
-                    Artículos seleccionados de {translateCategory(state.selectedCategory || "").toLowerCase()}
-                  </p>
-                  <Button className="bg-yellow-400 hover:bg-yellow-500 text-black text-sm">Comprar Ahora</Button>
+                  {loading
+                    ? Array(4)
+                        .fill(0)
+                        .map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-8 bg-gray-200 rounded-md animate-pulse"
+                          ></div>
+                        ))
+                    : featured.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleFeaturedClick(item)}
+                          className="block w-full text-left p-2 rounded-md hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                        >
+                          <span className="font-medium text-[#1B3C53]">
+                            {translateSubcategory(item.name)} (ID: {item.id})
+                          </span>
+                        </button>
+                      ))}
                 </div>
               </div>
             </div>

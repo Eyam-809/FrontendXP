@@ -16,9 +16,10 @@ import AnnounceBar from "@/components/announce-bar"
 import { useApp } from "@/contexts/app-context"
 import { products } from "@/data/products"
 import { useIsMobile } from "@/hooks/use-mobile"
+import FilteredProductsGrid from "@/components/filtered-products-grid"
 
 export default function Home() {
-  const { dispatch } = useApp()
+  const { state, dispatch } = useApp()
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -31,9 +32,15 @@ export default function Home() {
       <CategoryNavbar />
       <CategoryPanel />
       <main className="container mx-auto px-4">
-        <HeroCarousel />
-        {/* <PromoBanner /> */}
-        <ProductGrid />
+        {state.selectedSubcategory?.id ? (
+          <FilteredProductsGrid subcategoryId={state.selectedSubcategory.id} />
+        ) : (
+          <>
+            <HeroCarousel />
+            {/* <PromoBanner /> */}
+            <ProductGrid />
+          </>
+        )}
       </main>
       <AnnounceBar />
       <Footer />

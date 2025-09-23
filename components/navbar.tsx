@@ -41,10 +41,20 @@ const translateCategory = (category: string) => {
   return translations[category] || category
 }
 
+
+
 export default function Navbar() {
   const { state, dispatch } = useApp()
   const [searchInput, setSearchInput] = useState("")
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const handleResetFilters = () => {
+  dispatch({ type: "SET_SELECTED_CATEGORY", payload: null })
+  dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
+  dispatch({ type: "SET_SEARCH_QUERY", payload: "" })
+  //dispatch({ type: "TOGGLE_CATEGORY_PANEL", payload: true }) // opcional, cierra panel
+}
+
 
   const [user, setUser] = useState<{
     email: string
@@ -80,6 +90,7 @@ export default function Navbar() {
 
   const handleCategoryClick = (categoryName: string) => {
     dispatch({ type: "SET_SELECTED_CATEGORY", payload: categoryName })
+    dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
     dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
   }
 
@@ -112,7 +123,7 @@ export default function Navbar() {
                 </nav>
               </SheetContent>
             </Sheet>
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center" onClick={handleResetFilters}>
               <img src="/logonuevo.png" alt="XpMarket Logo" className="h-16 w-auto ml-2 md:h-32 md:ml-0 transition-all duration-200" />
             </Link>
           </div>

@@ -1,22 +1,67 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useApp } from "@/contexts/app-context"
 import { Monitor, Shirt, Home, Dumbbell, Star, ToyBrick } from "lucide-react"
 
-const categories = [
-  { name: "Electronics", translation: "Electrónicos", icon: Monitor },
-  { name: "Fashion", translation: "Moda", icon: Shirt },
-  { name: "Home", translation: "Hogar", icon: Home },
-  { name: "Sports", translation: "Deportes", icon: Dumbbell },
-  { name: "Beauty", translation: "Belleza", icon: Star },
-  { name: "Toys", translation: "Juguetes", icon: ToyBrick },
-]
-
 export default function CategoryNavbar() {
   const { dispatch } = useApp()
+  const [categories, setCategories] = useState<
+    { id: number; name: string; translation: string; icon: any }[]
+  >([])
 
-  const handleCategoryClick = (categoryName: string) => {
-    dispatch({ type: "SET_SELECTED_CATEGORY", payload: categoryName })
+  // 🔹 Función para traducir categorías
+  const translateCategory = (category: string) => {
+    const translations: Record<string, string> = {
+      Electronics: "Electrónicos",
+      Fashion: "Moda",
+      Home: "Hogar",
+      Sports: "Deportes",
+      Beauty: "Belleza",
+      Toys: "Juguetes",
+    }
+    return translations[category] || category
+  }
+
+  // 🔹 Cargar categorías desde la API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("https://backendxp-1.onrender.com/api/categorias")
+        if (!res.ok) throw new Error("Error al cargar categorías")
+        const data = await res.json()
+
+        // Asignamos iconos según categoría
+       // 👇 Usa los nombres exactos de la BD
+    const iconsMap: Record<string, any> = {
+      "Electrónicos": Monitor,
+      "Moda": Shirt,
+      "Hogar": Home,
+      "Deportes": Dumbbell,
+      "Belleza": Star,
+      "Juguetes": ToyBrick,
+    }
+
+
+        setCategories(
+          data.map((cat: any) => ({
+            id: Number(cat.id), // 👈 forzamos a número
+            name: cat.nombre,
+            translation: translateCategory(cat.nombre),
+           icon: iconsMap[cat.nombre] || Monitor,
+          }))
+        )
+      } catch (error) {
+        console.error(error)
+        alert("No se pudieron cargar las categorías")
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  const handleCategoryClick = (categoryId: number, categoryName: string) => {
+    dispatch({ type: "SET_SELECTED_CATEGORY", payload: { id: categoryId, name: categoryName } })
     dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
   }
 
@@ -28,8 +73,8 @@ export default function CategoryNavbar() {
             const IconComponent = category.icon
             return (
               <button
-                key={category.name}
-                onClick={() => handleCategoryClick(category.name)}
+                key={category.id}
+                onClick={() => handleCategoryClick(category.id, category.name)}
                 className="bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium text-xs transition-all duration-200 py-1.5 px-10 rounded-lg shadow-sm hover:shadow-md flex flex-col items-center space-y-1 min-w-[130px]"
               >
                 <IconComponent className="h-5 w-5" />
