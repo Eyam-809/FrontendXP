@@ -11,6 +11,7 @@ import Footer from "@/components/footer"
 import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import CategoryPanel from "@/components/category-panel"
+import ImageZoom from "@/components/image-zoom"
 import { useApp } from "@/contexts/app-context"
 import type { Product } from "@/contexts/app-context"
 
@@ -94,14 +95,12 @@ export default function ProductPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-card p-6 rounded-xl shadow-sm">
-            <div className="relative">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-auto object-contain rounded-lg"
-                style={{ maxHeight: "400px" }}
-              />
-            </div>
+            <ImageZoom
+              src={product.image}
+              alt={product.name}
+              className="w-full rounded-lg"
+              style={{ maxHeight: "400px" }}
+            />
           </div>
 
           <div className="bg-card p-6 rounded-xl shadow-sm">

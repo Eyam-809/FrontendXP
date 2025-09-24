@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useApp } from "@/contexts/app-context"
 import axios from "axios";
 
 export default function LoginPage() {
   const router = useRouter()
+  const { dispatch } = useApp()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
@@ -107,6 +109,18 @@ const handleLogin = (e: React.FormEvent) => {
     localStorage.setItem("name", userData.name);
 
     console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
+    
+    // Actualizar el contexto inmediatamente
+    dispatch({
+      type: "SET_USER_SESSION",
+      payload: { 
+        token: response.data.token, 
+        user_id: userData.id, 
+        plan_id: userData.plan_id, 
+        name: userData.name 
+      },
+    })
+    
     setIsLoading(false);
 
     setTimeout(() => {
