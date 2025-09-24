@@ -47,82 +47,89 @@ export default function CartSidebar() {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto"
+              className="fixed right-0 top-0 h-full w-full sm:w-80 md:w-96 bg-background shadow-xl z-50 overflow-y-auto"
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold flex items-center text-[#1B3C53]">
-                    <ShoppingBag className="mr-2" />
-                    Carrito de Compras ({state.cart.reduce((sum, item) => sum + item.quantity, 0)})
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4 bg-secondary p-3 rounded-lg">
+                  <h2 className="text-lg font-bold flex items-center text-card-foreground">
+                    <ShoppingBag className="mr-2 text-primary" />
+                    Carrito ({state.cart.reduce((sum, item) => sum + item.quantity, 0)})
                   </h2>
-                  <Button variant="ghost" size="icon" onClick={() => dispatch({ type: "TOGGLE_CART" })}>
-                    <X className="h-6 w-6" />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => dispatch({ type: "TOGGLE_CART" })}
+                    className="hover:bg-accent text-muted-foreground hover:text-card-foreground"
+                  >
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
 
                 {state.cart.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ShoppingBag className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-500">Tu carrito está vacío</p>
-                    <Button className="mt-4" onClick={() => dispatch({ type: "TOGGLE_CART" })}>
+                  <div className="text-center py-8 bg-secondary rounded-lg">
+                    <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                    <p className="text-card-foreground font-medium mb-3">Tu carrito está vacío</p>
+                    <Button 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground" 
+                      onClick={() => dispatch({ type: "TOGGLE_CART" })}
+                    >
                       Continuar Comprando
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-3 mb-4">
                       {state.cart.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                        <div key={item.id} className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-card shadow-sm">
                           <img
                             src={item.image || "/placeholder.svg"}
                             alt={item.name}
-                            className="w-16 h-16 object-contain rounded"
+                            className="w-12 h-12 object-contain rounded border border-border"
                           />
-                          <div className="flex-1">
-                            <h3 className="font-medium text-sm">{item.name}</h3>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm text-card-foreground truncate">{item.name}</h3>
                             <div className="flex items-center space-x-2 mt-1">
-                              <span className="font-bold">${Number(item.price).toFixed(2)}</span>
-
+                              <span className="font-bold text-primary">${Number(item.price).toFixed(2)}</span>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-7 w-7 border-border hover:bg-accent"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             >
-                              <Minus className="h-4 w-4" />
+                              <Minus className="h-3 w-3 text-muted-foreground" />
                             </Button>
-                            <span className="w-8 text-center">{item.quantity}</span>
+                            <span className="w-6 text-center text-sm font-medium text-card-foreground">{item.quantity}</span>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-7 w-7 border-border hover:bg-accent"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
-                              <Plus className="h-4 w-4" />
+                              <Plus className="h-3 w-3 text-muted-foreground" />
                             </Button>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-700"
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => removeItem(item.id)}
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
                       ))}
                     </div>
 
-                    <div className="border-t pt-4">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-semibold">Total:</span>
-                        <span className="text-xl font-bold text-black-600">${getTotalPrice().toFixed(2)}</span>
+                    <div className="border-t border-border pt-3 bg-secondary p-3 rounded-lg">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-base font-semibold text-card-foreground">Total:</span>
+                        <span className="text-lg font-bold text-primary">${getTotalPrice().toFixed(2)}</span>
                       </div>
                       <Button
-                        className="w-full bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                         onClick={handleCheckout}
                       >
                         Proceder al Pago
@@ -170,7 +177,7 @@ function CheckoutModal({ isOpen, onClose, total }: CheckoutModalProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-black/50 z-60 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}

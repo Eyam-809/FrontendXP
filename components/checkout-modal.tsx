@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-
+import React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, CreditCard, Smartphone, Wallet, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,10 +9,17 @@ import { Label } from "@/components/ui/label"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
 
-export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
+interface CheckoutModalProps {
+  onClose?: () => void
+  isOpen?: boolean
+  total?: number
+}
+
+export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalProps) {
   const { state, dispatch } = useApp()
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -25,6 +31,28 @@ export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
     expiryDate: "",
     cvv: "",
   })
+
+  // Show modal when cart has items and checkout is triggered
+  React.useEffect(() => {
+    if (state.cart.length > 0) {
+      setIsModalOpen(true)
+      document.body.style.overflow = 'hidden'
+    } else {
+      setIsModalOpen(false)
+      document.body.style.overflow = 'unset'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [state.cart.length])
+
+  // Handle external onClose prop
+  React.useEffect(() => {
+    if (isOpen !== undefined) {
+      setIsModalOpen(isOpen)
+    }
+  }, [isOpen])
 
   const getTotalPrice = () => {
     return state.cart.reduce((total, item) => {
@@ -49,7 +77,7 @@ export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
     }, 2000)
   }
 
-  if (state.cart.length === 0) return null
+  if (!isModalOpen) return null
 
   return (
     <AnimatePresence>
@@ -57,104 +85,123 @@ export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-60 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            if (onClose) {
+              onClose()
+            } else {
+              setIsModalOpen(false)
+            }
+          }
+        }}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          className="bg-background rounded-xl max-w-5xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
         >
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Pago</h2>
-              <Button variant="ghost" size="icon" onClick={onClose || (() => {})}>
-                <X className="h-6 w-6" />
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4 bg-secondary p-3 rounded-lg">
+              <h2 className="text-xl font-bold text-card-foreground">Pago</h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  if (onClose) {
+                    onClose()
+                  } else {
+                    setIsModalOpen(false)
+                  }
+                }}
+                className="hover:bg-accent text-muted-foreground hover:text-card-foreground"
+              >
+                <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               {/* Order Summary */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-3 mb-4">
+              <div className="bg-secondary p-3 rounded-lg">
+                <h3 className="text-base font-semibold mb-2 text-card-foreground">Resumen del Pedido</h3>
+                <div className="space-y-2 mb-2">
                   {state.cart.map((item) => {
                     const finalPrice = item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price
                     return (
-                      <div key={item.id} className="flex items-center space-x-3">
+                      <div key={item.id} className="flex items-center space-x-2 bg-card p-2 rounded-lg border border-border">
                         <img
                           src={item.image || "/placeholder.svg"}
                           alt={item.name}
-                          className="w-12 h-12 object-contain rounded"
+                          className="w-8 h-8 object-contain rounded border border-border"
                         />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.name}</p>
-                          <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-card-foreground truncate">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">Cantidad: {item.quantity}</p>
                         </div>
-                        <p className="font-medium">${(finalPrice * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium text-primary text-sm">${(finalPrice * item.quantity).toFixed(2)}</p>
                       </div>
                     )
                   })}
                 </div>
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total:</span>
-                    <span className="text-purple-600">${getTotalPrice().toFixed(2)}</span>
+                <div className="border-t border-border pt-2 bg-card p-2 rounded-lg">
+                  <div className="flex justify-between items-center text-sm font-bold">
+                    <span className="text-card-foreground">Total:</span>
+                    <span className="text-primary">${getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Form */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
-
-                {/* Payment Method Selection */}
-                <div className="mb-6">
-                  <Label className="text-sm font-medium mb-3 block">Método de Pago</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    <button
-                      onClick={() => setPaymentMethod("card")}
-                      className={`p-3 border rounded-lg flex flex-col items-center ${
-                        paymentMethod === "card" ? "border-purple-500 bg-purple-50" : "border-gray-200"
-                      }`}
-                    >
-                      <CreditCard className="h-6 w-6 mb-1" />
-                      <span className="text-xs">Tarjeta</span>
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod("paypal")}
-                      className={`p-3 border rounded-lg flex flex-col items-center ${
-                        paymentMethod === "paypal" ? "border-purple-500 bg-purple-50" : "border-gray-200"
-                      }`}
-                    >
-                      <Wallet className="h-6 w-6 mb-1" />
-                      <span className="text-xs">PayPal</span>
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod("apple")}
-                      className={`p-3 border rounded-lg flex flex-col items-center ${
-                        paymentMethod === "apple" ? "border-purple-500 bg-purple-50" : "border-gray-200"
-                      }`}
-                    >
-                      <Smartphone className="h-6 w-6 mb-1" />
-                      <span className="text-xs">Apple Pay</span>
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod("oxxo")}
-                      className={`p-3 border rounded-lg flex flex-col items-center ${
-                        paymentMethod === "oxxo" ? "border-purple-500 bg-purple-50" : "border-gray-200"
-                      }`}
-                    >
-                      <ShoppingBag className="h-6 w-6 mb-1" />
-                      <span className="text-xs">Oxxo</span>
-                    </button>
-                  </div>
+              {/* Payment Method Selection */}
+              <div className="bg-card p-3 rounded-lg border border-border">
+                <h3 className="text-base font-semibold mb-2 text-card-foreground">Método de Pago</h3>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    onClick={() => setPaymentMethod("card")}
+                    className={`p-2 border rounded-lg flex flex-col items-center transition-colors ${
+                      paymentMethod === "card" ? "border-primary bg-primary/10" : "border-border hover:border-ring"
+                    }`}
+                  >
+                    <CreditCard className={`h-4 w-4 mb-1 ${paymentMethod === "card" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs ${paymentMethod === "card" ? "text-primary font-medium" : "text-muted-foreground"}`}>Tarjeta</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("paypal")}
+                    className={`p-2 border rounded-lg flex flex-col items-center transition-colors ${
+                      paymentMethod === "paypal" ? "border-primary bg-primary/10" : "border-border hover:border-ring"
+                    }`}
+                  >
+                    <Wallet className={`h-4 w-4 mb-1 ${paymentMethod === "paypal" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs ${paymentMethod === "paypal" ? "text-primary font-medium" : "text-muted-foreground"}`}>PayPal</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("apple")}
+                    className={`p-2 border rounded-lg flex flex-col items-center transition-colors ${
+                      paymentMethod === "apple" ? "border-primary bg-primary/10" : "border-border hover:border-ring"
+                    }`}
+                  >
+                    <Smartphone className={`h-4 w-4 mb-1 ${paymentMethod === "apple" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs ${paymentMethod === "apple" ? "text-primary font-medium" : "text-muted-foreground"}`}>Apple Pay</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("oxxo")}
+                    className={`p-2 border rounded-lg flex flex-col items-center transition-colors ${
+                      paymentMethod === "oxxo" ? "border-primary bg-primary/10" : "border-border hover:border-ring"
+                    }`}
+                  >
+                    <ShoppingBag className={`h-4 w-4 mb-1 ${paymentMethod === "oxxo" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs ${paymentMethod === "oxxo" ? "text-primary font-medium" : "text-muted-foreground"}`}>Oxxo</span>
+                  </button>
                 </div>
 
-                {/* Form Fields */}
-                <div className="space-y-4">
+              </div>
+
+              {/* Form Fields */}
+              <div className="bg-card p-3 rounded-lg border border-border">
+                <h3 className="text-base font-semibold mb-2 text-card-foreground">Información Personal</h3>
+                <div className="space-y-2">
                   <div>
-                    <Label htmlFor="email">Correo Electrónico</Label>
+                    <Label htmlFor="email" className="text-card-foreground font-medium text-sm">Correo Electrónico</Label>
                     <Input
                       id="email"
                       name="email"
@@ -162,28 +209,31 @@ export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="tu@email.com"
+                      className="mt-1 h-8"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="firstName">Nombre</Label>
+                      <Label htmlFor="firstName" className="text-card-foreground font-medium text-sm">Nombre</Label>
                       <Input
                         id="firstName"
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
                         placeholder="Juan"
+                        className="mt-1 h-8"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Apellido</Label>
+                      <Label htmlFor="lastName" className="text-card-foreground font-medium text-sm">Apellido</Label>
                       <Input
                         id="lastName"
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
                         placeholder="Pérez"
+                        className="mt-1 h-8"
                       />
                     </div>
                   </div>
@@ -191,95 +241,84 @@ export default function CheckoutModal({ onClose }: { onClose?: () => void }) {
                   {paymentMethod === "card" && (
                     <>
                       <div>
-                        <Label htmlFor="cardNumber">Número de Tarjeta</Label>
+                        <Label htmlFor="cardNumber" className="text-card-foreground font-medium text-sm">Número de Tarjeta</Label>
                         <Input
                           id="cardNumber"
                           name="cardNumber"
                           value={formData.cardNumber}
                           onChange={handleInputChange}
                           placeholder="1234 5678 9012 3456"
+                          className="mt-1 h-8"
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <Label htmlFor="expiryDate">Fecha de Expiración</Label>
+                          <Label htmlFor="expiryDate" className="text-card-foreground font-medium text-sm">Fecha de Expiración</Label>
                           <Input
                             id="expiryDate"
                             name="expiryDate"
                             value={formData.expiryDate}
                             onChange={handleInputChange}
                             placeholder="MM/AA"
+                            className="mt-1 h-8"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="cvv">CVV</Label>
+                          <Label htmlFor="cvv" className="text-card-foreground font-medium text-sm">CVV</Label>
                           <Input
                             id="cvv"
                             name="cvv"
                             value={formData.cvv}
                             onChange={handleInputChange}
                             placeholder="123"
+                            className="mt-1 h-8"
                           />
                         </div>
                       </div>
                     </>
                   )}
 
-                  {paymentMethod === "oxxo" && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <h4 className="font-medium text-yellow-800 mb-2">Pago en Oxxo</h4>
-                      <p className="text-sm text-yellow-700 mb-3">
-                        Al completar tu compra, recibirás un código de barras para realizar el pago en cualquier tienda
-                        Oxxo. Tu pedido será procesado una vez que se confirme el pago.
-                      </p>
-                      <div className="flex items-center justify-center p-3 bg-white border border-yellow-200 rounded-md">
-                        <ShoppingBag className="h-8 w-8 text-yellow-500 mr-3" />
-                        <div>
-                          <p className="font-medium">Pago en efectivo</p>
-                          <p className="text-xs text-gray-500">El código será enviado a tu correo</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <div>
-                    <Label htmlFor="address">Dirección</Label>
+                    <Label htmlFor="address" className="text-card-foreground font-medium text-sm">Dirección</Label>
                     <Input
                       id="address"
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
                       placeholder="Calle Principal 123"
+                      className="mt-1 h-8"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label htmlFor="city">Ciudad</Label>
+                      <Label htmlFor="city" className="text-card-foreground font-medium text-sm">Ciudad</Label>
                       <Input
                         id="city"
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder="Ciudad de México"
+                        className="mt-1 h-8"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="zipCode">Código Postal</Label>
+                      <Label htmlFor="zipCode" className="text-card-foreground font-medium text-sm">Código Postal</Label>
                       <Input
                         id="zipCode"
                         name="zipCode"
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         placeholder="01000"
+                        className="mt-1 h-8"
                       />
                     </div>
                   </div>
                 </div>
 
                 <Button
-                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800"
+                  className="w-full mt-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-9"
                   onClick={handlePayment}
                   disabled={isProcessing}
                 >
