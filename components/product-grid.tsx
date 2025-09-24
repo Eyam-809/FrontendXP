@@ -8,19 +8,25 @@ import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/contexts/app-context"
 import Link from "next/link"
 
-export default function ProductGrid() {
+interface ProductGridProps {
+  products?: any[] // opcional, si no se pasa hace fetch de todos
+}
+
+export default function ProductGrid({ products }: ProductGridProps) {
   const { state, dispatch } = useApp()
+  const [productos, setProductos] = useState<any[]>(products || [])
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
-  const [productos, setProductos] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!products)
   const [error, setError] = useState<string | null>(null)
 
+  // Añadir al carrito
   const addToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     dispatch({ type: "ADD_TO_CART", payload: product })
   }
 
+  // Añadir/Remover favoritos
   const toggleFavorite = (product: any, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -32,36 +38,42 @@ export default function ProductGrid() {
     }
   }
 
-  
-
+  // Fetch productos si no se pasan por props
   useEffect(() => {
+    if (products) return // ya tenemos los productos
+
     const fetchProductos = async () => {
       try {
         const response = await fetch("https://backendxp-1.onrender.com/api/products")
+        if (!response.ok) throw new Error("Error al cargar productos")
         const data = await response.json()
         setProductos(data)
-        console.log(data);
         setLoading(false)
       } catch (err) {
+        console.error(err)
         setError("Error al cargar productos")
         setLoading(false)
       }
     }
 
     fetchProductos()
-  }, [])
+  }, [products])
 
   if (loading) return <p className="text-center mt-10">Cargando productos...</p>
   if (error) return <p className="text-center mt-10 text-red-500">{error}</p>
+  if (!productos || productos.length === 0) return <p className="text-center mt-10 text-gray-500">No hay productos disponibles.</p>
 
   return (
     <section className="my-10">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Todos los productos</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          {products ? "Productos filtrados" : "Todos los productos"}
+        </h2>
         <div className="text-sm text-gray-500">
           {productos.length} producto{productos.length !== 1 ? "s" : ""} encontrado
         </div>
       </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {productos.map((product, index) => {
           const finalPrice = product.stock > 0
