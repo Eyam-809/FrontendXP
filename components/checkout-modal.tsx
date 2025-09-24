@@ -54,6 +54,14 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
     }
   }, [isOpen])
 
+  const handleClose = () => {
+    setIsModalOpen(false)
+    document.body.style.overflow = 'unset'
+    if (onClose) {
+      onClose()
+    }
+  }
+
   const getTotalPrice = () => {
     return state.cart.reduce((total, item) => {
       const price = item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price
@@ -88,11 +96,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            if (onClose) {
-              onClose()
-            } else {
-              setIsModalOpen(false)
-            }
+            handleClose()
           }
         }}
       >
@@ -108,13 +112,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => {
-                  if (onClose) {
-                    onClose()
-                  } else {
-                    setIsModalOpen(false)
-                  }
-                }}
+                onClick={handleClose}
                 className="hover:bg-accent text-muted-foreground hover:text-card-foreground"
               >
                 <X className="h-5 w-5" />
