@@ -151,6 +151,7 @@ export default function CategoryPanel() {
                 </div>
               </div>
 
+
               {/* Productos Destacados */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">
