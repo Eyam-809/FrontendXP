@@ -75,6 +75,8 @@ const initialState: AppState = {
   userSession: null,
 }
 
+
+
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case "ADD_TO_CART":
@@ -159,6 +161,16 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   }
 }
 
+async function loadUserData() {
+  const res = await fetch("http://localhost:8000/api/user", {
+    headers: { Authorization: `Bearer ${state.userSession.token}` },
+  })
+  const user = await res.json()
+  console.log(user)
+}
+
+
+
 const AppContext = createContext<{
   state: AppState
   dispatch: React.Dispatch<AppAction>
@@ -167,12 +179,15 @@ const AppContext = createContext<{
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
+  
+
   // Al montar, carga sesión si existe en localStorage
   useEffect(() => {
     const token = localStorage.getItem("token")
     const user_id = localStorage.getItem("user_id")
     const plan_id = localStorage.getItem("plan_id")
     const name = localStorage.getItem("name")
+    
     console.log("Este es el usuario: "+ user_id);
 
     if (token && user_id && plan_id) {

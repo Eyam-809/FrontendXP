@@ -303,7 +303,10 @@ useEffect(() => {
                        <Facebook size={18} className="mr-2" />
                        <span className="sr-only md:not-sr-only md:text-xs md:truncate">Facebook</span>
                      </Button>
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
+                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
+                          // Abre el endpoint de login de Google
+                          window.location.href = "http://localhost:8000/api/login/google";
+                      }}>
                        <Mail size={18} className="mr-2" />
                        <span className="sr-only md:not-sr-only md:text-xs md:truncate">Google</span>
                      </Button>
