@@ -313,24 +313,63 @@ useEffect(() => {
                   </div>
 
                    <div className="grid grid-cols-3 gap-3">
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
-                       <Facebook size={18} className="mr-2" />
-                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">Facebook</span>
-                     </Button>
+                    {/*GitHub*/}
+                     <Button
+                      variant="outline"
+                      className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
+                      onClick={() => {
+                        window.location.href = "https://backendxp-1.onrender.com/api/login/github";
+                      }}
+                    >
+                      <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
+                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                    </Button>
+
+
+
+                     {/*Google*/}
                      <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
                           // Abre el endpoint de login de Google
                           window.location.href = "https://backendxp-1.onrender.com/api/login/google";
                       }}>
-                       <Mail size={18} className="mr-2" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 48 48"
+                        width="20"
+                        height="20"
+                        className="mr-2"
+                      >
+                        <path fill="#4285F4" d="M24 9.5c3.54 0 6 1.54 7.38 2.83l5.4-5.4C33.64 4.5 29.18 2 24 2 14.82 2 7.09 7.92 4.3 16.01l6.91 5.36C12.64 14.94 17.88 9.5 24 9.5z"/>
+                        <path fill="#34A853" d="M46.14 24.5c0-1.57-.14-3.08-.41-4.5H24v8.51h12.42c-.54 2.77-2.15 5.1-4.6 6.65l7.09 5.5c4.14-3.82 7.23-9.43 7.23-16.16z"/>
+                        <path fill="#FBBC05" d="M11.21 28.86c-.48-1.41-.76-2.92-.76-4.36s.27-2.95.76-4.36l-6.91-5.36C2.77 17.58 2 20.7 2 24s.77 6.42 2.3 9.22l6.91-5.36z"/>
+                        <path fill="#EA4335" d="M24 46c6.48 0 11.91-2.14 15.88-5.82l-7.09-5.5c-2 1.35-4.56 2.17-8.79 2.17-6.12 0-11.36-5.44-12.79-12.35l-6.91 5.36C7.09 40.08 14.82 46 24 46z"/>
+                      </svg>
                        <span className="sr-only md:not-sr-only md:text-xs md:truncate">Google</span>
                      </Button>
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
-                          // Abre el endpoint de login de Google
-                          window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft";
-                      }}>
-                       <Github size={18} className="mr-2" />
-                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">Microsoft</span>
-                     </Button>
+
+                    {/*Microsoft*/}
+                    <Button
+                      variant="outline"
+                      className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
+                      onClick={() => {
+                        window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft"
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 23 23"
+                        width="18"
+                        height="18"
+                        className="mr-2"
+                      >
+                        <rect width="10" height="10" x="1" y="1" fill="#f25022" />
+                        <rect width="10" height="10" x="12" y="1" fill="#7fba00" />
+                        <rect width="10" height="10" x="1" y="12" fill="#00a4ef" />
+                        <rect width="10" height="10" x="12" y="12" fill="#ffb900" />
+                      </svg>
+                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">Microsoft</span>
+                    </Button>
+
                    </div>
                 </form>
               </TabsContent>
