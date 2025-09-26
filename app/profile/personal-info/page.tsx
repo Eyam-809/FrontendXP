@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useApp } from "@/contexts/app-context"
 import { 
   User, 
   Mail, 
@@ -61,8 +60,6 @@ interface UserProduct {
 }
 
 export default function PersonalInfoPage() {
-  const { state } = useApp()
-  
   // Método para guardar solo datos del usuario (sin imagen)
   const saveUserInfo = async () => {
     setIsSaving(true);
@@ -849,12 +846,12 @@ const handleCloseDeleteModal = () => {
 
               <TabsContent value="favorites" className="mt-6">
                 <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Favoritos</h2>
-                <FavoritesGrid products={state.favorites} />
+                <FavoritesGrid products={favoriteProducts} />
               </TabsContent>
 
               <TabsContent value="cart" className="mt-6">
                 <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mi Carrito</h2>
-                <CartItemsList items={state.cart} />
+                <CartItemsList items={purchasedProducts} />
               </TabsContent>
 
               <TabsContent value="conversations" className="mt-6">

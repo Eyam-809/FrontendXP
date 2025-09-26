@@ -1,9 +1,10 @@
 "use client"
+
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useApp } from "@/contexts/app-context"
 
-export default function GoogleCallback() {
+export default function MicrosoftCallback() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { dispatch } = useApp()
@@ -13,12 +14,11 @@ export default function GoogleCallback() {
     const id = searchParams.get("id")
     const planId = searchParams.get("plan_id")
     const name = searchParams.get("name")
-    const email = searchParams.get("email") // 👈 asegúrate de que el backend lo mande
+    const email = searchParams.get("email") // Asegúrate que tu backend lo mande
     const phone = searchParams.get("telefono") || ""
     const address = searchParams.get("direccion") || ""
 
     if (token && id) {
-      // Crear el mismo objeto userData que en login normal
       const userData = {
         id,
         name: name || "",
@@ -45,7 +45,7 @@ export default function GoogleCallback() {
       // Actualizar contexto global
       dispatch({
         type: "SET_USER_SESSION",
-        payload: { 
+        payload: {
           token,
           user_id: id,
           plan_id: planId,
@@ -53,10 +53,9 @@ export default function GoogleCallback() {
         },
       })
 
-      // Redirige al dashboard
       router.push("/")
     }
   }, [router, searchParams, dispatch])
 
-  return <p>Iniciando sesión con Google…</p>
+  return <p>Iniciando sesión con Microsoft…</p>
 }

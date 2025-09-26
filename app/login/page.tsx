@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useApp } from "@/contexts/app-context"
 import axios from "axios";
 
 export default function LoginPage() {
   const router = useRouter()
+  const { dispatch } = useApp()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
@@ -107,6 +109,18 @@ const handleLogin = (e: React.FormEvent) => {
     localStorage.setItem("name", userData.name);
 
     console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
+    
+    // Actualizar el contexto inmediatamente
+    dispatch({
+      type: "SET_USER_SESSION",
+      payload: { 
+        token: response.data.token, 
+        user_id: userData.id, 
+        plan_id: userData.plan_id, 
+        name: userData.name 
+      },
+    })
+    
     setIsLoading(false);
 
     setTimeout(() => {
@@ -305,14 +319,17 @@ useEffect(() => {
                      </Button>
                      <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
                           // Abre el endpoint de login de Google
-                          window.location.href = "http://localhost:8000/api/login/google";
+                          window.location.href = "https://backendxp-1.onrender.com/api/login/google";
                       }}>
                        <Mail size={18} className="mr-2" />
                        <span className="sr-only md:not-sr-only md:text-xs md:truncate">Google</span>
                      </Button>
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200">
+                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
+                          // Abre el endpoint de login de Google
+                          window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft";
+                      }}>
                        <Github size={18} className="mr-2" />
-                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">Microsoft</span>
                      </Button>
                    </div>
                 </form>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
 export default function AnnounceBar() {
+  const [shouldShow, setShouldShow] = useState(true)
   const streamingAds = [
     {
       brand: "HBO Max",
@@ -69,11 +70,49 @@ export default function AnnounceBar() {
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
+    // Verificar el plan del usuario en localStorage
+    const checkUserPlan = () => {
+      try {
+        const plan_id = localStorage.getItem("plan_id")
+        // Si el plan_id es "2", no mostrar la barra de anuncios
+        if (plan_id === "2") {
+          setShouldShow(false)
+          return
+        }
+        setShouldShow(true)
+      } catch (error) {
+        console.error('Error al verificar el plan del usuario:', error)
+        setShouldShow(true)
+      }
+    }
+
+    checkUserPlan()
+
+    // Escuchar cambios en localStorage
+    const handleStorageChange = () => {
+      checkUserPlan()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!shouldShow) return
+
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % streamingAds.length)
     }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [shouldShow])
+
+  // No mostrar la barra de anuncios si el usuario tiene plan ID 2
+  if (!shouldShow) {
+    return null
+  }
 
   return (
     <>
