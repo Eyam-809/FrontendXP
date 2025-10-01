@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useApp } from "@/contexts/app-context"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Monitor, Shirt, Home, Dumbbell, Star, ToyBrick } from "lucide-react"
 
 export default function CategoryNavbar() {
   const { dispatch } = useApp()
+   const router = useRouter()
   const [categories, setCategories] = useState<
     { id: number; name: string; translation: string; icon: any }[]
   >([])
@@ -53,7 +55,8 @@ export default function CategoryNavbar() {
         )
       } catch (error) {
         console.error(error)
-        alert("No se pudieron cargar las categorías")
+        //alert("No se pudieron cargar las categorías")
+        router.push("/no-internet")
       }
     }
 
