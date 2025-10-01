@@ -123,7 +123,7 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
                 <div
                   key={conversation.id}
                   className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedConversation?.id === conversation.id ? 'bg-gray-100 border-r-2 border-red-600' : ''
+                    selectedConversation?.id === conversation.id ? 'bg-[#E8DDD4] border-r-2 border-[#E63946]' : ''
                   }`}
                   onClick={() => setSelectedConversation(conversation)}
                 >
@@ -136,7 +136,7 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
                         </AvatarFallback>
                       </Avatar>
                       {conversation.user.isOnline && (
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#1B3C53] rounded-full border-2 border-white"></div>
                       )}
                     </div>
                     
@@ -196,7 +196,7 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
                         </AvatarFallback>
                       </Avatar>
                       {selectedConversation.user.isOnline && (
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#1B3C53] rounded-full border-2 border-white"></div>
                       )}
                     </div>
                     <div>

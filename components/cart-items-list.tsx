@@ -74,14 +74,14 @@ export default function CartItemsList({ items }: CartItemsListProps) {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="flex items-center justify-center space-x-2">
-              <Package className="h-5 w-5 text-red-600" />
+              <Package className="h-5 w-5 text-[#E63946]" />
               <div>
                 <div className="text-sm text-gray-500">Productos</div>
                 <div className="font-semibold">{items.length}</div>
               </div>
             </div>
             <div className="flex items-center justify-center space-x-2">
-              <ShoppingCart className="h-5 w-5 text-green-600" />
+              <ShoppingCart className="h-5 w-5 text-[#1B3C53]" />
               <div>
                 <div className="text-sm text-gray-500">Cantidad total</div>
                 <div className="font-semibold">{getTotalItems()}</div>

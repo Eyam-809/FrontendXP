@@ -82,7 +82,7 @@ export default function SeguridadPage() {
       id: "two-factor",
       title: "Autenticación de dos factores",
       description: "Añade una capa extra de seguridad con códigos de verificación",
-      icon: <Smartphone className="h-5 w-5 text-blue-600" />,
+      icon: <Smartphone className="h-5 w-5 text-[#1B3C53]" />,
       enabled: twoFactorEnabled,
       onToggle: setTwoFactorEnabled,
       status: "Activado",
@@ -112,16 +112,16 @@ export default function SeguridadPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9F3EF] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Cargando configuración de seguridad...</p>
+          <p className="text-[#456882]">Cargando configuración de seguridad...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Top Section */}
         <div className="flex items-center justify-between mb-8">

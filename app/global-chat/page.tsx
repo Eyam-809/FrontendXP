@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Navbar from "@/components/navbar"
 import { 
   Globe, 
   MessageCircle, 
@@ -343,12 +344,13 @@ export default function GlobalChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header principal rojo */}
-      <div className="bg-gradient-to-r from-red-600 to-red-800 text-white">
+    <div className="min-h-screen bg-[#F9F3EF]">
+      <Navbar />
+      {/* Header principal */}
+      <div className="bg-gradient-to-r from-[#1B3C53] to-[#456882] text-[#F9F3EF]">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Hash className="h-6 w-6 text-yellow-400" />
+            <Hash className="h-6 w-6 text-[#E8DDD4]" />
             <div>
               <h1 className="text-2xl font-bold">Chat Global</h1>
               <p className="text-sm opacity-90">Descubre productos de toda la comunidad</p>
@@ -356,13 +358,13 @@ export default function GlobalChatPage() {
           </div>
           {/* Barra de búsqueda */}
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#456882] h-4 w-4" />
             <Input
               type="text"
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-white text-gray-900 border-0 rounded-lg text-sm"
+              className="pl-9 pr-4 py-2 bg-white text-[#1B3C53] border-0 rounded-lg text-sm"
             />
           </div>
         </div>
@@ -381,7 +383,7 @@ export default function GlobalChatPage() {
                     variant={selectedCategory === category.id ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`flex items-center space-x-2 whitespace-nowrap text-xs ${selectedCategory === category.id ? 'bg-red-600 text-white' : 'border-red-600 text-red-600 hover:bg-red-50'} border-2`}
+                    className={`flex items-center space-x-2 whitespace-nowrap text-xs ${selectedCategory === category.id ? 'bg-[#1B3C53] text-[#F9F3EF]' : 'border-[#1B3C53] text-[#1B3C53] hover:bg-[#F9F3EF]'} border-2`}
                   >
                     <category.icon className="h-3 w-3" />
                     <span>{category.name}</span>
@@ -390,11 +392,11 @@ export default function GlobalChatPage() {
               </div>
               {/* Ordenamiento */}
               <div className="flex items-center space-x-2">
-                <Filter className="h-3 w-3 text-yellow-400" />
+                <Filter className="h-3 w-3 text-[#456882]" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="text-xs border border-red-600 text-red-600 rounded px-2 py-1 bg-white"
+                  className="text-xs border border-[#1B3C53] text-[#1B3C53] rounded px-2 py-1 bg-white"
                 >
                   <option value="newest">Más recientes</option>
                   <option value="oldest">Más antiguos</option>
@@ -410,13 +412,13 @@ export default function GlobalChatPage() {
             <div className="w-full max-w-4xl space-y-4 px-2 sm:px-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B3C53]"></div>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <Card className="bg-white border-red-200">
+              <Card className="bg-white border-[#E8DDD4]">
                 <CardContent className="p-8 text-center">
-                  <Package className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-red-700 mb-2">No se encontraron productos</h3>
+                  <Package className="h-12 w-12 text-[#456882] mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-[#1B3C53] mb-2">No se encontraron productos</h3>
                   <p className="text-gray-500 mb-4">
                     {searchQuery 
                       ? `No hay productos que coincidan con "${searchQuery}"`
@@ -426,7 +428,7 @@ export default function GlobalChatPage() {
                   <Button 
                     variant="outline"
                     size="sm"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    className="border-[#1B3C53] text-[#1B3C53] hover:bg-[#F9F3EF]"
                     onClick={() => {
                       setSearchQuery("")
                       setSelectedCategory("all")
@@ -455,7 +457,7 @@ export default function GlobalChatPage() {
                   <div className="flex-1 min-w-0">
                     {/* Header del mensaje */}
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className="font-semibold text-sm text-red-700">{product.seller.name}</span>
+                      <span className="font-semibold text-sm text-[#1B3C53]">{product.seller.name}</span>
                       <div className="flex items-center space-x-1">
                         <Star className="h-3 w-3 text-yellow-400 fill-current" />
                         <span className="text-xs text-yellow-600">{product.seller.rating}</span>
@@ -464,7 +466,7 @@ export default function GlobalChatPage() {
                       <span className="text-xs text-gray-400">{formatTime(product.createdAt)}</span>
                     </div>
                     {/* Contenido del mensaje */}
-                    <div className="bg-white rounded-lg border border-red-200 overflow-hidden">
+                    <div className="bg-white rounded-lg border border-[#E8DDD4] overflow-hidden">
                       {/* Imagen del producto */}
                       <div className="relative">
                         <img 
@@ -473,7 +475,7 @@ export default function GlobalChatPage() {
                           className="w-full h-48 object-cover"
                         />
                         {product.originalPrice && (
-                          <Badge className="absolute top-2 left-2 bg-red-600 text-xs text-white">
+                          <Badge className="absolute top-2 left-2 bg-[#E63946] text-xs text-white">
                             -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                           </Badge>
                         )}
@@ -483,11 +485,11 @@ export default function GlobalChatPage() {
                       </div>
                       {/* Información del producto */}
                       <div className="p-4">
-                        <h3 className="font-semibold text-lg mb-2 text-red-700">{product.name}</h3>
+                        <h3 className="font-semibold text-lg mb-2 text-[#1B3C53]">{product.name}</h3>
                         <p className="text-sm text-gray-700 mb-3">{product.description}</p>
                         {/* Precio */}
                         <div className="flex items-center space-x-2 mb-3">
-                          <p className="text-xl font-bold text-red-600">${product.price.toLocaleString()}</p>
+                          <p className="text-xl font-bold text-[#1B3C53]">${product.price.toLocaleString()}</p>
                           {product.originalPrice && (
                             <p className="text-sm text-gray-400 line-through">
                               ${product.originalPrice.toLocaleString()}
@@ -514,7 +516,7 @@ export default function GlobalChatPage() {
                         {/* Botones de acción */}
                         <div className="flex space-x-2">
                           <Button 
-                            className="flex-1 bg-red-600 hover:bg-red-700"
+                            className="flex-1 bg-[#1B3C53] hover:bg-[#456882]"
                             size="sm"
                             onClick={() => startChat(product.seller.id, product.id)}
                           >
@@ -522,7 +524,7 @@ export default function GlobalChatPage() {
                             Iniciar Chat
                           </Button>
                           <Link href={`/product/${product.id}`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full border-yellow-400 text-yellow-700 hover:bg-yellow-50">
+                            <Button variant="outline" size="sm" className="w-full border-[#E8DDD4] text-[#1B3C53] hover:bg-[#F9F3EF]">
                               <Eye className="h-4 w-4 mr-2" />
                               Ver Producto
                             </Button>

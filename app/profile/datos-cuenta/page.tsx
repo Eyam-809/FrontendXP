@@ -83,19 +83,19 @@ export default function DatosCuentaPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Top Section */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/profile">
-            <Button variant="outline" className="bg-gray-100 border-gray-300 hover:bg-gray-200">
+            <Button variant="outline" className="bg-[#E8DDD4] border-[#E8DDD4] hover:bg-[#F9F3EF] text-[#1B3C53]">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
           </Link>
           <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Datos de tu cuenta</h1>
-            <p className="text-gray-600">Consulta tus compras, entregas y envíos en progreso</p>
+            <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Datos de tu cuenta</h1>
+            <p className="text-[#456882]">Consulta tus compras, entregas y envíos en progreso</p>
           </div>
           <div className="w-24"></div> {/* Spacer for centering */}
         </div>
@@ -103,23 +103,23 @@ export default function DatosCuentaPage() {
         {/* Three Cards Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Latest Purchases Card */}
-          <Card className="bg-white shadow-md">
+          <Card className="bg-white shadow-md border-[#E8DDD4]">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <CheckSquare className="h-5 w-5 text-green-600" />
+                <CheckSquare className="h-5 w-5 text-[#1B3C53]" />
                 <span>Últimas compras</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {purchases.map((purchase) => (
-                <div key={purchase.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                <div key={purchase.id} className="border-b border-[#E8DDD4] pb-3 last:border-b-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-gray-900">{purchase.product}</h4>
-                      <p className="text-sm text-gray-500">{purchase.date}</p>
+                      <h4 className="font-medium text-[#1B3C53]">{purchase.product}</h4>
+                      <p className="text-sm text-[#456882]">{purchase.date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">{purchase.total}</p>
+                      <p className="font-semibold text-[#1B3C53]">{purchase.total}</p>
                     </div>
                   </div>
                 </div>
@@ -128,23 +128,23 @@ export default function DatosCuentaPage() {
           </Card>
 
           {/* Deliveries Card */}
-          <Card className="bg-white shadow-md">
+          <Card className="bg-white shadow-md border-[#E8DDD4]">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <Truck className="h-5 w-5 text-blue-600" />
+                <Truck className="h-5 w-5 text-[#456882]" />
                 <span>Entregas</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {deliveries.map((delivery) => (
-                <div key={delivery.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                <div key={delivery.id} className="border-b border-[#E8DDD4] pb-3 last:border-b-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-gray-900">{delivery.product}</h4>
-                      <p className="text-sm text-gray-500">{delivery.date}</p>
+                      <h4 className="font-medium text-[#1B3C53]">{delivery.product}</h4>
+                      <p className="text-sm text-[#456882]">{delivery.date}</p>
                     </div>
                     <div className="text-right">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <Badge variant="secondary" className="bg-[#E8DDD4] text-[#1B3C53]">
                         {delivery.status}
                       </Badge>
                     </div>
@@ -155,23 +155,23 @@ export default function DatosCuentaPage() {
           </Card>
 
           {/* Shipments in Progress Card */}
-          <Card className="bg-white shadow-md">
+          <Card className="bg-white shadow-md border-[#E8DDD4]">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center space-x-2 text-lg">
-                <Package className="h-5 w-5 text-orange-600" />
+                <Package className="h-5 w-5 text-[#E63946]" />
                 <span>Envíos en progreso</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {shipments.map((shipment) => (
-                <div key={shipment.id} className="border-b border-gray-100 pb-3 last:border-b-0">
+                <div key={shipment.id} className="border-b border-[#E8DDD4] pb-3 last:border-b-0">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-gray-900">{shipment.product}</h4>
-                      <p className="text-sm text-gray-500">{shipment.date}</p>
+                      <h4 className="font-medium text-[#1B3C53]">{shipment.product}</h4>
+                      <p className="text-sm text-[#456882]">{shipment.date}</p>
                     </div>
                     <div className="text-right">
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                      <Badge variant="secondary" className="bg-[#E63946] text-white">
                         {shipment.status}
                       </Badge>
                     </div>

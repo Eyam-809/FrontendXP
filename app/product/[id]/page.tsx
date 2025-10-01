@@ -11,6 +11,7 @@ import Footer from "@/components/footer"
 import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import CategoryPanel from "@/components/category-panel"
+import ImageZoom from "@/components/image-zoom"
 import { useApp } from "@/contexts/app-context"
 import type { Product } from "@/contexts/app-context"
 
@@ -55,10 +56,10 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando producto...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Cargando producto...</p>
         </div>
       </div>
     )
@@ -82,32 +83,30 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
      <Navbar />
       <CategoryPanel />
 
       <main className="container mx-auto px-4 py-8">
-        <Button variant="ghost" className="mb-6 flex items-center text-gray-600" onClick={() => router.back()}>
+        <Button variant="ghost" className="mb-6 flex items-center text-muted-foreground" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver
         </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="relative">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-auto object-contain rounded-lg"
-                style={{ maxHeight: "400px" }}
-              />
-            </div>
+          <div className="bg-card p-6 rounded-xl shadow-sm">
+            <ImageZoom
+              src={product.image}
+              alt={product.name}
+              className="w-full rounded-lg"
+              style={{ maxHeight: "400px" }}
+            />
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm">
+          <div className="bg-card p-6 rounded-xl shadow-sm">
             <div className="mb-4">
               <Badge variant="outline" className="mb-2">{product.category}</Badge>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+              <h1 className="text-3xl font-bold text-card-foreground mb-2">{product.name}</h1>
               <div className="flex items-center mb-4">
                 <div className="flex text-yellow-400">
                   {[...Array(5)].map((_, i) => (
@@ -119,26 +118,36 @@ export default function ProductPage() {
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-500 ml-2">({product.rating})</span>
+                <span className="text-sm text-muted-foreground ml-2">({product.rating})</span>
               </div>
             </div>
 
             <div className="mb-6">
-              <span className="text-4xl font-bold text-[#be0c0c]-600">${price.toFixed(2)}</span>
+              <span className="text-4xl font-bold text-primary">${price.toFixed(2)}</span>
             </div>
 
             <div className="mb-6">
-              <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <span className="font-medium">Cantidad:</span>
+              <span className="font-medium text-card-foreground">Cantidad:</span>
               <div className="flex items-center space-x-2">
-                <Button variant="outline" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <Button variant="outline" size="icon" onClick={() => setQuantity(quantity + 1)}>
+                <span className="w-12 text-center font-medium text-card-foreground">{quantity}</span>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -146,7 +155,7 @@ export default function ProductPage() {
 
             <div className="flex space-x-3 mb-6">
               <Button
-                className="flex-1 bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={addToCart}
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
@@ -155,33 +164,33 @@ export default function ProductPage() {
               <Button
                 variant="outline"
                 size="icon"
-                className={`${isFavorite ? "text-red-500 border-red-500" : ""}`}
+                className={`${isFavorite ? "text-destructive border-destructive" : "text-muted-foreground border-border"}`}
                 onClick={toggleFavorite}
               >
                 <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
               </Button>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-semibold mb-2">Información del Producto</h4>
+            <div className="p-4 bg-muted rounded-lg">
+              <h4 className="font-semibold mb-2 text-card-foreground">Información del Producto</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Categoría:</span>
-                  <span>{translateCategory(product.category)}</span>
+                  <span className="text-muted-foreground">Categoría:</span>
+                  <span className="text-card-foreground">{translateCategory(product.category)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Disponibilidad:</span>
-                  <span className={product.stock ? "text-green-600" : "text-red-600"}>
-                    {product.stock ? "En Stock" : "Agotado"}
+                  <span className="text-muted-foreground">Disponibilidad:</span>
+                  <span className={product.inStock ? "text-green-600" : "text-destructive"}>
+                    {product.inStock ? "En Stock" : "Agotado"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Vendedor:</span>
+                  <span className="text-muted-foreground">Vendedor:</span>
                   <Link 
-                    href={`/user/${product.id_user}`}
-                    className="text-red-600 hover:text-red-700 hover:underline flex items-center"
+                    href={`/user/${product.id}`}
+                    className="text-primary hover:text-primary/80 hover:underline flex items-center"
                   >
-                    {product.userName || "Usuario"}
+                    Usuario
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </Link>
                 </div>

@@ -167,22 +167,75 @@ const AppContext = createContext<{
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
+  // Función para cargar sesión desde localStorage
+  const loadUserSession = () => {
+    try {
+      const token = localStorage.getItem("token")
+      const user_id = localStorage.getItem("user_id")
+      const plan_id = localStorage.getItem("plan_id")
+      const name = localStorage.getItem("name")
+      
+      console.log("Cargando sesión del usuario:", user_id);
+
+      if (token && user_id && plan_id) {
+        dispatch({
+          type: "SET_USER_SESSION",
+          payload: { token, user_id, plan_id, name: name || "" },
+        })
+      } else {
+        dispatch({ type: "CLEAR_USER_SESSION" })
+      }
+    } catch (error) {
+      console.error("Error al cargar sesión:", error)
+      dispatch({ type: "CLEAR_USER_SESSION" })
+    }
+  }
+
   // Al montar, carga sesión si existe en localStorage
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    const user_id = localStorage.getItem("user_id")
-    const plan_id = localStorage.getItem("plan_id")
-    const name = localStorage.getItem("name")
-    console.log("Este es el usuario: "+ user_id);
-
-    if (token && user_id && plan_id) {
-      dispatch({
-        type: "SET_USER_SESSION",
-        payload: { token, user_id, plan_id, name: name || "" },
-      })
-     // router.push("/");
-    }
+    loadUserSession()
   }, [])
+
+  // Escuchar cambios en localStorage para actualizar automáticamente
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "token" || e.key === "user_id" || e.key === "plan_id" || e.key === "name") {
+        console.log("Detectado cambio en localStorage, actualizando sesión...")
+        loadUserSession()
+      }
+    }
+
+    // Escuchar cambios de localStorage desde otras pestañas
+    window.addEventListener('storage', handleStorageChange)
+
+    // También escuchar cambios en la misma pestaña usando un intervalo
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem("token")
+      const currentUserId = localStorage.getItem("user_id")
+      const currentPlanId = localStorage.getItem("plan_id")
+      const currentName = localStorage.getItem("name")
+      
+      // Si hay cambios en localStorage, actualizar el estado
+      if (state.userSession) {
+        if (state.userSession.token !== currentToken || 
+            state.userSession.user_id !== currentUserId || 
+            state.userSession.plan_id !== currentPlanId ||
+            state.userSession.name !== currentName) {
+          console.log("Detectado cambio en localStorage (misma pestaña), actualizando sesión...")
+          loadUserSession()
+        }
+      } else if (currentToken && currentUserId && currentPlanId) {
+        // Si no hay sesión pero hay datos en localStorage, cargar sesión
+        console.log("Detectados datos de sesión en localStorage, cargando...")
+        loadUserSession()
+      }
+    }, 1000) // Verificar cada segundo
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [state.userSession])
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>
 }

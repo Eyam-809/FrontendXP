@@ -66,8 +66,8 @@ export default function TarjetasPage() {
   ]
 
   const cardBrands = [
-    { value: "visa", label: "Visa", color: "bg-blue-600" },
-    { value: "mastercard", label: "Mastercard", color: "bg-red-600" },
+    { value: "visa", label: "Visa", color: "bg-[#1B3C53]" },
+    { value: "mastercard", label: "Mastercard", color: "bg-[#E63946]" },
     { value: "amex", label: "American Express", color: "bg-green-600" },
     { value: "discover", label: "Discover", color: "bg-orange-600" }
   ]
@@ -150,16 +150,16 @@ export default function TarjetasPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9F3EF] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Cargando tarjetas...</p>
+          <p className="text-[#456882]">Cargando tarjetas...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Top Section */}
         <div className="flex items-center justify-between mb-8">

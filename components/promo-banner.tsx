@@ -31,7 +31,7 @@ export default function PromoBanner() {
               Obtén envío gratis en todos los pedidos superiores a $50. Oferta por tiempo limitado, ¡no te la pierdas!
             </motion.p>
             <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium text-lg px-6 py-2 rounded-full">
+              <Button className="bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF] font-medium text-lg px-6 py-2 rounded-full">
                 Comprar Ahora
               </Button>
             </motion.div>

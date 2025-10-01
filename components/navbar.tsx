@@ -41,10 +41,20 @@ const translateCategory = (category: string) => {
   return translations[category] || category
 }
 
+
+
 export default function Navbar() {
   const { state, dispatch } = useApp()
   const [searchInput, setSearchInput] = useState("")
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const handleResetFilters = () => {
+  dispatch({ type: "SET_SELECTED_CATEGORY", payload: null })
+  dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
+  dispatch({ type: "SET_SEARCH_QUERY", payload: "" })
+  //dispatch({ type: "TOGGLE_CATEGORY_PANEL", payload: true }) // opcional, cierra panel
+}
+
 
   const [user, setUser] = useState<{
     email: string
@@ -80,31 +90,32 @@ export default function Navbar() {
 
   const handleCategoryClick = (categoryName: string) => {
     dispatch({ type: "SET_SELECTED_CATEGORY", payload: categoryName })
+    dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
     dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#be0c0c] to-[#8B0000] shadow-md">
+    <header className="sticky top-0 z-50 w-full bg-[#1B3C53] shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-white">
+                <Button variant="ghost" size="icon" className="md:hidden text-[#F9F3EF]">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="bg-gradient-to-b from-[#be0c0c] to-[#8B0000] p-0 w-1/2 max-w-xs">
-                <nav className="flex flex-col gap-2 text-white px-4 py-6">
-                  <Link href="/" className="text-base md:text-lg font-medium hover:text-yellow-300 transition-colors py-2">
+              <SheetContent side="left" className="bg-[#1B3C53] p-0 w-1/2 max-w-xs">
+                <nav className="flex flex-col gap-2 text-[#F9F3EF] px-4 py-6">
+                  <Link href="/" className="text-base md:text-lg font-medium hover:text-[#D2C1B6] transition-colors py-2">
                     Inicio
                   </Link>
                   {categories.map((category) => (
                     <button
                       key={category.name}
                       onClick={() => handleCategoryClick(category.name)}
-                      className="text-base md:text-lg font-medium hover:text-yellow-300 transition-colors text-left py-2"
+                      className="text-base md:text-lg font-medium hover:text-[#D2C1B6] transition-colors text-left py-2"
                     >
                       {translateCategory(category.name)}
                     </button>
@@ -112,8 +123,8 @@ export default function Navbar() {
                 </nav>
               </SheetContent>
             </Sheet>
-            <Link href="/" className="flex items-center">
-              <img src="/sinfondo.png" alt="XpMarket Logo" className="h-12 w-auto ml-2 md:h-24 md:ml-0 transition-all duration-200" />
+            <Link href="/" className="flex items-center" onClick={handleResetFilters}>
+              <img src="/logonuevo.png" alt="XpMarket Logo" className="h-16 w-auto ml-2 md:h-32 md:ml-0 transition-all duration-200" />
             </Link>
           </div>
 
@@ -124,14 +135,14 @@ export default function Navbar() {
                 placeholder="Buscar productos, marcas y más..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-4 pr-10 py-2 rounded-md border-0 focus-visible:ring-yellow-400"
+                className="w-full pl-4 pr-10 py-2 rounded-md border-0 focus-visible:ring-[#D2C1B6]"
               />
               <Button
                 type="submit"
                 size="icon"
-                className="absolute right-0 top-0 h-full bg-yellow-400 hover:bg-yellow-500 rounded-l-none"
+                className="absolute right-0 top-0 h-full bg-[#456882] hover:bg-[#1B3C53] rounded-l-none"
               >
-                <Search className="h-4 w-4 text-gray-800" />
+                <Search className="h-4 w-4 text-[#F9F3EF]" />
                 <span className="sr-only">Buscar</span>
               </Button>
             </form>
@@ -143,7 +154,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden md:flex text-white hover:text-yellow-300 transition-colors"
+                  className="hidden md:flex text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors"
                 >
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Notificaciones</span>
@@ -154,7 +165,7 @@ export default function Navbar() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white hover:text-yellow-300 transition-colors"
+                      className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors"
                     >
                       <Globe className="h-5 w-5" />
                       <span className="sr-only">Chat Global</span>
@@ -165,12 +176,12 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:text-yellow-300 transition-colors relative"
+                  className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors relative"
                   onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
                 >
                   <Heart className="h-5 w-5" />
                   {state.favorites.length > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-xs">
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-[#456882] text-[#F9F3EF] text-xs">
                       {state.favorites.length}
                     </Badge>
                   )}
@@ -180,12 +191,12 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:text-yellow-300 transition-colors relative"
+                  className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors relative"
                   onClick={() => dispatch({ type: "TOGGLE_CART" })}
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {state.cart.length > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-xs">
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-[#456882] text-[#F9F3EF] text-xs">
                       {state.cart.reduce((sum, item) => sum + item.quantity, 0)}
                     </Badge>
                   )}
@@ -194,9 +205,9 @@ export default function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-white hover:text-yellow-300 transition-colors h-auto p-2">
+                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors h-auto p-2">
                       <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-yellow-400 text-black text-sm font-bold">
+                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-[#456882] text-[#F9F3EF] text-sm font-bold">
                           {(state.userSession.name || "U")[0].toUpperCase()}
                         </div>
                         <div className="hidden md:block text-left">
@@ -231,7 +242,7 @@ export default function Navbar() {
               </>
             ) : (
               <Link href="/login">
-                <Button variant="ghost" size="icon" className="text-white hover:text-yellow-300 transition-colors">
+                <Button variant="ghost" size="icon" className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors">
                   <User className="h-5 w-5" />
                   <span className="sr-only">Cuenta</span>
                 </Button>
@@ -247,20 +258,20 @@ export default function Navbar() {
               placeholder="Buscar..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full pl-4 pr-10 py-1 rounded-md border-0 focus-visible:ring-yellow-400"
+              className="w-full pl-4 pr-10 py-1 rounded-md border-0 focus-visible:ring-[#D2C1B6]"
             />
             <Button
               type="submit"
               size="icon"
-              className="absolute right-0 top-0 h-full bg-yellow-400 hover:bg-yellow-500 rounded-l-none"
+              className="absolute right-0 top-0 h-full bg-[#456882] hover:bg-[#1B3C53] rounded-l-none"
             >
-              <Search className="h-4 w-4 text-gray-800" />
+              <Search className="h-4 w-4 text-[#F9F3EF]" />
               <span className="sr-only">Buscar</span>
             </Button>
           </form>
         </div>
 
-        <nav className="hidden md:flex space-x-6 pb-2 text-sm text-white">
+        <nav className="hidden md:flex space-x-6 pb-2 text-sm text-[#F9F3EF]">
         </nav>
       </div>
     </header>

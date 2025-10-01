@@ -44,14 +44,14 @@ export default function UserProductsGrid({
   products, 
   onEdit, 
   onDelete, 
-  onToggleStatus 
+  onToggleStatus,
 }: UserProductsGridProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500'
+        return 'bg-[#1B3C53]'
       case 'sold':
-        return 'bg-red-500'
+        return 'bg-[#E63946]'
       case 'pending':
         return 'bg-yellow-500'
       default:
@@ -132,7 +132,7 @@ export default function UserProductsGrid({
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => onDelete?.(product.id)}
-                  className="text-red-600"
+                  className="text-[#E63946]"
                 >
                   Eliminar
                 </DropdownMenuItem>
@@ -174,7 +174,7 @@ export default function UserProductsGrid({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(product.created_at)}</span>
+                {/*<span>{formatDate(product.created_at)}</span> */}
               </div>
             </div>
 
@@ -208,7 +208,7 @@ export default function UserProductsGrid({
                 variant="outline" 
                 size="sm" 
                 className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onEdit?.(product.id)}
+                onClick={() => onDelete?.(product.id)}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
               </Button>

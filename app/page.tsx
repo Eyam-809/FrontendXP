@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import HeroCarousel from "@/components/hero-carousel"
 import Navbar from "@/components/navbar"
+import CategoryNavbar from "@/components/category-navbar"
 import CategorySection from "@/components/category-section"
 import ProductGrid from "@/components/product-grid"
 import PromoBanner from "@/components/promo-banner"
@@ -15,9 +16,10 @@ import AnnounceBar from "@/components/announce-bar"
 import { useApp } from "@/contexts/app-context"
 import { products } from "@/data/products"
 import { useIsMobile } from "@/hooks/use-mobile"
+import FilteredProductsGrid from "@/components/filtered-products-grid"
 
 export default function Home() {
-  const { dispatch } = useApp()
+  const { state, dispatch } = useApp()
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -25,20 +27,26 @@ export default function Home() {
   }, [dispatch])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
+      <CategoryNavbar />
       <CategoryPanel />
       <main className="container mx-auto px-4">
-        {!isMobile && <CategorySection />}
-        <HeroCarousel />
-        {/* <PromoBanner /> */}
-        <ProductGrid />
+        {state.selectedSubcategory?.id ? (
+          <FilteredProductsGrid subcategoryId={state.selectedSubcategory.id} />
+        ) : (
+          <>
+            <HeroCarousel />
+            {/* <PromoBanner /> */}
+            <ProductGrid />
+          </>
+        )}
       </main>
       <AnnounceBar />
       <Footer />
       <CartSidebar />
       <FavoritesSidebar />
-      <CheckoutModal />
+      <CheckoutModal onClose={() => {}} />
     </div>
   )
 }
