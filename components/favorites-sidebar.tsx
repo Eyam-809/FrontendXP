@@ -34,21 +34,29 @@ export default function FavoritesSidebar() {
             className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto"
           >
             <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold flex items-center text-[#1B3C53]">
-                  <Heart className="mr-2" />
+              <div className="flex items-center justify-between mb-6 bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-xl font-bold flex items-center text-gray-900">
+                  <Heart className="mr-2 text-red-500" />
                   Favoritos ({state.favorites.length})
                 </h2>
-                <Button variant="ghost" size="icon" onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
+                  className="hover:bg-gray-200 text-gray-700 hover:text-gray-900"
+                >
                   <X className="h-6 w-6" />
                 </Button>
               </div>
 
               {state.favorites.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
                   <Heart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500">No tienes favoritos aún</p>
-                  <Button className="mt-4" onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}>
+                  <p className="text-gray-700 font-medium mb-4">No tienes favoritos aún</p>
+                  <Button 
+                    className="mt-4 bg-[#1B3C53] hover:bg-[#0F2A3A] text-white" 
+                    onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
+                  >
                     Explorar Productos
                   </Button>
                 </div>
@@ -58,22 +66,22 @@ export default function FavoritesSidebar() {
                     const price = Number(item.price) // 👈 conversión segura
 
                     return (
-                      <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                      <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
                         <img
                           src={item.image || "/placeholder.svg"}
                           alt={item.name}
-                          className="w-16 h-16 object-contain rounded"
+                          className="w-16 h-16 object-contain rounded border border-gray-100"
                         />
                         <div className="flex-1">
-                          <h3 className="font-medium text-sm">{item.name}</h3>
+                          <h3 className="font-semibold text-base text-gray-900">{item.name}</h3>
                           <div className="mt-1">
-                            <span className="font-bold">${price.toFixed(2)}</span>
+                            <span className="font-bold text-lg text-red-600">${price.toFixed(2)}</span>
                           </div>
                           <div className="flex items-center mt-2 space-x-2">
                             <Button
                               size="sm"
                               onClick={() => addToCart(item)}
-                              className="bg-gradient-to-r from-[#be0c0c] to-[#be0c0c] hover:from-[#8B0000] hover:to-[#8B0000]"
+                              className="bg-[#1B3C53] hover:bg-[#0F2A3A] text-white font-medium"
                             >
                               <ShoppingCart className="h-4 w-4 mr-1" />
                               Añadir al Carrito
@@ -82,7 +90,7 @@ export default function FavoritesSidebar() {
                               variant="outline"
                               size="sm"
                               onClick={() => removeFromFavorites(item.id)}
-                              className="text-red-500 hover:text-red-700"
+                              className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-700"
                             >
                               Eliminar
                             </Button>

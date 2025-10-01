@@ -1,7 +1,6 @@
 "use client"
 
 import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
 
 export interface Product {
   id: number
@@ -40,7 +39,7 @@ interface AppState {
   isFavoritesOpen: boolean
   isCategoryPanelOpen: boolean
   selectedProduct: Product | null
-  userSession: UserSession | null // <-- nuevo estado para sesión
+  userSession: UserSession | null
 }
 
 type AppAction =
@@ -58,8 +57,8 @@ type AppAction =
   | { type: "TOGGLE_CATEGORY_PANEL" }
   | { type: "SET_SELECTED_PRODUCT"; payload: Product | null }
   | { type: "SET_PRODUCTS"; payload: Product[] }
-  | { type: "SET_USER_SESSION"; payload: UserSession }      // <-- nueva acción
-  | { type: "CLEAR_USER_SESSION" }                          // <-- nueva acción
+  | { type: "SET_USER_SESSION"; payload: UserSession }
+  | { type: "CLEAR_USER_SESSION" }
 
 const initialState: AppState = {
   cart: [],
@@ -83,26 +82,22 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         return {
           ...state,
           cart: state.cart.map((item) =>
-            item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
+            item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item
           ),
         }
       }
-      return {
-        ...state,
-        cart: [...state.cart, { ...action.payload, quantity: 1 }],
-      }
+      return { ...state, cart: [...state.cart, { ...action.payload, quantity: 1 }] }
 
     case "REMOVE_FROM_CART":
-      return {
-        ...state,
-        cart: state.cart.filter((item) => item.id !== action.payload),
-      }
+      return { ...state, cart: state.cart.filter((item) => item.id !== action.payload) }
 
     case "UPDATE_CART_QUANTITY":
       return {
         ...state,
         cart: state.cart
-          .map((item) => (item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item))
+          .map((item) =>
+            item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item
+          )
           .filter((item) => item.quantity > 0),
       }
 
@@ -110,19 +105,11 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, cart: [] }
 
     case "ADD_TO_FAVORITES":
-      if (state.favorites.find((item) => item.id === action.payload.id)) {
-        return state
-      }
-      return {
-        ...state,
-        favorites: [...state.favorites, action.payload],
-      }
+      if (state.favorites.find((item) => item.id === action.payload.id)) return state
+      return { ...state, favorites: [...state.favorites, action.payload] }
 
     case "REMOVE_FROM_FAVORITES":
-      return {
-        ...state,
-        favorites: state.favorites.filter((item) => item.id !== action.payload),
-      }
+      return { ...state, favorites: state.favorites.filter((item) => item.id !== action.payload) }
 
     case "SET_SEARCH_QUERY":
       return { ...state, searchQuery: action.payload }
@@ -159,38 +146,67 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   }
 }
 
-const AppContext = createContext<{
-  state: AppState
-  dispatch: React.Dispatch<AppAction>
-} | null>(null)
+const AppContext = createContext<{ state: AppState; dispatch: React.Dispatch<AppAction> } | null>(null)
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
-  // Al montar, carga sesión si existe en localStorage
-  useEffect(() => {
-    const token = localStorage.getItem("token")
-    const user_id = localStorage.getItem("user_id")
-    const plan_id = localStorage.getItem("plan_id")
-    const name = localStorage.getItem("name")
-    console.log("Este es el usuario: "+ user_id);
+  const loadUserSession = () => {
+    try {
+      const token = localStorage.getItem("token")
+      const user_id = localStorage.getItem("user_id")
+      const plan_id = localStorage.getItem("plan_id")
+      const name = localStorage.getItem("name")
 
-    if (token && user_id && plan_id) {
-      dispatch({
-        type: "SET_USER_SESSION",
-        payload: { token, user_id, plan_id, name: name || "" },
-      })
-     // router.push("/");
+      if (token && user_id && plan_id) {
+        dispatch({ type: "SET_USER_SESSION", payload: { token, user_id, plan_id, name: name || "" } })
+      } else {
+        dispatch({ type: "CLEAR_USER_SESSION" })
+      }
+    } catch (error) {
+      console.error("Error al cargar sesión:", error)
+      dispatch({ type: "CLEAR_USER_SESSION" })
     }
+  }
+
+  useEffect(() => {
+    loadUserSession()
   }, [])
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (["token", "user_id", "plan_id", "name"].includes(e.key || "")) loadUserSession()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+
+    const interval = setInterval(() => {
+      const currentToken = localStorage.getItem("token")
+      const currentUserId = localStorage.getItem("user_id")
+      const currentPlanId = localStorage.getItem("plan_id")
+      const currentName = localStorage.getItem("name")
+
+      if (!state.userSession && currentToken && currentUserId && currentPlanId) {
+        loadUserSession()
+      } else if (state.userSession) {
+        const { token, user_id, plan_id, name } = state.userSession
+        if (token !== currentToken || user_id !== currentUserId || plan_id !== currentPlanId || name !== currentName) {
+          loadUserSession()
+        }
+      }
+    }, 1000)
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [state.userSession])
 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>
 }
 
 export const useApp = () => {
   const context = useContext(AppContext)
-  if (!context) {
-    throw new Error("useApp must be used within AppProvider")
-  }
+  if (!context) throw new Error("useApp must be used within AppProvider")
   return context
 }

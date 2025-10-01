@@ -46,7 +46,7 @@ export default function Home() {
       <Footer />
       <CartSidebar />
       <FavoritesSidebar />
-      <CheckoutModal />
+      <CheckoutModal onClose={() => {}} />
     </div>
   )
 }
