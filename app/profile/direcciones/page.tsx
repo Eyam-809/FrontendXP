@@ -24,6 +24,7 @@ import {
   Star
 } from "lucide-react"
 import Link from "next/link"
+import Navbar from "@/components/navbar"
 
 interface UserData {
   name: string
@@ -243,20 +244,14 @@ export default function DireccionesPage() {
 
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
+      <Navbar />
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Top Section */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/profile">
-            <Button variant="outline" className="bg-[#E8DDD4] border-[#E8DDD4] hover:bg-[#F9F3EF] text-[#1B3C53]">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-          </Link>
-          <div className="text-center flex-1">
+        <div className="flex items-center justify-center mb-8">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Tus Direcciones</h1>
             <p className="text-[#456882]">Gestiona tus direcciones de envío de forma segura</p>
           </div>
-          <div className="w-24"></div>
         </div>
 
         {/* Add Address Button */}

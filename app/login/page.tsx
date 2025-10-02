@@ -315,6 +315,7 @@ useEffect(() => {
                    <div className="grid grid-cols-3 gap-3">
                     {/*GitHub*/}
                      <Button
+                      type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
@@ -328,7 +329,11 @@ useEffect(() => {
 
 
                      {/*Google*/}
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
+                     <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" 
+                      onClick={() => {
                           // Abre el endpoint de login de Google
                           window.location.href = "https://backendxp-1.onrender.com/api/login/google";
                       }}>
@@ -349,6 +354,7 @@ useEffect(() => {
 
                     {/*Microsoft*/}
                     <Button
+                      type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {

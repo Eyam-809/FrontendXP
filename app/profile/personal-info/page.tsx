@@ -16,7 +16,6 @@ import {
   MapPin,
   Edit,
   Save,
-  ArrowLeft,
   Star,
   Package,
   TrendingUp,
@@ -34,6 +33,7 @@ import FavoritesGrid from "@/components/favorites-grid"
 import CartItemsList from "@/components/cart-items-list"
 import ChatConversations from "@/components/chat-conversations"
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
+import Navbar from "@/components/navbar"
 
 interface UserData {
   name: string
@@ -488,16 +488,7 @@ const handleCloseDeleteModal = () => {
 
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
-      {/* Botón de volver */}
-      <div className="absolute top-4 left-4 z-10">
-        <Link href="/">
-          <Button variant="outline" className="bg-[#F9F3EF] hover:bg-white text-[#1B3C53] border-[#E8DDD4]">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-        </Link>
-      </div>
-
+      <Navbar />
       {/* Header con imagen de portada */}
       <div className="relative h-64 bg-gradient-to-r from-[#1B3C53] to-[#456882]">
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>

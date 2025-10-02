@@ -20,6 +20,7 @@ import {
   ArrowRight
 } from "lucide-react"
 import Link from "next/link"
+import Navbar from "@/components/navbar"
 
 interface UserData {
   name: string
@@ -94,20 +95,14 @@ export default function XPmarketPlusPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Top Section */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/profile">
-            <Button variant="outline" className="bg-[#E8DDD4] border-[#E8DDD4] hover:bg-[#F9F3EF] text-[#1B3C53]">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-          </Link>
-          <div className="text-center flex-1">
+        <div className="flex items-center justify-center mb-8">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">XPmarket+</h1>
             <p className="text-gray-600">Suscripción con beneficios en envíos, compras y ventas</p>
           </div>
-          <div className="w-24"></div>
         </div>
 
         {/* Plans Comparison */}

@@ -33,8 +33,8 @@ interface AppState {
   favorites: Product[]
   products: Product[]
   searchQuery: string
-  selectedCategory: string | null
-  selectedSubcategory: string | null
+  selectedCategory: { id: number; name: string } | null
+  selectedSubcategory: { id: number; name: string } | null
   isCartOpen: boolean
   isFavoritesOpen: boolean
   isCategoryPanelOpen: boolean
@@ -50,8 +50,8 @@ type AppAction =
   | { type: "ADD_TO_FAVORITES"; payload: Product }
   | { type: "REMOVE_FROM_FAVORITES"; payload: number }
   | { type: "SET_SEARCH_QUERY"; payload: string }
-  | { type: "SET_SELECTED_CATEGORY"; payload: string | null }
-  | { type: "SET_SELECTED_SUBCATEGORY"; payload: string | null }
+  | { type: "SET_SELECTED_CATEGORY"; payload: { id: number; name: string } | null }
+  | { type: "SET_SELECTED_SUBCATEGORY"; payload: { id: number; name: string } | null }
   | { type: "TOGGLE_CART" }
   | { type: "TOGGLE_FAVORITES" }
   | { type: "TOGGLE_CATEGORY_PANEL" }
