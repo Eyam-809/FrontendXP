@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse } from "lucide-react"
+import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, ShieldCheck } from "lucide-react"
 
 const categories = [
   { name: "Electronics", subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"] },
@@ -219,15 +219,21 @@ export default function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <Link href="/profile">
+                    <Link href="/profile/personal-info">
                       <DropdownMenuItem>
                         <UserCircle className="mr-2 h-4 w-4" />
                         <span>Mi Perfil</span>
                       </DropdownMenuItem>
                     </Link>
+                    <Link href="/profile">
+                      <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Ajustes</span>
+                      </DropdownMenuItem>
+                    </Link>
                     <Link href="/admin/dashboard">
                     <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
+                      <ShieldCheck className="mr-2 h-4 w-4" />
                       <span>Panel Administrativo</span>
                     </DropdownMenuItem>
                     </Link>

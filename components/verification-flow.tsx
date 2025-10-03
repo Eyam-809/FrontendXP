@@ -1,39 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Phone, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Phone, CheckCircle, RefreshCw } from 'lucide-react';
 import { useVerification } from '@/hooks/use-verification';
 
-export default function VerificationPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface VerificationFlowProps {
+  initialPhoneNumber?: string;
+  onSuccess?: () => void;
+  onBack?: () => void;
+}
+
+export default function VerificationFlow({ 
+  initialPhoneNumber = '', 
+  onSuccess,
+  onBack 
+}: VerificationFlowProps) {
   const [step, setStep] = useState<'phone' | 'code'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber);
   const [code, setCode] = useState(['', '', '', '']);
   const [countdown, setCountdown] = useState(600); // 10 minutos
   const [canResend, setCanResend] = useState(false);
-  const [email, setEmail] = useState('');
+  const router = useRouter();
 
   const { isLoading, error, success, sendCode, verifyCode, setError, setSuccess } = useVerification();
 
-  // Obtener parámetros de la URL
+  // Auto-avanzar si viene con número inicial
   useEffect(() => {
-    const phoneParam = searchParams.get('phone');
-    const emailParam = searchParams.get('email');
-    
-    if (phoneParam) {
-      setPhoneNumber(phoneParam);
-      setStep('code'); // Si viene con teléfono, ir directo al código
+    if (initialPhoneNumber) {
+      setStep('code');
     }
-    if (emailParam) {
-      setEmail(emailParam);
-    }
-  }, [searchParams]);
+  }, [initialPhoneNumber]);
 
   // Countdown timer
   useEffect(() => {
@@ -110,8 +111,11 @@ export default function VerificationPage() {
     const result = await verifyCode(phoneNumber, codeToVerify);
     if (result && result.verified) {
       setTimeout(() => {
-        // Redirigir al login con mensaje de éxito
-        router.push('/login?verified=true');
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push('/');
+        }
       }, 1500);
     } else {
       // Limpiar código en caso de error
@@ -148,22 +152,22 @@ export default function VerificationPage() {
 
   if (step === 'phone') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F9F3EF] to-[#E8DDD4] flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex items-center justify-between mb-4">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => router.push('/login')}
+                onClick={onBack || (() => router.push('/login'))}
                 className="p-2"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <CardTitle className="text-2xl font-bold text-[#1B3C53]">Verificar Teléfono</CardTitle>
+              <CardTitle className="text-2xl font-bold">Verificar Teléfono</CardTitle>
               <div className="w-10" />
             </div>
-            <CardDescription className="text-[#456882]">
+            <CardDescription>
               Ingresa tu número de teléfono para recibir un código de verificación
             </CardDescription>
           </CardHeader>
@@ -171,22 +175,22 @@ export default function VerificationPage() {
           <CardContent>
             <form onSubmit={handlePhoneSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium text-[#1B3C53]">
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700">
                   Número de teléfono
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#456882]" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="999 123 4567"
                     value={formatPhoneNumber(phoneNumber)}
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                    className="pl-10 text-[#1B3C53] placeholder:text-[#456882]"
+                    className="pl-10"
                     disabled={isLoading}
                   />
                 </div>
-                <p className="text-xs text-[#456882]">
+                <p className="text-xs text-gray-500">
                   Incluye el código de área (ej: 999 para Yucatán)
                 </p>
               </div>
@@ -206,7 +210,7 @@ export default function VerificationPage() {
               <Button
                 type="submit"
                 disabled={isLoading || phoneNumber.length < 10}
-                className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
+                className="w-full"
               >
                 {isLoading ? 'Enviando código...' : (
                   <>
@@ -217,7 +221,7 @@ export default function VerificationPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-xs text-[#456882]">
+            <div className="mt-6 text-center text-xs text-gray-500">
               <p>Al continuar, aceptas recibir mensajes SMS</p>
               <p>Se aplicarán tarifas estándar de tu operador</p>
             </div>
@@ -228,7 +232,7 @@ export default function VerificationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F9F3EF] to-[#E8DDD4] flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-between mb-4">
@@ -240,13 +244,13 @@ export default function VerificationPage() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <CardTitle className="text-2xl font-bold text-[#1B3C53]">Verificar Código</CardTitle>
+            <CardTitle className="text-2xl font-bold">Verificar Código</CardTitle>
             <div className="w-10" />
           </div>
-          <CardDescription className="text-[#456882]">
+          <CardDescription>
             Hemos enviado un código de 4 dígitos al número
             <br />
-            <span className="font-semibold text-[#1B3C53]">+52 {phoneNumber}</span>
+            <span className="font-semibold text-blue-600">+52 {phoneNumber}</span>
           </CardDescription>
         </CardHeader>
 
@@ -263,7 +267,7 @@ export default function VerificationPage() {
                 onChange={(e) => handleCodeChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-12 h-12 text-center text-xl font-bold border-2 focus:border-[#1B3C53] text-[#1B3C53]"
+                className="w-12 h-12 text-center text-xl font-bold border-2 focus:border-blue-500"
                 disabled={isLoading}
               />
             ))}
@@ -282,9 +286,9 @@ export default function VerificationPage() {
           )}
 
           <div className="text-center">
-            <p className="text-sm text-[#456882]">
+            <p className="text-sm text-gray-600">
               El código expira en:{' '}
-              <span className={`font-mono font-bold ${countdown < 60 ? 'text-red-500' : 'text-[#1B3C53]'}`}>
+              <span className={`font-mono font-bold ${countdown < 60 ? 'text-red-500' : 'text-gray-700'}`}>
                 {formatTime(countdown)}
               </span>
             </p>
@@ -294,30 +298,23 @@ export default function VerificationPage() {
             <Button
               onClick={() => handleCodeVerification()}
               disabled={isLoading || code.join('').length !== 4}
-              className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
+              className="w-full"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verificando...
-                </>
-              ) : (
-                'Verificar Código'
-              )}
+              {isLoading ? 'Verificando...' : 'Verificar Código'}
             </Button>
 
             <Button
               variant="outline"
               onClick={handleResendCode}
               disabled={!canResend || isLoading}
-              className="w-full border-[#1B3C53] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-white"
+              className="w-full"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Reenviar Código
             </Button>
           </div>
 
-          <div className="text-center text-xs text-[#456882]">
+          <div className="text-center text-xs text-gray-500">
             <p>¿No recibiste el código?</p>
             <p>Verifica tu número de teléfono o intenta reenviar el código.</p>
           </div>
@@ -326,3 +323,6 @@ export default function VerificationPage() {
     </div>
   );
 }
+
+
+

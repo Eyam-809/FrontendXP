@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [telefono, setTelefono] = useState(""); // Nuevo estado para teléfono
   const [direccion, setDireccion] = useState(""); // Nuevo estado para dirección
   const [message, setMessage] = useState("");
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
   //const [errors, setErrors] = useState({});
    //PLANES
   const [planSeleccionado, setPlanSeleccionado] = useState("");
@@ -173,7 +174,9 @@ const handleLogin = (e: React.FormEvent) => {
 
         setMessage(response.data.message);
         //setErrors({});
-        window.location.reload()
+        
+        // Redirigir a la página de verificación con el número de teléfono
+        router.push(`/verification?phone=${encodeURIComponent(telefono)}&email=${encodeURIComponent(emailR)}`);
     } catch (error) {
         setIsRegister(false);
     }
@@ -189,6 +192,15 @@ useEffect(() => {
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
       });
+  }, []);
+
+  // Detectar si viene de verificación exitosa
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === 'true') {
+      setVerificationSuccess(true);
+      setSuccessMessage('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión.');
+    }
   }, []);
 
   return (
@@ -275,6 +287,12 @@ useEffect(() => {
                       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                         <strong className="font-bold">¡Error!</strong>
                         <span className="block sm:inline ml-1">{error}</span>
+                      </div>
+                    )}
+                    {verificationSuccess && successMessage && (
+                      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                        <strong className="font-bold">¡Éxito!</strong>
+                        <span className="block sm:inline ml-1">{successMessage}</span>
                       </div>
                     )}
                   </div>
