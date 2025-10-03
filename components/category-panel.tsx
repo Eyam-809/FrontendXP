@@ -153,6 +153,7 @@ export default function CategoryPanel() {
 
 
               {/* Productos Destacados */}
+               
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">
                   Productos Destacados
@@ -180,6 +181,7 @@ export default function CategoryPanel() {
                       ))}
                 </div>
               </div>
+              
             </div>
           </div>
         </motion.div>

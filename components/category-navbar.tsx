@@ -54,9 +54,10 @@ export default function CategoryNavbar() {
           }))
         )
       } catch (error) {
+        router.push("/no-internet")
         console.error(error)
         //alert("No se pudieron cargar las categorías")
-        router.push("/no-internet")
+       
       }
     }
 
