@@ -574,7 +574,7 @@ useEffect(() => {
 
       <footer className="bg-[#1B3C53] text-[#F9F3EF] py-6">
         <div className="container mx-auto px-4 text-center">
-          <p>&copy; {new Date().getFullYear()} SuperMercado. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} XpMarket. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
