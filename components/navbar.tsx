@@ -205,7 +205,7 @@ export default function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors h-auto p-2">
+                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#456882] transition-colors h-auto p-2">
                       <div className="flex items-center space-x-2">
                         <div className="h-8 w-8 flex items-center justify-center rounded-full bg-[#456882] text-[#F9F3EF] text-sm font-bold">
                           {(state.userSession.name || "U")[0].toUpperCase()}
@@ -218,6 +218,7 @@ export default function Navbar() {
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
+
                   <DropdownMenuContent align="end" className="w-64">
                     {/* Opciones del perfil */}
                     <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
