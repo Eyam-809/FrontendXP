@@ -165,6 +165,67 @@ useEffect(() => {
   fetchProducts()
 }, [refresh])
 
+  // Cargar conversaciones desde localStorage
+  useEffect(() => {
+    const loadConversations = () => {
+      try {
+        const savedConversations = localStorage.getItem('conversations')
+        if (savedConversations) {
+          const parsedConversations = JSON.parse(savedConversations)
+          
+          // Transformar las conversaciones simples en el formato esperado por ChatConversations
+          const formattedConversations = parsedConversations.map((conv: any) => ({
+            id: conv.id,
+            user: {
+              id: conv.sellerId,
+              name: conv.sellerName || `Vendedor ${conv.sellerId}`,
+              avatar: conv.sellerAvatar || "/placeholder-user.jpg",
+              isOnline: true
+            },
+            product: {
+              id: conv.productId,
+              name: conv.productName || `Producto ${conv.productId}`,
+              image: conv.productImage || "/placeholder.jpg",
+              price: conv.productPrice || 0
+            },
+            messages: [{
+              id: 1,
+              sender: 'other' as const,
+              content: conv.lastMessage,
+              timestamp: new Date(conv.timestamp).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }),
+              isRead: true
+            }],
+            unreadCount: conv.unreadCount,
+            lastMessage: conv.lastMessage,
+            lastMessageTime: conv.timestamp
+          }))
+          
+          setConversations(formattedConversations)
+        }
+      } catch (error) {
+        console.error('Error al cargar conversaciones:', error)
+      }
+    }
+
+    loadConversations()
+    
+    // Escuchar cambios en localStorage para actualizar conversaciones
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'conversations') {
+        loadConversations()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
   useEffect(() => {
     // Primero intenta obtener datos del localStorage
     const userData = localStorage.getItem("userData")
