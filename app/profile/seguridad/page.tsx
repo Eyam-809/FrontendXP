@@ -23,6 +23,7 @@ import {
   Bell
 } from "lucide-react"
 import Link from "next/link"
+import Navbar from "@/components/navbar"
 
 interface UserData {
   name: string
@@ -122,20 +123,14 @@ export default function SeguridadPage() {
 
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
+      <Navbar />
       <div className="container mx-auto px-6 py-8 max-w-4xl">
         {/* Top Section */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/profile">
-            <Button variant="outline" className="bg-gray-100 border-gray-300 hover:bg-gray-200">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-          </Link>
-          <div className="text-center flex-1">
+        <div className="flex items-center justify-center mb-8">
+          <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Seguridad</h1>
             <p className="text-gray-600">Configuraciones importantes para mantener tu cuenta segura</p>
           </div>
-          <div className="w-24"></div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

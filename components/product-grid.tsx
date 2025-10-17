@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Star, Heart, ShoppingCart, Eye } from "lucide-react"
+import { Star, Heart, ShoppingCart, Eye, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/contexts/app-context"
 import Link from "next/link"
+import CategoryNavbar from "@/components/category-navbar"
 
 interface ProductGridProps {
   products?: any[] // opcional, si no se pasa hace fetch de todos
@@ -36,6 +37,11 @@ export default function ProductGrid({ products }: ProductGridProps) {
     } else {
       dispatch({ type: "ADD_TO_FAVORITES", payload: product })
     }
+  }
+
+  // Limpiar filtro de subcategoría
+  const clearFilter = () => {
+    dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
   }
 
   // Fetch productos si no se pasan por props
@@ -69,10 +75,24 @@ export default function ProductGrid({ products }: ProductGridProps) {
         <h2 className="text-2xl font-bold text-gray-800">
           {products ? "Productos filtrados" : "Todos los productos"}
         </h2>
-        <div className="text-sm text-gray-500">
-          {productos.length} producto{productos.length !== 1 ? "s" : ""} encontrado
+        <div className="flex items-center space-x-4">
+          {products && (
+            <Button
+              onClick={clearFilter}
+              variant="outline"
+              className="bg-[#E8DDD4] border-[#1B3C53] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-white transition-all duration-200"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Borrar Filtro
+            </Button>
+          )}
+          <div className="text-sm text-gray-500">
+            {productos.length} producto{productos.length !== 1 ? "s" : ""} encontrado
+          </div>
         </div>
       </div>
+
+      <CategoryNavbar />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {productos.map((product, index) => {

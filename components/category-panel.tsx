@@ -38,9 +38,8 @@ const translateSubcategory = (subcategory: string) => {
 
 export default function CategoryPanel() {
   const { state, dispatch } = useApp()
-  // 👇 ahora subcategories y featured guardan {id, name}
+  // 👇 ahora subcategories guarda {id, name}
   const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
-  const [featured, setFeatured] = useState<{ id: number; name: string }[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -48,7 +47,6 @@ export default function CategoryPanel() {
 
     setLoading(true)
     setSubcategories([])
-    setFeatured([])
 
     const fetchSubcategories = async () => {
       try {
@@ -65,7 +63,6 @@ export default function CategoryPanel() {
         }))
 
         setSubcategories(mapped)
-        setFeatured(mapped.slice(0, 4))
       } catch (error) {
         console.error(error)
         alert("No se pudieron cargar las subcategorías")
@@ -79,13 +76,8 @@ export default function CategoryPanel() {
 
   if (!state.isCategoryPanelOpen) return null
 
-  // 👇 ahora recibimos también el id
   const handleSubcategoryClick = (subcategory: { id: number; name: string }) => {
     dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: subcategory })
-  }
-
-  const handleFeaturedClick = (item: { id: number; name: string }) => {
-    dispatch({ type: "SET_SEARCH_QUERY", payload: item.name })
   }
 
   return (
@@ -118,15 +110,15 @@ export default function CategoryPanel() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-8">
               {/* Subcategorías */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-[#1B3C53]">
                   Subcategorías
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {loading
-                    ? Array(4)
+                    ? Array(8)
                         .fill(0)
                         .map((_, i) => (
                           <div
