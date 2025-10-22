@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { useApp } from "@/contexts/app-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   User, 
@@ -120,9 +121,19 @@ export default function PersonalInfoPage() {
   })
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
+  
   const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
   const [conversations, setConversations] = useState<any[]>([])
+  const { state, dispatch } = useApp(); // ✅ Esto soluciona los errores
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    email: "",
+    telefono: "",
+    direccion: "",
+    foto: "",
+  });
+
   const [refresh, setRefresh] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -164,6 +175,69 @@ useEffect(() => {
 
   fetchProducts()
 }, [refresh])
+
+
+
+  // Cargar conversaciones desde localStorage
+  useEffect(() => {
+    const loadConversations = () => {
+      try {
+        const savedConversations = localStorage.getItem('conversations')
+        if (savedConversations) {
+          const parsedConversations = JSON.parse(savedConversations)
+          
+          // Transformar las conversaciones simples en el formato esperado por ChatConversations
+          const formattedConversations = parsedConversations.map((conv: any) => ({
+            id: conv.id,
+            user: {
+              id: conv.sellerId,
+              name: conv.sellerName || `Vendedor ${conv.sellerId}`,
+              avatar: conv.sellerAvatar || "/placeholder-user.jpg",
+              isOnline: true
+            },
+            product: {
+              id: conv.productId,
+              name: conv.productName || `Producto ${conv.productId}`,
+              image: conv.productImage || "/placeholder.jpg",
+              price: conv.productPrice || 0
+            },
+            messages: [{
+              id: 1,
+              sender: 'other' as const,
+              content: conv.lastMessage,
+              timestamp: new Date(conv.timestamp).toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }),
+              isRead: true
+            }],
+            unreadCount: conv.unreadCount,
+            lastMessage: conv.lastMessage,
+            lastMessageTime: conv.timestamp
+          }))
+          
+          setConversations(formattedConversations)
+        }
+      } catch (error) {
+        console.error('Error al cargar conversaciones:', error)
+      }
+    }
+
+    loadConversations()
+    
+    // Escuchar cambios en localStorage para actualizar conversaciones
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'conversations') {
+        loadConversations()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
 
   useEffect(() => {
     // Primero intenta obtener datos del localStorage
@@ -387,6 +461,78 @@ useEffect(() => {
     setIsEditing(false)
   }
 
+  const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("foto", file);
+
+  try {
+    setIsUploadingAvatar(true);
+
+    const response = await fetch("http://localhost:8000/api/usuario/foto", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${state.userSession?.token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Actualizar contexto
+      const newSession = {
+        ...state.userSession,
+        foto: data.foto,
+      };
+      dispatch({
+        type: "SET_USER_SESSION",
+        payload: newSession,
+      });
+
+      // Actualizar userSession en localStorage
+      localStorage.setItem("userSession", JSON.stringify(newSession));
+
+      // Actualizar userData.foto en localStorage (si existe)
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("userData") || "{}");
+        if (storedUser && typeof storedUser === "object") {
+          storedUser.foto = data.foto;
+          // mantener también propiedades antiguas (compatibilidad)
+          localStorage.setItem("userData", JSON.stringify(storedUser));
+        }
+      } catch (err) {
+        console.error("Error al actualizar userData en localStorage:", err);
+      }
+
+      // Actualizar estados locales usados en esta página
+      setUserInfo((prev) => ({ ...prev, foto: data.foto }));
+      setUser((prev) => (prev ? { ...prev, // compatibilidad con distintos nombres
+        // intenta asignar a avatar y foto por si el objeto usa uno u otro campo
+        ...(prev as any),
+        avatar: data.foto,
+        foto: data.foto,
+      } : prev));
+
+      // opcional: notificar al usuario
+      // toast.success("Foto actualizada");
+    } else {
+      // toast.error("Error al subir la foto");
+      console.error("Error subiendo foto:", data);
+      alert("❌ Error al subir la foto");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("❌ Ocurrió un error al subir la foto");
+  } finally {
+    setIsUploadingAvatar(false);
+  }
+};
+
+
+
   // Función para recargar productos
   const reloadUserProducts = async () => {
     try {
@@ -494,14 +640,35 @@ const handleCloseDeleteModal = () => {
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-end space-x-4">
-            <Avatar className="h-24 w-24 border-4 border-white">
-              {currentUser.avatar ? (
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-              ) : null}
-              <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
-                {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
-              </AvatarFallback>
-            </Avatar>
+             <Avatar className="h-24 w-24 border-4 border-white">
+                          {userInfo?.foto || currentUser?.foto ? (
+                            <AvatarImage
+                              src={
+                                // Si es base64, úsalo directamente
+                                (userInfo?.foto?.startsWith("data:image")
+                                  ? userInfo.foto
+                                  : userInfo?.foto
+                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  : currentUser?.foto?.startsWith("data:image")
+                                  ? currentUser.foto
+                                  : currentUser?.foto
+                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  : undefined)
+                              }
+                              alt={currentUser?.name || "Usuario"}
+                            />
+                          ) : null}
+
+                          <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
+                            {(currentUser?.name && currentUser.name.trim()
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U")}
+                          </AvatarFallback>
+                        </Avatar>
             <div className="flex-1 text-white">
               <h1 className="text-3xl font-bold">{currentUser.name}</h1>
               <p className="text-lg opacity-90">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
@@ -640,19 +807,50 @@ const handleCloseDeleteModal = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center space-x-4">
-                        <Avatar className="h-20 w-20">
-                          {currentUser.avatar ? (
-                            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                        <Avatar className="h-24 w-24 border-4 border-white">
+                          {userInfo?.foto || currentUser?.foto ? (
+                            <AvatarImage
+                              src={
+                                // Si es base64, úsalo directamente
+                                (userInfo?.foto?.startsWith("data:image")
+                                  ? userInfo.foto
+                                  : userInfo?.foto
+                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  : currentUser?.foto?.startsWith("data:image")
+                                  ? currentUser.foto
+                                  : currentUser?.foto
+                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  : undefined)
+                              }
+                              alt={currentUser?.name || "Usuario"}
+                            />
                           ) : null}
-                          <AvatarFallback className="bg-[#E8DDD4] text-[#1B3C53] text-2xl font-semibold">
-                            {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
+
+                          <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
+                            {(currentUser?.name && currentUser.name.trim()
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U")}
                           </AvatarFallback>
                         </Avatar>
+
+
                         <div>
-                          <Button variant="outline">
+                          <Button variant="outline"
+                          onClick={() => document.getElementById("fileInput").click()}>
                             <Edit className="h-4 w-4 mr-2" />
                             Cambiar foto
                           </Button>
+                          <input
+                            id="fileInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleChangePhoto}
+                            className="hidden"
+                          />
                           <p className="text-sm text-[#456882] mt-1">
                             JPG, PNG hasta 5MB
                           </p>

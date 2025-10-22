@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApp } from "@/contexts/app-context"
 import axios from "axios";
+import storage from "@/lib/storage"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function LoginPage() {
   const [telefono, setTelefono] = useState(""); // Nuevo estado para teléfono
   const [direccion, setDireccion] = useState(""); // Nuevo estado para dirección
   const [message, setMessage] = useState("");
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
   //const [errors, setErrors] = useState({});
    //PLANES
   const [planSeleccionado, setPlanSeleccionado] = useState("");
@@ -81,8 +83,10 @@ const handleLogin = (e: React.FormEvent) => {
   .then((response) => {
     console.log("Usuario autenticado:", response.data); // Verifica la respuesta completa
     
+    const { token, user: apiUser } = response.data; // Desestructuración para mayor claridad
+
     // Guarda el token
-    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("token", token);
     
     // Guarda todos los datos del usuario
     const userData = response.data.user;
@@ -93,6 +97,7 @@ const handleLogin = (e: React.FormEvent) => {
       phone: userData.telefono,
       address: userData.direccion,
       plan_id: userData.plan_id,
+      foto: userData.foto,
       created_at: userData.created_at,
       updated_at: userData.updated_at,
       email_verified_at: userData.email_verified_at,
@@ -101,6 +106,7 @@ const handleLogin = (e: React.FormEvent) => {
       totalProducts: 12,
       totalSales: 45,
       joinDate: userData.created_at
+      
     }));
 
     // También guarda datos individuales para compatibilidad
@@ -111,15 +117,16 @@ const handleLogin = (e: React.FormEvent) => {
     console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
     
     // Actualizar el contexto inmediatamente
-    dispatch({
-      type: "SET_USER_SESSION",
-      payload: { 
-        token: response.data.token, 
-        user_id: userData.id, 
-        plan_id: userData.plan_id, 
-        name: userData.name 
-      },
+    storage.setToken(token)
+    storage.setUserData(apiUser)
+    storage.setUserSession({
+      token,
+      user_id: apiUser.id,
+      name: apiUser.name,
+      role: apiUser.role,
+      foto: apiUser.foto
     })
+    dispatch({ type: "SET_USER_SESSION", payload: { token, user_id: apiUser.id, name: apiUser.name, foto: apiUser.foto } })
     
     setIsLoading(false);
 
@@ -173,7 +180,9 @@ const handleLogin = (e: React.FormEvent) => {
 
         setMessage(response.data.message);
         //setErrors({});
-        window.location.reload()
+        
+        // Redirigir a la página de verificación con el número de teléfono
+        router.push(`/verification?phone=${encodeURIComponent(telefono)}&email=${encodeURIComponent(emailR)}`);
     } catch (error) {
         setIsRegister(false);
     }
@@ -189,6 +198,15 @@ useEffect(() => {
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
       });
+  }, []);
+
+  // Detectar si viene de verificación exitosa
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === 'true') {
+      setVerificationSuccess(true);
+      setSuccessMessage('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión.');
+    }
   }, []);
 
   return (
@@ -275,6 +293,12 @@ useEffect(() => {
                       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                         <strong className="font-bold">¡Error!</strong>
                         <span className="block sm:inline ml-1">{error}</span>
+                      </div>
+                    )}
+                    {verificationSuccess && successMessage && (
+                      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                        <strong className="font-bold">¡Éxito!</strong>
+                        <span className="block sm:inline ml-1">{successMessage}</span>
                       </div>
                     )}
                   </div>

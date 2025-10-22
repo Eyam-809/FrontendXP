@@ -92,9 +92,41 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
   }
 
   const startChat = (sellerId: number, productId: number) => {
-    // Redirigir al chat privado con el vendedor
-    onClose() // Cerrar el modal del chat global
-    router.push(`/profile?tab=conversations&seller=${sellerId}&product=${productId}`)
+    // Encontrar el producto y vendedor para obtener más información
+    const product = products.find(p => p.id === productId)
+    if (!product) return
+
+    // Crear una nueva conversación con información completa
+    const newConversation = {
+      id: Date.now(),
+      sellerId,
+      sellerName: product.seller.name,
+      sellerAvatar: product.seller.avatar,
+      productId,
+      productName: product.name,
+      productImage: product.image,
+      productPrice: product.price,
+      timestamp: new Date().toISOString(),
+      lastMessage: "Conversación iniciada",
+      unreadCount: 0
+    }
+
+    // Guardar la conversación en localStorage
+    const existingConversations = JSON.parse(localStorage.getItem('conversations') || '[]')
+    const conversationExists = existingConversations.find((conv: any) => 
+      conv.sellerId === sellerId && conv.productId === productId
+    )
+
+    if (!conversationExists) {
+      const updatedConversations = [...existingConversations, newConversation]
+      localStorage.setItem('conversations', JSON.stringify(updatedConversations))
+    }
+
+    // Cerrar el modal del chat global
+    onClose()
+    
+    // Redirigir al perfil con la pestaña de conversaciones activa
+    router.push('/profile/personal-info?tab=conversations')
   }
 
   if (!isOpen) return null
@@ -157,11 +189,6 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                       alt={product.name}
                       className="w-full h-48 object-cover"
                     />
-                    {product.originalPrice && (
-                      <Badge className="absolute top-2 left-2 bg-[#E63946]">
-                        -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                      </Badge>
-                    )}
                     <Badge variant="outline" className="absolute top-2 right-2 bg-white/90">
                       {product.condition}
                     </Badge>
@@ -186,14 +213,6 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                       <span className="text-xs text-gray-400">{formatTime(product.createdAt)}</span>
                     </div>
                     <p className="text-sm text-gray-700 mb-3">{product.description}</p>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <p className="text-xl font-bold text-[#1B3C53]">${product.price.toLocaleString()}</p>
-                      {product.originalPrice && (
-                        <p className="text-sm text-gray-400 line-through">
-                          ${product.originalPrice.toLocaleString()}
-                        </p>
-                      )}
-                    </div>
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center space-x-1">
@@ -219,7 +238,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Iniciar Chat
                       </Button>
-                      <Link href={`/product/${product.id}`} className="flex-1">
+                      <Link href={`/product/chat/${product.id}`} className="flex-1">
                         <Button variant="outline" size="sm" className="w-full border-[#E8DDD4] text-[#1B3C53] hover:bg-[#F9F3EF]">
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Producto

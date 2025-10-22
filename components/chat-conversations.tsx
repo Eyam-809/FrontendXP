@@ -13,7 +13,9 @@ import {
   User,
   Package,
   Eye,
-  Heart
+  Heart,
+  Trash2,
+  MoreVertical
 } from "lucide-react"
 import Link from "next/link"
 
@@ -54,6 +56,7 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
     conversations.length > 0 ? conversations[0] : null
   )
   const [newMessage, setNewMessage] = useState("")
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const sendMessage = () => {
     if (!newMessage.trim() || !selectedConversation) return
@@ -69,9 +72,50 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
       isRead: false
     }
 
-    // Aquí deberías actualizar el estado real de la conversación
-    console.log('Enviando mensaje:', message)
+    // Actualizar la conversación en localStorage
+    const savedConversations = JSON.parse(localStorage.getItem('conversations') || '[]')
+    const updatedConversations = savedConversations.map((conv: any) => {
+      if (conv.id === selectedConversation.id) {
+        return {
+          ...conv,
+          lastMessage: newMessage,
+          timestamp: new Date().toISOString()
+        }
+      }
+      return conv
+    })
+    
+    localStorage.setItem('conversations', JSON.stringify(updatedConversations))
+    
+    // Actualizar el estado local
+    setSelectedConversation({
+      ...selectedConversation,
+      messages: [...selectedConversation.messages, message],
+      lastMessage: newMessage,
+      lastMessageTime: new Date().toISOString()
+    })
+    
     setNewMessage("")
+  }
+
+  const deleteConversation = () => {
+    if (!selectedConversation) return
+
+    // Eliminar la conversación del localStorage
+    const savedConversations = JSON.parse(localStorage.getItem('conversations') || '[]')
+    const updatedConversations = savedConversations.filter((conv: any) => conv.id !== selectedConversation.id)
+    localStorage.setItem('conversations', JSON.stringify(updatedConversations))
+
+    // Actualizar el estado local
+    const remainingConversations = conversations.filter(conv => conv.id !== selectedConversation.id)
+    setSelectedConversation(remainingConversations.length > 0 ? remainingConversations[0] : null)
+    setShowDeleteModal(false)
+
+    // Disparar evento de storage para actualizar la lista en el componente padre
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'conversations',
+      newValue: JSON.stringify(updatedConversations)
+    }))
   }
 
   const formatTime = (timeString: string) => {
@@ -166,11 +210,25 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
                       </div>
                     </div>
                     
-                    {conversation.unreadCount > 0 && (
-                      <Badge className="h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-xs">
-                        {conversation.unreadCount}
-                      </Badge>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      {conversation.unreadCount > 0 && (
+                        <Badge className="h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-xs">
+                          {conversation.unreadCount}
+                        </Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedConversation(conversation)
+                          setShowDeleteModal(true)
+                        }}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -207,12 +265,22 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
                     </div>
                   </div>
                   
-                  <Link href={`/product/${selectedConversation.product.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver producto
+                  <div className="flex space-x-2">
+                    <Link href={`/product/chat/${selectedConversation.product.id}`}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver producto
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </Link>
+                  </div>
                 </div>
               </CardHeader>
 
@@ -290,6 +358,44 @@ export default function ChatConversations({ conversations }: ChatConversationsPr
           )}
         </Card>
       </div>
+
+      {/* Modal de confirmación para eliminar conversación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Eliminar conversación</h3>
+                <p className="text-sm text-gray-500">Esta acción no se puede deshacer</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 mb-6">
+              ¿Estás seguro de que quieres eliminar esta conversación con <strong>{selectedConversation?.user.name}</strong>?
+            </p>
+            
+            <div className="flex space-x-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteModal(false)}
+                className="border-gray-300"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={deleteConversation}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
