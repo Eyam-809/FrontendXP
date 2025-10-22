@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle } from "lucide-react"
+import storage from "@/lib/storage"
 
 const categories = [
   { name: "Electronics", subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"] },
@@ -65,21 +66,20 @@ export default function Navbar() {
   } | null>(null)
 
   useEffect(() => {
-    const userData = localStorage.getItem("userData")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-    
+    const userData = storage.getUserData()
+    if (userData) setUser(userData as any)
     if (typeof window !== "undefined") {
-      setIsAdmin(localStorage.getItem("role") === "admin");
+      // Si guardas role dentro de userData o userSession, ajústalo aquí
+      const sess = storage.getUserSession()
+      setIsAdmin(sess?.role === "admin" || storage.getUserData()?.role === "admin")
     }
   }, [])
 
   const handleLogout = () => {
-  localStorage.clear()  // Limpia todo el localStorage
+  storage.clearAll()
   dispatch({ type: "CLEAR_USER_SESSION" })
   setUser(null)
-  window.location.href = "/login" // Redirige a login
+  window.location.href = "/login"
 }
 
 

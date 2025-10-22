@@ -260,6 +260,58 @@ export default function GlobalChatPage() {
   }, [])
 
   useEffect(() => {
+  const loadGlobalProducts = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("http://localhost:8000/api/products/trueques", {
+        headers: { "Accept": "application/json" }
+      })
+      if (!response.ok) throw new Error("Error al obtener los productos")
+
+      const data = await response.json()
+      console.log("Productos obtenidos del API:", data) 
+
+      // Mapeamos los datos del backend al formato GlobalProduct
+      const mappedProducts: GlobalProduct[] = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: parseFloat(item.price) || 0,
+        image: item.image || "/placeholder.jpg", // ya viene en base64
+        category: item.subcategoria?.name || "Sin categoría",
+        condition: item.condition || "No especificado",
+        location: item.location || "Desconocido",
+        createdAt: item.created_at || new Date().toISOString(),
+        views: item.views ?? 0,
+        likes: item.likes ?? 0,
+        seller: {
+          id: item.user?.id || 0,
+          name: item.user?.name || "Vendedor desconocido",
+          avatar: item.user?.avatar 
+            ? (item.user.avatar.startsWith("http") 
+                ? item.user.avatar 
+                : `http://localhost:8000/storage/${item.user.avatar}`)
+            : "/placeholder-user.jpg",
+          rating: item.user?.rating ?? 0,
+          isOnline: false,
+          status: 'offline'
+        }
+      }))
+
+      setProducts(mappedProducts)
+      setFilteredProducts(mappedProducts)
+    } catch (error) {
+      console.error("Error al cargar productos del API:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  loadGlobalProducts()
+}, [])
+
+
+  useEffect(() => {
     // Filtrar y ordenar productos
     let filtered = products
 
@@ -339,8 +391,82 @@ export default function GlobalChatPage() {
     }
   }
 
-  const startChat = (sellerId: number, productId: number) => {
-    router.push(`/profile?tab=conversations&seller=${sellerId}&product=${productId}`)
+  const startChat = async (sellerId: number, productId: number) => {
+    try {
+      // obtener id del usuario logueado (contexto o localStorage)
+      const currentUserId =
+        state.userSession?.user_id ||
+        Number(localStorage.getItem("user_id")) ||
+        (JSON.parse(localStorage.getItem("userData") || "{}")?.id);
+
+      if (!currentUserId) {
+        alert("No se encontró usuario logueado");
+        return;
+      }
+
+      const token = state.userSession?.token || localStorage.getItem("token");
+
+      // El backend espera 'receiver_id' y usa el usuario autenticado del header
+      const payload = {
+        receiver_id: sellerId
+      };
+
+      const res = await fetch("http://localhost:8000/api/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let apiConv: any = null;
+      if (res.ok) {
+        apiConv = await res.json();
+        console.log("Conversación creada/obtenida:", apiConv);
+      } else {
+        console.error("Error creando conversación en API:", await res.text());
+        // intentar parsear respuesta por si devuelve información útil
+        try { apiConv = await res.json(); } catch { apiConv = null; }
+      }
+
+      // Buscar producto para datos de la conversación (usa filteredProducts en este componente)
+      const product = filteredProducts.find((p) => p.id === productId);
+
+      // Guardar en localStorage (mantener compatibilidad con el flow actual)
+      const existingConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
+      const conversationExists = existingConversations.find(
+        (conv: any) =>
+          // si la API devolvió id, usarlo; sino comparar seller+product
+          (apiConv?.id && conv.id === apiConv.id) ||
+          (conv.sellerId === sellerId && conv.productId === productId)
+      );
+
+      if (!conversationExists) {
+        const newConversation = {
+          id: apiConv?.id ?? Date.now(),
+          sellerId,
+          sellerName: product?.seller.name ?? `Vendedor ${sellerId}`,
+          sellerAvatar: product?.seller.avatar ?? "/placeholder-user.jpg",
+          productId,
+          productName: product?.name ?? `Producto ${productId}`,
+          productImage: product?.image ?? "/placeholder.jpg",
+          productPrice: product?.price ?? 0,
+          timestamp: new Date().toISOString(),
+          lastMessage: "Conversación iniciada",
+          unreadCount: 0,
+        };
+
+        const updatedConversations = [...existingConversations, newConversation];
+        localStorage.setItem("conversations", JSON.stringify(updatedConversations));
+      }
+
+      // Redirigir a la pestaña de conversaciones del perfil
+      router.push("/profile/personal-info?tab=conversations");
+    } catch (error) {
+      console.error("Error al iniciar chat:", error);
+      alert("Ocurrió un error al iniciar la conversación.");
+    }
   }
 
   return (
@@ -474,11 +600,6 @@ export default function GlobalChatPage() {
                           alt={product.name}
                           className="w-full h-48 object-cover"
                         />
-                        {product.originalPrice && (
-                          <Badge className="absolute top-2 left-2 bg-[#E63946] text-xs text-white">
-                            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                          </Badge>
-                        )}
                         <Badge variant="outline" className="absolute top-2 right-2 bg-yellow-100 text-xs border-yellow-400 text-yellow-700">
                           {product.condition}
                         </Badge>
@@ -487,15 +608,6 @@ export default function GlobalChatPage() {
                       <div className="p-4">
                         <h3 className="font-semibold text-lg mb-2 text-[#1B3C53]">{product.name}</h3>
                         <p className="text-sm text-gray-700 mb-3">{product.description}</p>
-                        {/* Precio */}
-                        <div className="flex items-center space-x-2 mb-3">
-                          <p className="text-xl font-bold text-[#1B3C53]">${product.price.toLocaleString()}</p>
-                          {product.originalPrice && (
-                            <p className="text-sm text-gray-400 line-through">
-                              ${product.originalPrice.toLocaleString()}
-                            </p>
-                          )}
-                        </div>
                         {/* Estadísticas */}
                         <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                           <div className="flex items-center space-x-3">
@@ -523,7 +635,7 @@ export default function GlobalChatPage() {
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Iniciar Chat
                           </Button>
-                          <Link href={`/product/${product.id}`} className="flex-1">
+                          <Link href={`/product/chat/${product.id}`} className="flex-1">
                             <Button variant="outline" size="sm" className="w-full border-[#E8DDD4] text-[#1B3C53] hover:bg-[#F9F3EF]">
                               <Eye className="h-4 w-4 mr-2" />
                               Ver Producto
@@ -542,4 +654,4 @@ export default function GlobalChatPage() {
       </div>
     </div>
   )
-} 
+}

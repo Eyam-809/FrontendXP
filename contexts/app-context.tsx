@@ -26,6 +26,7 @@ interface UserSession {
   user_id: string
   plan_id: string
   name: string
+  foto: string
 }
 
 interface AppState {
@@ -157,6 +158,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const user_id = localStorage.getItem("user_id")
       const plan_id = localStorage.getItem("plan_id")
       const name = localStorage.getItem("name")
+      const foto = localStorage.getItem("foto")
+      console.log("Cargando sesión desde localStorage:", { token, user_id, plan_id, name, foto }) 
 
       if (token && user_id && plan_id) {
         dispatch({ type: "SET_USER_SESSION", payload: { token, user_id, plan_id, name: name || "" } })

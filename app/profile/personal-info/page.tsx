@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { useApp } from "@/contexts/app-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   User, 
@@ -120,9 +121,19 @@ export default function PersonalInfoPage() {
   })
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
+  
   const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
   const [conversations, setConversations] = useState<any[]>([])
+  const { state, dispatch } = useApp(); // ✅ Esto soluciona los errores
+  const [userInfo, setUserInfo] = useState({
+    name: "",
+    email: "",
+    telefono: "",
+    direccion: "",
+    foto: "",
+  });
+  
   const [refresh, setRefresh] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -164,6 +175,154 @@ useEffect(() => {
 
   fetchProducts()
 }, [refresh])
+
+
+
+  // Cargar conversaciones: primero intenta la API y si falla usa localStorage (compatibilidad)
+  useEffect(() => {
+    const loadFromLocal = (saved: any[]) => {
+      try {
+        const formattedConversations = saved.map((conv: any) => ({
+          id: conv.id,
+          user: {
+            id: conv.sellerId,
+            name: conv.sellerName || `Vendedor ${conv.sellerId}`,
+            avatar: conv.sellerAvatar || "/placeholder-user.jpg",
+            isOnline: true
+          },
+          product: {
+            id: conv.productId,
+            name: conv.productName || `Producto ${conv.productId}`,
+            image: conv.productImage || "/placeholder.jpg",
+            price: conv.productPrice || 0
+          },
+          messages: [{
+            id: 1,
+            sender: 'other' as const,
+            content: conv.lastMessage,
+            timestamp: new Date(conv.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            isRead: true
+          }],
+          unreadCount: conv.unreadCount,
+          lastMessage: conv.lastMessage,
+          lastMessageTime: conv.timestamp
+        }))
+        setConversations(formattedConversations)
+        console.log("Conversaciones cargadas desde localStorage:", formattedConversations)
+      } catch (e) {
+        console.error("Error formateando conversaciones desde localStorage:", e)
+      }
+    }
+
+    const fetchConversationsFromApi = async () => {
+      try {
+        const token = state.userSession?.token || localStorage.getItem("token")
+        const userData = state.userSession?.user_id ? { id: state.userSession.user_id } : JSON.parse(localStorage.getItem("userData") || "{}")
+        const userId = userData?.id
+        if (!userId) {
+          // intentar cargar local si no hay id
+          const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+          if (saved.length) loadFromLocal(saved)
+          return
+        }
+
+        const res = await fetch(`http://localhost:8000/api/conversations/user/${userId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "application/json"
+          }
+        })
+
+        if (!res.ok) {
+          console.warn("No se pudo obtener conversaciones desde la API, status:", res.status)
+          const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+          if (saved.length) loadFromLocal(saved)
+          return
+        }
+
+        const data = await res.json()
+
+        // Formatear la respuesta del backend al formato que usa el UI
+        const formatted = (data || []).map((conv: any) => {
+          // identificar el otro usuario
+          const other = (conv.user_one_id === userId) ? conv.userTwo : conv.userOne
+          // último mensaje si existe
+          const lastMsg = (conv.messages && conv.messages.length) ? conv.messages[conv.messages.length - 1] : null
+
+          return {
+            id: conv.id,
+            user: {
+              id: other?.id ?? (other?.user_id ?? 0),
+              name: other?.name ?? `Usuario ${other?.id ?? ''}`,
+              avatar: other?.foto ?? other?.avatar ?? "/placeholder-user.jpg",
+              isOnline: true
+            },
+            product: {
+              id: conv.product_id ?? (conv.product?.id ?? 0),
+              name: conv.product?.name ?? conv.product_name ?? `Producto ${conv.product_id ?? ''}`,
+              image: conv.product?.image ?? "/placeholder.jpg",
+              price: conv.product?.price ?? 0
+            },
+            messages: (conv.messages || []).map((m: any, idx: number) => ({
+              id: m.id ?? idx,
+              sender: m.sender_id === userId ? 'me' as const : 'other' as const,
+              content: m.message ?? m.content ?? '',
+              timestamp: new Date(m.created_at ?? m.createdAt ?? Date.now()).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              isRead: !!m.read
+            })),
+            unreadCount: conv.unread_count ?? 0,
+            lastMessage: lastMsg ? (lastMsg.message ?? lastMsg.content ?? '') : '',
+            lastMessageTime: lastMsg ? (lastMsg.created_at ?? lastMsg.createdAt) : conv.updated_at
+          }
+        })
+
+        setConversations(formatted)
+        console.log("Conversaciones cargadas desde API:", formatted)
+
+        // actualizar localStorage con una versión simplificada para compatibilidad con el resto de la UI
+        try {
+          const simple = formatted.map(fc => ({
+            id: fc.id,
+            sellerId: fc.user.id,
+            sellerName: fc.user.name,
+            sellerAvatar: fc.user.avatar,
+            productId: fc.product.id,
+            productName: fc.product.name,
+            productImage: fc.product.image,
+            productPrice: fc.product.price,
+            timestamp: fc.lastMessageTime ?? new Date().toISOString(),
+            lastMessage: fc.lastMessage,
+            unreadCount: fc.unreadCount
+          }))
+          localStorage.setItem('conversations', JSON.stringify(simple))
+        } catch (e) {
+          console.warn("No se pudo actualizar localStorage de conversaciones:", e)
+        }
+
+      } catch (error) {
+        console.error("Error al cargar conversaciones desde la API:", error)
+        const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+        if (saved.length) loadFromLocal(saved)
+      }
+    }
+
+    // Ejecutar carga
+    fetchConversationsFromApi()
+
+    // Escuchar cambios en localStorage para mantener la UI sincronizada
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'conversations' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue)
+          if (Array.isArray(parsed) && parsed.length) loadFromLocal(parsed)
+        } catch (err) {
+          console.error("Error parseando conversaciones desde evento storage:", err)
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [state.userSession])
 
   useEffect(() => {
     // Primero intenta obtener datos del localStorage
@@ -387,6 +546,78 @@ useEffect(() => {
     setIsEditing(false)
   }
 
+  const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("foto", file);
+
+  try {
+    setIsUploadingAvatar(true);
+
+    const response = await fetch("http://localhost:8000/api/usuario/foto", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${state.userSession?.token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Actualizar contexto
+      const newSession = {
+        ...state.userSession,
+        foto: data.foto,
+      };
+      dispatch({
+        type: "SET_USER_SESSION",
+        payload: newSession,
+      });
+
+      // Actualizar userSession en localStorage
+      localStorage.setItem("userSession", JSON.stringify(newSession));
+
+      // Actualizar userData.foto en localStorage (si existe)
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("userData") || "{}");
+        if (storedUser && typeof storedUser === "object") {
+          storedUser.foto = data.foto;
+          // mantener también propiedades antiguas (compatibilidad)
+          localStorage.setItem("userData", JSON.stringify(storedUser));
+        }
+      } catch (err) {
+        console.error("Error al actualizar userData en localStorage:", err);
+      }
+
+      // Actualizar estados locales usados en esta página
+      setUserInfo((prev) => ({ ...prev, foto: data.foto }));
+      setUser((prev) => (prev ? { ...prev, // compatibilidad con distintos nombres
+        // intenta asignar a avatar y foto por si el objeto usa uno u otro campo
+        ...(prev as any),
+        avatar: data.foto,
+        foto: data.foto,
+      } : prev));
+
+      // opcional: notificar al usuario
+      // toast.success("Foto actualizada");
+    } else {
+      // toast.error("Error al subir la foto");
+      console.error("Error subiendo foto:", data);
+      alert("❌ Error al subir la foto");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("❌ Ocurrió un error al subir la foto");
+  } finally {
+    setIsUploadingAvatar(false);
+  }
+};
+
+
+
   // Función para recargar productos
   const reloadUserProducts = async () => {
     try {
@@ -486,6 +717,102 @@ const handleCloseDeleteModal = () => {
     totalSales: 45
   }
 
+  // Añadir función para enviar mensaje a la API y hacer optimistic update
+  const sendMessage = async (conversationId: number | string, text: string) => {
+    console.log("[sendMessage] conversationId:", conversationId, "text:", text)
+    if (!text || !text.trim()) {
+      console.warn("[sendMessage] texto vacío, abortando")
+      return false
+    }
+    const messageText = text.trim()
+    const token = state.userSession?.token || localStorage.getItem("token")
+
+    // Optimistic update: comparar ids como strings
+    const tempId = `tmp-${Date.now()}`
+    const optimisticMessage = {
+      id: tempId,
+      sender: 'me',
+      content: messageText,
+      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      isRead: false
+    }
+
+    setConversations(prev =>
+      prev.map(conv =>
+        String(conv.id) === String(conversationId)
+          ? {
+              ...conv,
+              messages: [...(conv.messages || []), optimisticMessage],
+              lastMessage: messageText,
+              lastMessageTime: new Date().toISOString()
+            }
+          : conv
+      )
+    )
+
+    try {
+      console.log("[sendMessage] llamando API...")
+      const res = await fetch(`http://localhost:8000/api/conversations/${conversationId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ message: messageText })
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error("[sendMessage] respuesta no ok:", res.status, errText)
+        alert("No se pudo enviar el mensaje (ver consola).")
+        // opcional: revertir optimistic update aquí si quieres
+        return false
+      }
+
+      const saved = await res.json()
+      console.log("[sendMessage] mensaje guardado:", saved)
+
+      // Reemplazar mensaje temporal por el guardado por backend (comparando por tempId)
+      setConversations(prev =>
+        prev.map(conv => {
+          if (String(conv.id) !== String(conversationId)) return conv
+          return {
+            ...conv,
+            messages: (conv.messages || []).map((m: any) =>
+              String(m.id) === String(tempId) ? {
+                id: saved.id ?? saved.message_id ?? saved.temp_id ?? Date.now(),
+                sender: (saved.sender_id === (state.userSession?.user_id || JSON.parse(localStorage.getItem("userData") || "{}")?.id)) ? 'me' : 'other',
+                content: saved.message ?? saved.content ?? messageText,
+                timestamp: new Date(saved.created_at ?? saved.createdAt ?? Date.now()).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                isRead: !!saved.read_at
+              } : m
+            ),
+            lastMessage: saved.message ?? conv.lastMessage,
+            lastMessageTime: saved.created_at ?? conv.lastMessageTime
+          }
+        })
+      )
+
+      // actualizar localStorage simplificado de conversaciones
+      try {
+        const simple = (JSON.parse(localStorage.getItem('conversations') || '[]') || []).map((c: any) =>
+          String(c.id) === String(conversationId)
+            ? { ...c, lastMessage: messageText, timestamp: new Date().toISOString() }
+            : c
+        )
+        localStorage.setItem('conversations', JSON.stringify(simple))
+      } catch (e) {
+        console.warn("No se pudo actualizar localStorage de conversaciones:", e)
+      }
+
+      return true
+    } catch (error) {
+      console.error("[sendMessage] error de red:", error)
+      alert("Error de red al enviar mensaje (ver consola).")
+      return false
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
@@ -494,14 +821,35 @@ const handleCloseDeleteModal = () => {
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
         <div className="absolute bottom-4 left-4 right-4">
           <div className="flex items-end space-x-4">
-            <Avatar className="h-24 w-24 border-4 border-white">
-              {currentUser.avatar ? (
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-              ) : null}
-              <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
-                {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
-              </AvatarFallback>
-            </Avatar>
+             <Avatar className="h-24 w-24 border-4 border-white">
+                          {userInfo?.foto || currentUser?.foto ? (
+                            <AvatarImage
+                              src={
+                                // Si es base64, úsalo directamente
+                                (userInfo?.foto?.startsWith("data:image")
+                                  ? userInfo.foto
+                                  : userInfo?.foto
+                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  : currentUser?.foto?.startsWith("data:image")
+                                  ? currentUser.foto
+                                  : currentUser?.foto
+                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  : undefined)
+                              }
+                              alt={currentUser?.name || "Usuario"}
+                            />
+                          ) : null}
+
+                          <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
+                            {(currentUser?.name && currentUser.name.trim()
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U")}
+                          </AvatarFallback>
+                        </Avatar>
             <div className="flex-1 text-white">
               <h1 className="text-3xl font-bold">{currentUser.name}</h1>
               <p className="text-lg opacity-90">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
@@ -640,19 +988,50 @@ const handleCloseDeleteModal = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center space-x-4">
-                        <Avatar className="h-20 w-20">
-                          {currentUser.avatar ? (
-                            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                        <Avatar className="h-24 w-24 border-4 border-white">
+                          {userInfo?.foto || currentUser?.foto ? (
+                            <AvatarImage
+                              src={
+                                // Si es base64, úsalo directamente
+                                (userInfo?.foto?.startsWith("data:image")
+                                  ? userInfo.foto
+                                  : userInfo?.foto
+                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  : currentUser?.foto?.startsWith("data:image")
+                                  ? currentUser.foto
+                                  : currentUser?.foto
+                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  : undefined)
+                              }
+                              alt={currentUser?.name || "Usuario"}
+                            />
                           ) : null}
-                          <AvatarFallback className="bg-[#E8DDD4] text-[#1B3C53] text-2xl font-semibold">
-                            {(currentUser.name && currentUser.name.trim() ? currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U')}
+
+                          <AvatarFallback className="text-2xl font-bold bg-[#1B3C53] text-white">
+                            {(currentUser?.name && currentUser.name.trim()
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U")}
                           </AvatarFallback>
                         </Avatar>
+
+
                         <div>
-                          <Button variant="outline">
+                          <Button variant="outline"
+                          onClick={() => document.getElementById("fileInput").click()}>
                             <Edit className="h-4 w-4 mr-2" />
                             Cambiar foto
                           </Button>
+                          <input
+                            id="fileInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleChangePhoto}
+                            className="hidden"
+                          />
                           <p className="text-sm text-[#456882] mt-1">
                             JPG, PNG hasta 5MB
                           </p>
@@ -847,7 +1226,7 @@ const handleCloseDeleteModal = () => {
 
               <TabsContent value="conversations" className="mt-6">
                 <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Conversaciones</h2>
-                <ChatConversations conversations={conversations} />
+                <ChatConversations conversations={conversations} onSendMessage={sendMessage} />
               </TabsContent>
             </Tabs>
           </div>
