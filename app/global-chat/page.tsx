@@ -263,7 +263,7 @@ export default function GlobalChatPage() {
   const loadGlobalProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:8000/api/products/trueques", {
+      const response = await fetch("https://backendxp-1.onrender.com/api/products/trueques", {
         headers: { "Accept": "application/json" }
       })
       if (!response.ok) throw new Error("Error al obtener los productos")
@@ -290,7 +290,7 @@ export default function GlobalChatPage() {
           avatar: item.user?.avatar 
             ? (item.user.avatar.startsWith("http") 
                 ? item.user.avatar 
-                : `http://localhost:8000/storage/${item.user.avatar}`)
+                : `https://backendxp-1.onrender.com/storage/${item.user.avatar}`)
             : "/placeholder-user.jpg",
           rating: item.user?.rating ?? 0,
           isOnline: false,
@@ -411,7 +411,7 @@ export default function GlobalChatPage() {
         receiver_id: sellerId
       };
 
-      const res = await fetch("http://localhost:8000/api/conversations", {
+      const res = await fetch("https://backendxp-1.onrender.com/api/conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

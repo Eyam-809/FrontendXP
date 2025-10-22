@@ -84,7 +84,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
     if (!convId) return
     try {
       const token = getToken()
-      const res = await fetch(`http://localhost:8000/api/conversations/${convId}/messages`, {
+      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${convId}/messages`, {
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -121,7 +121,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
     if (!convId) return
     try {
       const token = getToken()
-      const res = await fetch(`http://localhost:8000/api/conversations/${convId}/read`, {
+      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${convId}/read`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +171,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
     try {
       const token = getToken()
       // intentar llamada DELETE al backend (asegúrate de tener la ruta)
-      const res = await fetch(`http://localhost:8000/api/conversations/${activeConvId}`, {
+      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${activeConvId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -247,7 +247,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
       if (!ok) {
         // Si el padre no envió, intentar enviar directamente desde aquí
         const token = getToken();
-        const res = await fetch(`http://localhost:8000/api/conversations/${activeConvId}/messages`, {
+        const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${activeConvId}/messages`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

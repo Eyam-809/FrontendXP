@@ -226,7 +226,7 @@ useEffect(() => {
           return
         }
 
-        const res = await fetch(`http://localhost:8000/api/conversations/user/${userId}`, {
+        const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/user/${userId}`, {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "Content-Type": "application/json"
@@ -556,7 +556,7 @@ useEffect(() => {
   try {
     setIsUploadingAvatar(true);
 
-    const response = await fetch("http://localhost:8000/api/usuario/foto", {
+    const response = await fetch("https://backendxp-1.onrender.com/api/usuario/foto", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${state.userSession?.token}`,
@@ -752,7 +752,7 @@ const handleCloseDeleteModal = () => {
 
     try {
       console.log("[sendMessage] llamando API...")
-      const res = await fetch(`http://localhost:8000/api/conversations/${conversationId}/messages`, {
+      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -829,11 +829,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}
@@ -996,11 +996,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}

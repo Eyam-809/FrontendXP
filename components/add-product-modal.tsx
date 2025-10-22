@@ -127,7 +127,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
       if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
-      const response = await fetch("http://127.0.0.1:8000/api/products", {
+      const response = await fetch("https://backendxp-1.onrender.com/api/products", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData
