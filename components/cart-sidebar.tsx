@@ -157,18 +157,46 @@ interface CheckoutModalProps {
 }
 
 function CheckoutModal({ isOpen, onClose, total }: CheckoutModalProps) {
-  const { dispatch } = useApp()
+  const { state, dispatch } = useApp()
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true)
-    setTimeout(() => {
+    
+    try {
+      // Calcular el total de la compra
+      const totalAmount = getTotalPrice()
+      
+      // Agregar puntos al usuario si está autenticado
+      if (state.userSession?.user?.id) {
+        const token = localStorage.getItem('token')
+        await fetch('http://localhost:8000/api/points/add', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: state.userSession.user.id,
+            amount: totalAmount,
+            description: `Compra por $${totalAmount.toFixed(2)}`
+          })
+        })
+      }
+      
+      // Simular procesamiento de pago
+      setTimeout(() => {
+        setIsProcessing(false)
+        dispatch({ type: "CLEAR_CART" })
+        onClose()
+        alert(`¡Pago exitoso! Has ganado ${Math.floor(totalAmount)} puntos por tu compra.`)
+      }, 2000)
+    } catch (error) {
+      console.error('Error al procesar pago:', error)
       setIsProcessing(false)
-      dispatch({ type: "CLEAR_CART" })
-      onClose()
-      alert("Payment successful! Your order has been placed.")
-    }, 2000)
+      alert("Error al procesar el pago. Inténtalo de nuevo.")
+    }
   }
 
   if (!isOpen) return null
