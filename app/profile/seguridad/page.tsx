@@ -300,6 +300,26 @@ export default function SeguridadPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Términos Legales */}
+        <Card className="mt-6 bg-[#F9F3EF] border-[#1B3C53]">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h4 className="font-medium text-[#1B3C53] mb-3">Información Legal</h4>
+              <p className="text-sm text-[#456882] mb-4">
+                Consulta nuestros términos y condiciones para conocer las políticas de seguridad y privacidad de XPMarket.
+              </p>
+              <Link href="/terminos-y-condiciones">
+                <Button 
+                  variant="outline" 
+                  className="bg-[#1B3C53] text-white border-[#1B3C53] hover:bg-[#456882] hover:border-[#456882]"
+                >
+                  Ver Términos Legales
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
