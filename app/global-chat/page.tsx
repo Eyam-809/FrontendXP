@@ -269,6 +269,7 @@ export default function GlobalChatPage() {
       if (!response.ok) throw new Error("Error al obtener los productos")
 
       const data = await response.json()
+      console.log("Productos obtenidos del API:", data) 
 
       // Mapeamos los datos del backend al formato GlobalProduct
       const mappedProducts: GlobalProduct[] = data.map((item: any) => ({
@@ -390,39 +391,82 @@ export default function GlobalChatPage() {
     }
   }
 
-  const startChat = (sellerId: number, productId: number) => {
-    // Encontrar el producto y vendedor para obtener más información
-    const product = filteredProducts.find(p => p.id === productId)
-    if (!product) return
+  const startChat = async (sellerId: number, productId: number) => {
+    try {
+      // obtener id del usuario logueado (contexto o localStorage)
+      const currentUserId =
+        state.userSession?.user_id ||
+        Number(localStorage.getItem("user_id")) ||
+        (JSON.parse(localStorage.getItem("userData") || "{}")?.id);
 
-    // Crear una nueva conversación con información completa
-    const newConversation = {
-      id: Date.now(),
-      sellerId,
-      sellerName: product.seller.name,
-      sellerAvatar: product.seller.avatar,
-      productId,
-      productName: product.name,
-      productImage: product.image,
-      productPrice: product.price,
-      timestamp: new Date().toISOString(),
-      lastMessage: "Conversación iniciada",
-      unreadCount: 0
+      if (!currentUserId) {
+        alert("No se encontró usuario logueado");
+        return;
+      }
+
+      const token = state.userSession?.token || localStorage.getItem("token");
+
+      // El backend espera 'receiver_id' y usa el usuario autenticado del header
+      const payload = {
+        receiver_id: sellerId
+      };
+
+      const res = await fetch("http://localhost:8000/api/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let apiConv: any = null;
+      if (res.ok) {
+        apiConv = await res.json();
+        console.log("Conversación creada/obtenida:", apiConv);
+      } else {
+        console.error("Error creando conversación en API:", await res.text());
+        // intentar parsear respuesta por si devuelve información útil
+        try { apiConv = await res.json(); } catch { apiConv = null; }
+      }
+
+      // Buscar producto para datos de la conversación (usa filteredProducts en este componente)
+      const product = filteredProducts.find((p) => p.id === productId);
+
+      // Guardar en localStorage (mantener compatibilidad con el flow actual)
+      const existingConversations = JSON.parse(localStorage.getItem("conversations") || "[]");
+      const conversationExists = existingConversations.find(
+        (conv: any) =>
+          // si la API devolvió id, usarlo; sino comparar seller+product
+          (apiConv?.id && conv.id === apiConv.id) ||
+          (conv.sellerId === sellerId && conv.productId === productId)
+      );
+
+      if (!conversationExists) {
+        const newConversation = {
+          id: apiConv?.id ?? Date.now(),
+          sellerId,
+          sellerName: product?.seller.name ?? `Vendedor ${sellerId}`,
+          sellerAvatar: product?.seller.avatar ?? "/placeholder-user.jpg",
+          productId,
+          productName: product?.name ?? `Producto ${productId}`,
+          productImage: product?.image ?? "/placeholder.jpg",
+          productPrice: product?.price ?? 0,
+          timestamp: new Date().toISOString(),
+          lastMessage: "Conversación iniciada",
+          unreadCount: 0,
+        };
+
+        const updatedConversations = [...existingConversations, newConversation];
+        localStorage.setItem("conversations", JSON.stringify(updatedConversations));
+      }
+
+      // Redirigir a la pestaña de conversaciones del perfil
+      router.push("/profile/personal-info?tab=conversations");
+    } catch (error) {
+      console.error("Error al iniciar chat:", error);
+      alert("Ocurrió un error al iniciar la conversación.");
     }
-
-    // Guardar la conversación en localStorage
-    const existingConversations = JSON.parse(localStorage.getItem('conversations') || '[]')
-    const conversationExists = existingConversations.find((conv: any) => 
-      conv.sellerId === sellerId && conv.productId === productId
-    )
-
-    if (!conversationExists) {
-      const updatedConversations = [...existingConversations, newConversation]
-      localStorage.setItem('conversations', JSON.stringify(updatedConversations))
-    }
-
-    // Redirigir al perfil con la pestaña de conversaciones activa
-    router.push('/profile/personal-info?tab=conversations')
   }
 
   return (
@@ -610,4 +654,4 @@ export default function GlobalChatPage() {
       </div>
     </div>
   )
-} 
+}
