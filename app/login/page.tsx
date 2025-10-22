@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApp } from "@/contexts/app-context"
 import axios from "axios";
+import storage from "@/lib/storage"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -82,8 +83,10 @@ const handleLogin = (e: React.FormEvent) => {
   .then((response) => {
     console.log("Usuario autenticado:", response.data); // Verifica la respuesta completa
     
+    const { token, user: apiUser } = response.data; // Desestructuración para mayor claridad
+
     // Guarda el token
-    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("token", token);
     
     // Guarda todos los datos del usuario
     const userData = response.data.user;
@@ -94,6 +97,7 @@ const handleLogin = (e: React.FormEvent) => {
       phone: userData.telefono,
       address: userData.direccion,
       plan_id: userData.plan_id,
+      foto: userData.foto,
       created_at: userData.created_at,
       updated_at: userData.updated_at,
       email_verified_at: userData.email_verified_at,
@@ -102,6 +106,7 @@ const handleLogin = (e: React.FormEvent) => {
       totalProducts: 12,
       totalSales: 45,
       joinDate: userData.created_at
+      
     }));
 
     // También guarda datos individuales para compatibilidad
@@ -112,15 +117,16 @@ const handleLogin = (e: React.FormEvent) => {
     console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
     
     // Actualizar el contexto inmediatamente
-    dispatch({
-      type: "SET_USER_SESSION",
-      payload: { 
-        token: response.data.token, 
-        user_id: userData.id, 
-        plan_id: userData.plan_id, 
-        name: userData.name 
-      },
+    storage.setToken(token)
+    storage.setUserData(apiUser)
+    storage.setUserSession({
+      token,
+      user_id: apiUser.id,
+      name: apiUser.name,
+      role: apiUser.role,
+      foto: apiUser.foto
     })
+    dispatch({ type: "SET_USER_SESSION", payload: { token, user_id: apiUser.id, name: apiUser.name, foto: apiUser.foto } })
     
     setIsLoading(false);
 
@@ -333,6 +339,7 @@ useEffect(() => {
                    <div className="grid grid-cols-3 gap-3">
                     {/*GitHub*/}
                      <Button
+                      type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
@@ -346,7 +353,11 @@ useEffect(() => {
 
 
                      {/*Google*/}
-                     <Button variant="outline" className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" onClick={() => {
+                     <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" 
+                      onClick={() => {
                           // Abre el endpoint de login de Google
                           window.location.href = "https://backendxp-1.onrender.com/api/login/google";
                       }}>
@@ -367,6 +378,7 @@ useEffect(() => {
 
                     {/*Microsoft*/}
                     <Button
+                      type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
@@ -592,7 +604,7 @@ useEffect(() => {
 
       <footer className="bg-[#1B3C53] text-[#F9F3EF] py-6">
         <div className="container mx-auto px-4 text-center">
-          <p>&copy; {new Date().getFullYear()} SuperMercado. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} XpMarket. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

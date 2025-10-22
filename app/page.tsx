@@ -29,8 +29,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
-      <CategoryNavbar />
-      <CategoryPanel />
+      {/* <CategoryPanel /> */}
       <main className="container mx-auto px-4">
         {state.selectedSubcategory?.id ? (
           <FilteredProductsGrid subcategoryId={state.selectedSubcategory.id} />

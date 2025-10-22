@@ -260,6 +260,57 @@ export default function GlobalChatPage() {
   }, [])
 
   useEffect(() => {
+  const loadGlobalProducts = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("http://localhost:8000/api/products/trueques", {
+        headers: { "Accept": "application/json" }
+      })
+      if (!response.ok) throw new Error("Error al obtener los productos")
+
+      const data = await response.json()
+
+      // Mapeamos los datos del backend al formato GlobalProduct
+      const mappedProducts: GlobalProduct[] = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: parseFloat(item.price) || 0,
+        image: item.image || "/placeholder.jpg", // ya viene en base64
+        category: item.subcategoria?.name || "Sin categoría",
+        condition: item.condition || "No especificado",
+        location: item.location || "Desconocido",
+        createdAt: item.created_at || new Date().toISOString(),
+        views: item.views ?? 0,
+        likes: item.likes ?? 0,
+        seller: {
+          id: item.user?.id || 0,
+          name: item.user?.name || "Vendedor desconocido",
+          avatar: item.user?.avatar 
+            ? (item.user.avatar.startsWith("http") 
+                ? item.user.avatar 
+                : `http://localhost:8000/storage/${item.user.avatar}`)
+            : "/placeholder-user.jpg",
+          rating: item.user?.rating ?? 0,
+          isOnline: false,
+          status: 'offline'
+        }
+      }))
+
+      setProducts(mappedProducts)
+      setFilteredProducts(mappedProducts)
+    } catch (error) {
+      console.error("Error al cargar productos del API:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  loadGlobalProducts()
+}, [])
+
+
+  useEffect(() => {
     // Filtrar y ordenar productos
     let filtered = products
 

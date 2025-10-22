@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, ShoppingCart, User, Heart, Bell, Menu, Globe } from "lucide-react"
+import { Search, ShoppingCart, Heart, Bell, Menu, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -18,7 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, ShieldCheck } from "lucide-react"
+import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle } from "lucide-react"
+import storage from "@/lib/storage"
 
 const categories = [
   { name: "Electronics", subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"] },
@@ -65,21 +66,20 @@ export default function Navbar() {
   } | null>(null)
 
   useEffect(() => {
-    const userData = localStorage.getItem("userData")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-    
+    const userData = storage.getUserData()
+    if (userData) setUser(userData as any)
     if (typeof window !== "undefined") {
-      setIsAdmin(localStorage.getItem("role") === "admin");
+      // Si guardas role dentro de userData o userSession, ajústalo aquí
+      const sess = storage.getUserSession()
+      setIsAdmin(sess?.role === "admin" || storage.getUserData()?.role === "admin")
     }
   }, [])
 
   const handleLogout = () => {
-  localStorage.clear()  // Limpia todo el localStorage
+  storage.clearAll()
   dispatch({ type: "CLEAR_USER_SESSION" })
   setUser(null)
-  window.location.href = "/login" // Redirige a login
+  window.location.href = "/login"
 }
 
 
@@ -89,7 +89,7 @@ export default function Navbar() {
   }
 
   const handleCategoryClick = (categoryName: string) => {
-    dispatch({ type: "SET_SELECTED_CATEGORY", payload: categoryName })
+    dispatch({ type: "SET_SELECTED_CATEGORY", payload: { id: 0, name: categoryName } })
     dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
     dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
   }
@@ -205,37 +205,80 @@ export default function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors h-auto p-2">
+                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#456882] transition-colors h-auto p-2">
                       <div className="flex items-center space-x-2">
                         <div className="h-8 w-8 flex items-center justify-center rounded-full bg-[#456882] text-[#F9F3EF] text-sm font-bold">
                           {(state.userSession.name || "U")[0].toUpperCase()}
                         </div>
                         <div className="hidden md:block text-left">
                           <p className="text-sm font-medium">
-                            {state.userSession.name ? state.userSession.name : (state.userSession.email || "Usuario")}
+                            {state.userSession.name ? state.userSession.name : "Usuario"}
                           </p>
                         </div>
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+
+                  <DropdownMenuContent align="end" className="w-64">
+                    {/* Opciones del perfil */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      MI PERFIL
+                    </div>
+                    
                     <Link href="/profile/personal-info">
                       <DropdownMenuItem>
-                        <UserCircle className="mr-2 h-4 w-4" />
-                        <span>Mi Perfil</span>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Tu información</span>
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/profile">
+                    
+                    <Link href="/profile/datos-cuenta">
+                      <DropdownMenuItem>
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>Datos de tu cuenta</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/xpmarket-plus">
+                      <DropdownMenuItem>
+                        <Crown className="mr-2 h-4 w-4" />
+                        <span>XPmarket+</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/tarjetas">
+                      <DropdownMenuItem>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        <span>Tarjetas</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/direcciones">
+                      <DropdownMenuItem>
+                        <MapPin className="mr-2 h-4 w-4" />
+                        <span>Direcciones</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/seguridad">
+                      <DropdownMenuItem>
+                        <AlertTriangle className="mr-2 h-4 w-4" />
+                        <span>Seguridad</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    {/* Panel administrativo */}
+                    <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      PANEL ADMINISTRATIVO
+                    </div>
+                    
+                    <Link href="/admin/dashboard">
                       <DropdownMenuItem>
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Ajustes</span>
+                        <span>Panel Administrativo</span>
                       </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin/dashboard">
-                    <DropdownMenuItem>
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      <span>Panel Administrativo</span>
-                    </DropdownMenuItem>
                     </Link>
                     
                     <DropdownMenuSeparator />

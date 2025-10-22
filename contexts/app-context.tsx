@@ -26,6 +26,7 @@ interface UserSession {
   user_id: string
   plan_id: string
   name: string
+  foto: string
 }
 
 interface AppState {
@@ -33,8 +34,8 @@ interface AppState {
   favorites: Product[]
   products: Product[]
   searchQuery: string
-  selectedCategory: string | null
-  selectedSubcategory: string | null
+  selectedCategory: { id: number; name: string } | null
+  selectedSubcategory: { id: number; name: string } | null
   isCartOpen: boolean
   isFavoritesOpen: boolean
   isCategoryPanelOpen: boolean
@@ -50,8 +51,8 @@ type AppAction =
   | { type: "ADD_TO_FAVORITES"; payload: Product }
   | { type: "REMOVE_FROM_FAVORITES"; payload: number }
   | { type: "SET_SEARCH_QUERY"; payload: string }
-  | { type: "SET_SELECTED_CATEGORY"; payload: string | null }
-  | { type: "SET_SELECTED_SUBCATEGORY"; payload: string | null }
+  | { type: "SET_SELECTED_CATEGORY"; payload: { id: number; name: string } | null }
+  | { type: "SET_SELECTED_SUBCATEGORY"; payload: { id: number; name: string } | null }
   | { type: "TOGGLE_CART" }
   | { type: "TOGGLE_FAVORITES" }
   | { type: "TOGGLE_CATEGORY_PANEL" }
@@ -157,6 +158,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const user_id = localStorage.getItem("user_id")
       const plan_id = localStorage.getItem("plan_id")
       const name = localStorage.getItem("name")
+      const foto = localStorage.getItem("foto")
+      console.log("Cargando sesión desde localStorage:", { token, user_id, plan_id, name, foto }) 
 
       if (token && user_id && plan_id) {
         dispatch({ type: "SET_USER_SESSION", payload: { token, user_id, plan_id, name: name || "" } })
