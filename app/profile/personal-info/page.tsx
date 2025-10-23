@@ -133,7 +133,7 @@ export default function PersonalInfoPage() {
     direccion: "",
     foto: "",
   });
-
+  
   const [refresh, setRefresh] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -178,66 +178,151 @@ useEffect(() => {
 
 
 
-  // Cargar conversaciones desde localStorage
+  // Cargar conversaciones: primero intenta la API y si falla usa localStorage (compatibilidad)
   useEffect(() => {
-    const loadConversations = () => {
+    const loadFromLocal = (saved: any[]) => {
       try {
-        const savedConversations = localStorage.getItem('conversations')
-        if (savedConversations) {
-          const parsedConversations = JSON.parse(savedConversations)
-          
-          // Transformar las conversaciones simples en el formato esperado por ChatConversations
-          const formattedConversations = parsedConversations.map((conv: any) => ({
+        const formattedConversations = saved.map((conv: any) => ({
+          id: conv.id,
+          user: {
+            id: conv.sellerId,
+            name: conv.sellerName || `Vendedor ${conv.sellerId}`,
+            avatar: conv.sellerAvatar || "/placeholder-user.jpg",
+            isOnline: true
+          },
+          product: {
+            id: conv.productId,
+            name: conv.productName || `Producto ${conv.productId}`,
+            image: conv.productImage || "/placeholder.jpg",
+            price: conv.productPrice || 0
+          },
+          messages: [{
+            id: 1,
+            sender: 'other' as const,
+            content: conv.lastMessage,
+            timestamp: new Date(conv.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            isRead: true
+          }],
+          unreadCount: conv.unreadCount,
+          lastMessage: conv.lastMessage,
+          lastMessageTime: conv.timestamp
+        }))
+        setConversations(formattedConversations)
+        console.log("Conversaciones cargadas desde localStorage:", formattedConversations)
+      } catch (e) {
+        console.error("Error formateando conversaciones desde localStorage:", e)
+      }
+    }
+
+    const fetchConversationsFromApi = async () => {
+      try {
+        const token = state.userSession?.token || localStorage.getItem("token")
+        const userData = state.userSession?.user_id ? { id: state.userSession.user_id } : JSON.parse(localStorage.getItem("userData") || "{}")
+        const userId = userData?.id
+        if (!userId) {
+          // intentar cargar local si no hay id
+          const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+          if (saved.length) loadFromLocal(saved)
+          return
+        }
+
+        const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/user/${userId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "application/json"
+          }
+        })
+
+        if (!res.ok) {
+          console.warn("No se pudo obtener conversaciones desde la API, status:", res.status)
+          const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+          if (saved.length) loadFromLocal(saved)
+          return
+        }
+
+        const data = await res.json()
+
+        // Formatear la respuesta del backend al formato que usa el UI
+        const formatted = (data || []).map((conv: any) => {
+          // identificar el otro usuario
+          const other = (conv.user_one_id === userId) ? conv.userTwo : conv.userOne
+          // último mensaje si existe
+          const lastMsg = (conv.messages && conv.messages.length) ? conv.messages[conv.messages.length - 1] : null
+
+          return {
             id: conv.id,
             user: {
-              id: conv.sellerId,
-              name: conv.sellerName || `Vendedor ${conv.sellerId}`,
-              avatar: conv.sellerAvatar || "/placeholder-user.jpg",
+              id: other?.id ?? (other?.user_id ?? 0),
+              name: other?.name ?? `Usuario ${other?.id ?? ''}`,
+              avatar: other?.foto ?? other?.avatar ?? "/placeholder-user.jpg",
               isOnline: true
             },
             product: {
-              id: conv.productId,
-              name: conv.productName || `Producto ${conv.productId}`,
-              image: conv.productImage || "/placeholder.jpg",
-              price: conv.productPrice || 0
+              id: conv.product_id ?? (conv.product?.id ?? 0),
+              name: conv.product?.name ?? conv.product_name ?? `Producto ${conv.product_id ?? ''}`,
+              image: conv.product?.image ?? "/placeholder.jpg",
+              price: conv.product?.price ?? 0
             },
-            messages: [{
-              id: 1,
-              sender: 'other' as const,
-              content: conv.lastMessage,
-              timestamp: new Date(conv.timestamp).toLocaleTimeString('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              }),
-              isRead: true
-            }],
-            unreadCount: conv.unreadCount,
-            lastMessage: conv.lastMessage,
-            lastMessageTime: conv.timestamp
+            messages: (conv.messages || []).map((m: any, idx: number) => ({
+              id: m.id ?? idx,
+              sender: m.sender_id === userId ? 'me' as const : 'other' as const,
+              content: m.message ?? m.content ?? '',
+              timestamp: new Date(m.created_at ?? m.createdAt ?? Date.now()).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+              isRead: !!m.read
+            })),
+            unreadCount: conv.unread_count ?? 0,
+            lastMessage: lastMsg ? (lastMsg.message ?? lastMsg.content ?? '') : '',
+            lastMessageTime: lastMsg ? (lastMsg.created_at ?? lastMsg.createdAt) : conv.updated_at
+          }
+        })
+
+        setConversations(formatted)
+        console.log("Conversaciones cargadas desde API:", formatted)
+
+        // actualizar localStorage con una versión simplificada para compatibilidad con el resto de la UI
+        try {
+          const simple = formatted.map(fc => ({
+            id: fc.id,
+            sellerId: fc.user.id,
+            sellerName: fc.user.name,
+            sellerAvatar: fc.user.avatar,
+            productId: fc.product.id,
+            productName: fc.product.name,
+            productImage: fc.product.image,
+            productPrice: fc.product.price,
+            timestamp: fc.lastMessageTime ?? new Date().toISOString(),
+            lastMessage: fc.lastMessage,
+            unreadCount: fc.unreadCount
           }))
-          
-          setConversations(formattedConversations)
+          localStorage.setItem('conversations', JSON.stringify(simple))
+        } catch (e) {
+          console.warn("No se pudo actualizar localStorage de conversaciones:", e)
         }
+
       } catch (error) {
-        console.error('Error al cargar conversaciones:', error)
+        console.error("Error al cargar conversaciones desde la API:", error)
+        const saved = JSON.parse(localStorage.getItem('conversations') || '[]')
+        if (saved.length) loadFromLocal(saved)
       }
     }
 
-    loadConversations()
-    
-    // Escuchar cambios en localStorage para actualizar conversaciones
+    // Ejecutar carga
+    fetchConversationsFromApi()
+
+    // Escuchar cambios en localStorage para mantener la UI sincronizada
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'conversations') {
-        loadConversations()
+      if (e.key === 'conversations' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue)
+          if (Array.isArray(parsed) && parsed.length) loadFromLocal(parsed)
+        } catch (err) {
+          console.error("Error parseando conversaciones desde evento storage:", err)
+        }
       }
     }
-
     window.addEventListener('storage', handleStorageChange)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
-  }, [])
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [state.userSession])
 
   useEffect(() => {
     // Primero intenta obtener datos del localStorage
@@ -471,7 +556,7 @@ useEffect(() => {
   try {
     setIsUploadingAvatar(true);
 
-    const response = await fetch("http://localhost:8000/api/usuario/foto", {
+    const response = await fetch("https://backendxp-1.onrender.com/api/usuario/foto", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${state.userSession?.token}`,
@@ -632,6 +717,102 @@ const handleCloseDeleteModal = () => {
     totalSales: 45
   }
 
+  // Añadir función para enviar mensaje a la API y hacer optimistic update
+  const sendMessage = async (conversationId: number | string, text: string) => {
+    console.log("[sendMessage] conversationId:", conversationId, "text:", text)
+    if (!text || !text.trim()) {
+      console.warn("[sendMessage] texto vacío, abortando")
+      return false
+    }
+    const messageText = text.trim()
+    const token = state.userSession?.token || localStorage.getItem("token")
+
+    // Optimistic update: comparar ids como strings
+    const tempId = `tmp-${Date.now()}`
+    const optimisticMessage = {
+      id: tempId,
+      sender: 'me',
+      content: messageText,
+      timestamp: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      isRead: false
+    }
+
+    setConversations(prev =>
+      prev.map(conv =>
+        String(conv.id) === String(conversationId)
+          ? {
+              ...conv,
+              messages: [...(conv.messages || []), optimisticMessage],
+              lastMessage: messageText,
+              lastMessageTime: new Date().toISOString()
+            }
+          : conv
+      )
+    )
+
+    try {
+      console.log("[sendMessage] llamando API...")
+      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${conversationId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ message: messageText })
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.error("[sendMessage] respuesta no ok:", res.status, errText)
+        alert("No se pudo enviar el mensaje (ver consola).")
+        // opcional: revertir optimistic update aquí si quieres
+        return false
+      }
+
+      const saved = await res.json()
+      console.log("[sendMessage] mensaje guardado:", saved)
+
+      // Reemplazar mensaje temporal por el guardado por backend (comparando por tempId)
+      setConversations(prev =>
+        prev.map(conv => {
+          if (String(conv.id) !== String(conversationId)) return conv
+          return {
+            ...conv,
+            messages: (conv.messages || []).map((m: any) =>
+              String(m.id) === String(tempId) ? {
+                id: saved.id ?? saved.message_id ?? saved.temp_id ?? Date.now(),
+                sender: (saved.sender_id === (state.userSession?.user_id || JSON.parse(localStorage.getItem("userData") || "{}")?.id)) ? 'me' : 'other',
+                content: saved.message ?? saved.content ?? messageText,
+                timestamp: new Date(saved.created_at ?? saved.createdAt ?? Date.now()).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+                isRead: !!saved.read_at
+              } : m
+            ),
+            lastMessage: saved.message ?? conv.lastMessage,
+            lastMessageTime: saved.created_at ?? conv.lastMessageTime
+          }
+        })
+      )
+
+      // actualizar localStorage simplificado de conversaciones
+      try {
+        const simple = (JSON.parse(localStorage.getItem('conversations') || '[]') || []).map((c: any) =>
+          String(c.id) === String(conversationId)
+            ? { ...c, lastMessage: messageText, timestamp: new Date().toISOString() }
+            : c
+        )
+        localStorage.setItem('conversations', JSON.stringify(simple))
+      } catch (e) {
+        console.warn("No se pudo actualizar localStorage de conversaciones:", e)
+      }
+
+      return true
+    } catch (error) {
+      console.error("[sendMessage] error de red:", error)
+      alert("Error de red al enviar mensaje (ver consola).")
+      return false
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
@@ -648,11 +829,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}
@@ -817,11 +998,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `http://localhost:8000/storage/${userInfo.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `http://localhost:8000/storage/${currentUser.foto}`
+                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}
@@ -1047,7 +1228,7 @@ const handleCloseDeleteModal = () => {
 
               <TabsContent value="conversations" className="mt-6">
                 <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Conversaciones</h2>
-                <ChatConversations conversations={conversations} />
+                <ChatConversations conversations={conversations} onSendMessage={sendMessage} />
               </TabsContent>
             </Tabs>
           </div>
