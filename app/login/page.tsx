@@ -783,21 +783,47 @@ useEffect(() => {
                 <div className="bg-[#F9F3EF] p-4 rounded-lg">
                   <div className="space-y-3">
                     <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.1 Empresas de Mensajería</h4>
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Tarifas de Envío</h4>
                       <p className="text-[#456882] mb-2 text-sm">
-                        XPMarket trabaja con distintas empresas de mensajería para ofrecer opciones de envío seguras y adaptadas a las necesidades del comprador. El costo del envío se calcula como un porcentaje del valor del producto, considerando peso, destino y nivel de seguridad.
+                      XPMarket ofrece a los usuarios la posibilidad de seleccionar la empresa de paquetería a través de la cual desean que se realice la entrega de los productos adquiridos dentro de la plataforma. Las opciones disponibles son: Estafeta, FedEx y DHL.
                       </p>
                       <ul className="text-[#456882] space-y-1 text-sm">
-                        <li>• <strong>Estafeta:</strong> 8% - 12%</li>
-                        <li>• <strong>FedEx:</strong> 12% - 15%</li>
-                        <li>• <strong>DHL:</strong> 15% - 20%</li>
+                        <li>• <strong>Estafeta:</strong> $50MXN</li>
+                        <li>• <strong>FedEx:</strong> $100MXN</li>
+                        <li>• <strong>DHL:</strong> $150MXN</li>
                       </ul>
                     </div>
                     
                     <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.2 Deducciones Automáticas</h4>
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Productos Excluidos</h4>
                       <p className="text-[#456882] text-sm">
-                        Ten en cuenta que el monto final recibido por el vendedor incluirá las deducciones correspondientes a los costos de envío y las comisiones de XPMarket. Por lo tanto, el dinero transferido no será equivalente al valor total del producto publicado.
+                      Quedan expresamente excluidos del servicio de envío todos aquellos productos que por su tamaño, peso o naturaleza resulten especiales o difíciles de transportar, incluyendo, pero no limitándose a:
+                      </p>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                       <li>• Refrigeradores</li>
+                       <li>• Pianos</li>
+                       <li>• Objetos de gran tamaño o peso significativo</li>
+                       </ul>
+                       <p className="text-[#456882] mb-2 text-sm">
+                       XPMarket no aceptará envíos de este tipo de productos, y cualquier intento de incluirlos será rechazado automáticamente.
+                       </p>
+                     
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Alcance y Responsabilidad</h4>
+                     
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                       <li>• XPMarket se encarga únicamente de la gestión y coordinación del envío dentro de la plataforma.</li>
+                       <li>• Los tiempos de entrega, la cobertura, y cualquier costo adicional o eventualidad durante el transporte dependen directamente de la paquetería seleccionada y no son responsabilidad de XPMarket.</li>
+                       <li>• Los usuarios comprenden y aceptan que las tarifas aplicadas son tarifas de gestión de envío establecidas por XPMarket, y no corresponden al costo final exacto del servicio proporcionado por la paquetería.</li>
+                       </ul>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Aceptación del Usuario</h4>
+                      <p className="text-[#456882] text-sm">
+                      Al utilizar XPMarket para la compra de productos y seleccionar un tipo de envío, el usuario acepta las tarifas fijas descritas, reconoce las exclusiones de productos y entiende que XPMarket actúa únicamente como intermediario digital, sin asumir responsabilidades sobre retrasos, pérdidas, daños o modificaciones en los costos de envío por parte de las empresas de mensajería.
                       </p>
                     </div>
                   </div>
