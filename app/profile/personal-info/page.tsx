@@ -868,10 +868,12 @@ const handleCloseDeleteModal = () => {
                 </div>
               </div>
             </div>
-            <Button variant="outline" className="bg-white text-[#1B3C53] hover:bg-[#F9F3EF] border-[#E8DDD4]">
-              <Edit className="h-4 w-4 mr-2" />
-              Editar perfil
-            </Button>
+            <Link href="/profile/rewards">
+              <Button variant="outline" className="bg-white text-[#1B3C53] hover:bg-[#F9F3EF] border-[#E8DDD4]">
+                <Star className="h-4 w-4 mr-2" />
+                Mis Puntos
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
