@@ -593,14 +593,6 @@ useEffect(() => {
                           className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
                         >
                           términos de servicio
-                        </button>{" "}
-                        y la{" "}
-                        <button 
-                          type="button"
-                          onClick={openTermsModal}
-                          className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
-                        >
-                          política de privacidad
                         </button>
                       </Label>
                       {errors.register.agreeTerms && (
@@ -636,14 +628,6 @@ useEffect(() => {
               >
                 Términos de Servicio
               </button>{" "}
-              y la{" "}
-              <button 
-                type="button"
-                onClick={openTermsModal}
-                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
-              >
-                Política de Privacidad
-              </button>{" "}
               de XPMarket
             </p>
           </motion.div>
@@ -662,7 +646,7 @@ useEffect(() => {
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold text-[#1B3C53]">
-                Términos y Condiciones de Uso - XPMarket
+                Términos de Servicio y Política de Privacidad - XPMarket
               </DialogTitle>
               <Button
                 variant="ghost"
