@@ -16,6 +16,7 @@ interface AddProductForm {
   price: string
   stock: string
   image: File | null
+  video?: File | null
   categoria_id?: string
   subcategoria_id?: string
 }
@@ -94,6 +95,37 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
     setForm(prev => ({ ...prev, image: file }))
   }
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith("video/")) {
+    alert(`El archivo ${file.name} no es un video válido`)
+    return
+  }
+
+  if (file.size > 50 * 1024 * 1024) { // 50 MB máx.
+    alert(`El archivo ${file.name} es demasiado grande. Máximo 50MB`)
+    return
+  }
+
+  // Verificar duración del video
+  const videoElement = document.createElement("video")
+  videoElement.preload = "metadata"
+  videoElement.onloadedmetadata = () => {
+    window.URL.revokeObjectURL(videoElement.src)
+    const duration = videoElement.duration
+    if (duration > 90) {
+      alert("El video no puede durar más de 1 minuto y 30 segundos.")
+      e.target.value = "" // limpiar input
+      return
+    }
+    setForm(prev => ({ ...prev, video: file }))
+  }
+  videoElement.src = URL.createObjectURL(file)
+}
+
+
   const removeImage = () => {
     setForm(prev => ({ ...prev, image: null }))
   }
@@ -124,6 +156,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
 
       if (modo === "venta") formData.append('price', form.price)
       if (form.image) formData.append('image', form.image)
+      if (modo === "venta" && form.video) formData.append('video', form.video)
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
       if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
@@ -330,6 +363,46 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
                 )}
               </CardContent>
             </Card>
+            {/* Video (solo si es venta) */}
+            {modo === "venta" && (         
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h3 className="font-semibold text-lg">Video del producto (opcional)</h3>
+
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <Label htmlFor="video" className="cursor-pointer">
+                      <span className="text-sm text-gray-600">Haz clic para subir un video</span>
+                      <Input
+                        id="video"
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                      />
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">MP4 o WebM hasta 50MB y máximo 1:30 min</p>
+                  </div>
+
+                  {form.video && (
+                    <div className="relative group">
+                      <video
+                        controls
+                        src={URL.createObjectURL(form.video)}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, video: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              )}
 
             {/* Botones */}
             <div className="flex justify-end space-x-4">

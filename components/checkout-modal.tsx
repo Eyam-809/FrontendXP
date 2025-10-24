@@ -207,7 +207,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="tu@email.com"
-                      className="mt-1 h-8"
+                     className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                     />
                   </div>
 
@@ -220,7 +220,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.firstName}
                         onChange={handleInputChange}
                         placeholder="Juan"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                     <div>
@@ -231,7 +231,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.lastName}
                         onChange={handleInputChange}
                         placeholder="Pérez"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                   </div>
@@ -246,7 +246,10 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                           value={formData.cardNumber}
                           onChange={handleInputChange}
                           placeholder="1234 5678 9012 3456"
-                          className="mt-1 h-8"
+                          maxLength={19}
+                          pattern="[0-9\s]{13,19}"
+                          inputMode="numeric"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
 
@@ -259,7 +262,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                             value={formData.expiryDate}
                             onChange={handleInputChange}
                             placeholder="MM/AA"
-                            className="mt-1 h-8"
+                            className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                           />
                         </div>
                         <div>
@@ -270,7 +273,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                             value={formData.cvv}
                             onChange={handleInputChange}
                             placeholder="123"
-                            className="mt-1 h-8"
+                            className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                           />
                         </div>
                       </div>
@@ -285,7 +288,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                       value={formData.address}
                       onChange={handleInputChange}
                       placeholder="Calle Principal 123"
-                      className="mt-1 h-8"
+                      className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                     />
                   </div>
 
@@ -298,7 +301,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder="Ciudad de México"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                     <div>
@@ -309,7 +312,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         placeholder="01000"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                   </div>
