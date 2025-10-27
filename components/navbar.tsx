@@ -48,6 +48,7 @@ export default function Navbar() {
   const { state, dispatch } = useApp()
   const [searchInput, setSearchInput] = useState("")
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasGlobalChatAccess, setHasGlobalChatAccess] = useState(false);
 
   const handleResetFilters = () => {
   dispatch({ type: "SET_SELECTED_CATEGORY", payload: null })
@@ -72,8 +73,18 @@ export default function Navbar() {
       // Si guardas role dentro de userData o userSession, ajústalo aquí
       const sess = storage.getUserSession()
       setIsAdmin(sess?.role === "admin" || storage.getUserData()?.role === "admin")
+      
+      // Verificar plan_id para acceso al chat global
+      const planId = storage.getPlanId()
+      setHasGlobalChatAccess(planId === "2")
     }
   }, [])
+  
+  useEffect(() => {
+    // Verificar plan_id cuando cambie el userSession del contexto
+    const planId = state.userSession?.plan_id || storage.getPlanId()
+    setHasGlobalChatAccess(planId === "2")
+  }, [state.userSession])
 
   const handleLogout = () => {
   storage.clearAll()
@@ -159,8 +170,8 @@ export default function Navbar() {
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Notificaciones</span>
                 </Button>
-                {/* Botón Chat Global solo si NO es admin */}
-                {!isAdmin && (
+                {/* Botón Chat Global solo si NO es admin y tiene plan_id = 2 */}
+                {!isAdmin && hasGlobalChatAccess && (
                   <Link href="/global-chat">
                     <Button
                       variant="ghost"
