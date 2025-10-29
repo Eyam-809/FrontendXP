@@ -90,7 +90,7 @@ export default function DatosCuentaPage() {
         {/* Top Section */}
         <div className="flex items-center justify-center mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Datos de tu cuenta</h1>
+            <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Seguimiento de pedidos</h1>
             <p className="text-[#456882]">Consulta tus compras, entregas y envíos en progreso</p>
           </div>
         </div>

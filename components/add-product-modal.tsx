@@ -32,6 +32,9 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
   const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
   const [subcategorias, setSubcategorias] = useState<{ id: number; nombre: string }[]>([])
   const [modo, setModo] = useState<"venta" | "trueque" | null>(null)
+  const token = localStorage.getItem("token")
+if (!token) throw new Error("No hay token de autenticación")
+
 
   const [form, setForm] = useState<AddProductForm>({
     name: "",
@@ -152,19 +155,25 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       formData.append('stock', form.stock)
       formData.append('id_user', userData.id.toString())
       formData.append('tipo', modo || "venta") // 🔹 Tipo de publicación
-      formData.append('price', modo === 'trueque' ? '0' : form.price)
+      if (modo === "venta") {
+    formData.append('price', form.price)
+} else {
+    formData.append('price', '0')
+}
 
-      if (modo === "venta") formData.append('price', form.price)
       if (form.image) formData.append('image', form.image)
       if (modo === "venta" && form.video) formData.append('video', form.video)
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
       if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
-      const response = await fetch("https://backendxp-1.onrender.com/api/products", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      })
+      const response = await fetch("http://localhost:8000/api/products", {
+  method: "POST",
+  headers: {
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  },
+  body: formData,
+  credentials: "include" // 🔹 necesario si usas Sanctum con cookies
+})
 
       if (!response.ok) {
         const errorData = await response.json()
