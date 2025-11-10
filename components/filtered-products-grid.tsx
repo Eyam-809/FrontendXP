@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import ProductGrid from "@/components/product-grid"
+import { ApiUrl } from "@/lib/config"
 
 interface Product {
   id: number
@@ -24,7 +25,7 @@ export default function FilteredProductsGrid({ subcategoryId }: Props) {
     if (!subcategoryId) return
     setLoading(true)
 
-    fetch(`https://backendxp-1.onrender.com/api/products/subcategory/${subcategoryId}`)
+    fetch(`${ApiUrl}/api/products/subcategory/${subcategoryId}`)
       .then(res => {
         if (!res.ok) throw new Error("Error en la petición")
         return res.json()

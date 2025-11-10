@@ -265,15 +265,15 @@ export default function DireccionesPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Agregar Nueva Dirección</DialogTitle>
+                <DialogTitle className="text-[#1B3C53]">Agregar Nueva Dirección</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddAddress} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address-type">Tipo de dirección</Label>
-                    <Select value={addressType} onValueChange={(value: "home" | "work" | "other") => setAddressType(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona el tipo" />
+                    <Label htmlFor="address-type" className="text-[#1B3C53]">Tipo de dirección</Label>
+                     <Select value={addressType} onValueChange={(value: "home" | "work" | "other") => setAddressType(value)}>
+                      <SelectTrigger className="text-[#1B3C53] placeholder:text-[#456882]">
+                        <SelectValue className="text-[#1B3C53] placeholder:text-[#456882]" placeholder="Selecciona el tipo" />
                       </SelectTrigger>
                       <SelectContent>
                         {addressTypes.map((type) => (
@@ -288,66 +288,71 @@ export default function DireccionesPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address-name">Nombre de la dirección</Label>
-                    <Input
+                    <Label htmlFor="address-name" className="text-[#1B3C53]">Nombre de la dirección</Label>
+                     <Input
                       id="address-name"
                       value={addressName}
                       onChange={(e) => setAddressName(e.target.value)}
                       placeholder="Ej: Casa, Trabajo, etc."
                       required
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                     />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="street">Calle</Label>
-                  <Input
-                    id="street"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                    placeholder="Nombre de la calle"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="number">Número</Label>
-                    <Input
-                      id="number"
-                      value={number}
-                      onChange={(e) => setNumber(e.target.value)}
-                      placeholder="123"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="apartment">Apartamento/Oficina (opcional)</Label>
-                    <Input
-                      id="apartment"
-                      value={apartment}
-                      onChange={(e) => setApartment(e.target.value)}
-                      placeholder="Apto 5B"
-                    />
-                  </div>
-                </div>
+                   </div>
+                 </div>
+ 
+                 <div className="space-y-2">
+                  <Label htmlFor="street" className="text-[#1B3C53]">Calle</Label>
+                   <Input
+                     id="street"
+                     value={street}
+                     onChange={(e) => setStreet(e.target.value)}
+                     placeholder="Nombre de la calle"
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+ 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                    <Label htmlFor="number" className="text-[#1B3C53]">Número</Label>
+                     <Input
+                       id="number"
+                       value={number}
+                       onChange={(e) => setNumber(e.target.value)}
+                       placeholder="123"
+                       required
+                       className="text-[#1B3C53] placeholder:text-[#456882]"
+                     />
+                   </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="apartment" className="text-[#1B3C53]">Apartamento/Oficina (opcional)</Label>
+                     <Input
+                       id="apartment"
+                       value={apartment}
+                       onChange={(e) => setApartment(e.target.value)}
+                       placeholder="Apto 5B"
+                       className="text-[#1B3C53] placeholder:text-[#456882]"
+                     />
+                   </div>
+                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">Ciudad</Label>
+                    <Label htmlFor="city" className="text-[#1B3C53]">Ciudad</Label>
                     <Input
                       id="city"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="Ciudad"
                       required
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">Estado</Label>
+                    <Label htmlFor="state" className="text-[#1B3C53]">Estado</Label>
                     <Select value={state} onValueChange={setState}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona estado" />
+                      <SelectTrigger className="text-[#1B3C53] placeholder:text-[#456882]">
+                        <SelectValue className="text-[#1B3C53] placeholder:text-[#456882]" placeholder="Selecciona estado" />
                       </SelectTrigger>
                       <SelectContent>
                         {mexicanStates.map((stateName) => (
@@ -359,7 +364,7 @@ export default function DireccionesPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zip-code">Código Postal</Label>
+                    <Label htmlFor="zip-code" className="text-[#1B3C53]">Código Postal</Label>
                     <Input
                       id="zip-code"
                       value={zipCode}
@@ -367,46 +372,54 @@ export default function DireccionesPage() {
                       placeholder="12345"
                       maxLength={5}
                       required
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="country">País</Label>
+                    <Label htmlFor="country" className="text-[#1B3C53]">País</Label>
                     <Input
                       id="country"
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
                       placeholder="México"
                       required
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Teléfono</Label>
+                    <Label htmlFor="phone" className="text-[#1B3C53]">Teléfono</Label>
                     <Input
                       id="phone"
                       value={phone}
                       onChange={(e) => setPhone(formatPhone(e.target.value))}
                       placeholder="(555) 123-4567"
                       required
+                      className="text-[#1B3C53] placeholder:text-[#456882]"
                     />
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Instrucciones de entrega (opcional)</Label>
-                  <Textarea
-                    id="instructions"
-                    value={instructions}
-                    onChange={(e) => setInstructions(e.target.value)}
-                    placeholder="Instrucciones especiales para el repartidor..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+ 
+                 <div className="space-y-2">
+                  <Label htmlFor="instructions" className="text-[#1B3C53]">Instrucciones de entrega (opcional)</Label>
+                   <Textarea
+                     id="instructions"
+                     value={instructions}
+                     onChange={(e) => setInstructions(e.target.value)}
+                     placeholder="Instrucciones especiales para el repartidor..."
+                     rows={3}
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+ 
+                 <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    className="bg-[#1B3C53] hover:bg-[#123246] text-white"
+                    onClick={() => setShowAddDialog(false)}
+                  >
                     Cancelar
                   </Button>
                   <Button type="submit" disabled={isAddingAddress}>
@@ -513,149 +526,162 @@ export default function DireccionesPage() {
             <form onSubmit={handleEditAddress} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-address-type">Tipo de dirección</Label>
-                  <Select value={addressType} onValueChange={(value: "home" | "work" | "other") => setAddressType(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona el tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {addressTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex items-center space-x-2">
-                            {type.icon}
-                            <span>{type.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-address-name">Nombre de la dirección</Label>
-                  <Input
-                    id="edit-address-name"
-                    value={addressName}
-                    onChange={(e) => setAddressName(e.target.value)}
-                    placeholder="Ej: Casa, Trabajo, etc."
-                    required
-                  />
-                </div>
-              </div>
+                  <Label htmlFor="edit-address-type" className="text-[#1B3C53]">Tipo de dirección</Label>
+                   <Select value={addressType} onValueChange={(value: "home" | "work" | "other") => setAddressType(value)}>
+                     <SelectTrigger>
+                       <SelectValue placeholder="Selecciona el tipo" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {addressTypes.map((type) => (
+                         <SelectItem key={type.value} value={type.value}>
+                           <div className="flex items-center space-x-2">
+                             {type.icon}
+                             <span>{type.label}</span>
+                           </div>
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-address-name" className="text-[#1B3C53]">Nombre de la dirección</Label>
+                   <Input
+                     id="edit-address-name"
+                     value={addressName}
+                     onChange={(e) => setAddressName(e.target.value)}
+                     placeholder="Ej: Casa, Trabajo, etc."
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-street">Calle</Label>
-                <Input
-                  id="edit-street"
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                  placeholder="Nombre de la calle"
-                  required
-                />
-              </div>
+               <div className="space-y-2">
+                <Label htmlFor="edit-street" className="text-[#1B3C53]">Calle</Label>
+                 <Input
+                   id="edit-street"
+                   value={street}
+                   onChange={(e) => setStreet(e.target.value)}
+                   placeholder="Nombre de la calle"
+                   required
+                   className="text-[#1B3C53] placeholder:text-[#456882]"
+                 />
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-number">Número</Label>
-                  <Input
-                    id="edit-number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    placeholder="123"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-apartment">Apartamento/Oficina (opcional)</Label>
-                  <Input
-                    id="edit-apartment"
-                    value={apartment}
-                    onChange={(e) => setApartment(e.target.value)}
-                    placeholder="Apto 5B"
-                  />
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-number" className="text-[#1B3C53]">Número</Label>
+                   <Input
+                     id="edit-number"
+                     value={number}
+                     onChange={(e) => setNumber(e.target.value)}
+                     placeholder="123"
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-apartment" className="text-[#1B3C53]">Apartamento/Oficina (opcional)</Label>
+                   <Input
+                     id="edit-apartment"
+                     value={apartment}
+                     onChange={(e) => setApartment(e.target.value)}
+                     placeholder="Apto 5B"
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-city">Ciudad</Label>
-                  <Input
-                    id="edit-city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ciudad"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-state">Estado</Label>
-                  <Select value={state} onValueChange={setState}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mexicanStates.map((stateName) => (
-                        <SelectItem key={stateName} value={stateName}>
-                          {stateName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-zip-code">Código Postal</Label>
-                  <Input
-                    id="edit-zip-code"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(formatZipCode(e.target.value))}
-                    placeholder="12345"
-                    maxLength={5}
-                    required
-                  />
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-city" className="text-[#1B3C53]">Ciudad</Label>
+                   <Input
+                     id="edit-city"
+                     value={city}
+                     onChange={(e) => setCity(e.target.value)}
+                     placeholder="Ciudad"
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-state" className="text-[#1B3C53]">Estado</Label>
+                   <Select value={state} onValueChange={setState}>
+                     <SelectTrigger>
+                       <SelectValue placeholder="Selecciona estado" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {mexicanStates.map((stateName) => (
+                         <SelectItem key={stateName} value={stateName}>
+                           {stateName}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-zip-code" className="text-[#1B3C53]">Código Postal</Label>
+                   <Input
+                     id="edit-zip-code"
+                     value={zipCode}
+                     onChange={(e) => setZipCode(formatZipCode(e.target.value))}
+                     placeholder="12345"
+                     maxLength={5}
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-country">País</Label>
-                  <Input
-                    id="edit-country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    placeholder="México"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-phone">Teléfono</Label>
-                  <Input
-                    id="edit-phone"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhone(e.target.value))}
-                    placeholder="(555) 123-4567"
-                    required
-                  />
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-country" className="text-[#1B3C53]">País</Label>
+                   <Input
+                     id="edit-country"
+                     value={country}
+                     onChange={(e) => setCountry(e.target.value)}
+                     placeholder="México"
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="edit-phone" className="text-[#1B3C53]">Teléfono</Label>
+                   <Input
+                     id="edit-phone"
+                     value={phone}
+                     onChange={(e) => setPhone(formatPhone(e.target.value))}
+                     placeholder="(555) 123-4567"
+                     required
+                     className="text-[#1B3C53] placeholder:text-[#456882]"
+                   />
+                 </div>
+               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-instructions">Instrucciones de entrega (opcional)</Label>
-                <Textarea
-                  id="edit-instructions"
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  placeholder="Instrucciones especiales para el repartidor..."
-                  rows={3}
-                />
-              </div>
+               <div className="space-y-2">
+                <Label htmlFor="edit-instructions" className="text-[#1B3C53]">Instrucciones de entrega (opcional)</Label>
+                 <Textarea
+                   id="edit-instructions"
+                   value={instructions}
+                   onChange={(e) => setInstructions(e.target.value)}
+                   placeholder="Instrucciones especiales para el repartidor..."
+                   rows={3}
+                   className="text-[#1B3C53] placeholder:text-[#456882]"
+                 />
+               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+               <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  className="bg-[#1B3C53] hover:bg-[#123246] text-white"
+                  onClick={() => setShowEditDialog(false)}
+                >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isAddingAddress}>
-                  {isAddingAddress ? "Actualizando..." : "Actualizar Dirección"}
-                </Button>
-              </div>
+                 <Button type="submit" disabled={isAddingAddress}>
+                   {isAddingAddress ? "Actualizando..." : "Actualizar Dirección"}
+                 </Button>
+               </div>
             </form>
           </DialogContent>
         </Dialog>
@@ -680,4 +706,4 @@ export default function DireccionesPage() {
       </div>
     </div>
   )
-} 
+}

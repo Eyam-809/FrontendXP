@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { 
   ArrowLeft, 
   Crown,
@@ -17,10 +19,16 @@ import {
   Truck,
   User,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  X,
+  CreditCard,
+  Wallet,
+  AlertCircle,
+  ShoppingBag
 } from "lucide-react"
 import Link from "next/link"
 import Navbar from "@/components/navbar"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface UserData {
   name: string
@@ -30,20 +38,37 @@ interface UserData {
 
 export default function XPmarketPlusPage() {
   const [user, setUser] = useState<UserData | null>(null)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [selectedPaymentPlan, setSelectedPaymentPlan] = useState("mensual") // mensual, trimestral, anual
+  const [paymentMethod, setPaymentMethod] = useState("card")
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [userPlanId, setUserPlanId] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    zipCode: "",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+  })
 
   useEffect(() => {
     const userData = localStorage.getItem("userData")
     if (userData) {
       setUser(JSON.parse(userData))
     }
+    
+    // Verificar el plan actual del usuario (por defecto es plan básico con ID: 1)
+    const planId = localStorage.getItem("plan_id") || "1"
+    setUserPlanId(planId)
   }, [])
 
   const gamingApps = [
     { name: "Steam", color: "bg-[#1B3C53]", icon: "🎮" },
     { name: "Epic", color: "bg-[#456882]", icon: "🎯" },
-    { name: "Xbox", color: "bg-green-600", icon: "🎮" },
-    { name: "PlayStation", color: "bg-[#1B3C53]", icon: "🎮" },
-    { name: "Nintendo", color: "bg-[#E63946]", icon: "🎮" },
     { name: "Discord", color: "bg-purple-600", icon: "💬" },
     { name: "Twitch", color: "bg-purple-500", icon: "📺" },
     { name: "Spotify", color: "bg-green-500", icon: "🎵" },
@@ -51,36 +76,63 @@ export default function XPmarketPlusPage() {
   ]
 
   const familyPlan = {
-    title: "XPmarket+ Familia",
-    price: "Free",
+    title: "XPMarket Basico",
+    price: "Gratis",
     monthlyPrice: "",
-    badge: "El mejor plan para iniciar tus compras",
+    badge: "",
     features: [
-      "Para una a seis personas",
-      "Acceso a todas las plataformas de gaming",
-      "Úsalo en PC, Mac, teléfonos y tabletas",
-      "Hasta 6 TB de almacenamiento en la nube (1 TB por persona)",
-      "Envíos gratis en todas las compras",
-      "Descuentos exclusivos en tecnología y gaming",
-      "Soporte prioritario 24/7",
-      "Acceso anticipado a ofertas especiales"
+      "Para usuarios que inician en la plataforma",
+      "Publicación de hasta 5 productos activos a la vez",
+      "Visualización de anuncios publicitarios",
+      "Comisión del 5% sobre cada venta",
+      "Sin acceso al chat global  (Sistema de intercambios)",
+      "Sin verificación premium",
+
     ]
   }
 
   const personalPlan = {
-    title: "XPmarket+ Personal",
-    price: "MXN$199.00/año",
-    monthlyPrice: "MXN$1,199.99/mes",
+    title: "XPMarket Cliente Fiel",
+    price: "$99.00MXN",
+    monthlyPrice: "$899.00MXN/año",
     features: [
-      "Para una persona",
-      "Acceso a todas las plataformas de gaming",
-      "Úsalo en PC, Mac, teléfonos y tabletas",
-      "1 TB de almacenamiento en la nube",
-      "Envíos gratis en compras superiores a $500",
-      "Descuentos exclusivos en tecnología y gaming",
-      "Soporte prioritario 24/7",
-      "Acceso anticipado a ofertas especiales"
+      "Vendedores activos",
+      "Publicación de hasta 100 productos activos a la vez",
+      "Comisión reducida del 2.5% por venta",
+      "Acceso al chat global",
+      "Sistema de puntuaciones y reseñas",
+      "Acceso al chat global",
+      "Verificación premium incluida",
     ]
+  }
+
+  const paymentPlans = {
+    mensual: { price: 99, label: "Mensual", usd: 5.50 },
+    trimestral: { price: 249, label: "Trimestral", usd: 13.80 },
+    anual: { price: 899, label: "Anual", usd: 49.80 }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+  }
+
+  const handlePayment = () => {
+    setIsProcessing(true)
+    setTimeout(() => {
+      setIsProcessing(false)
+      setShowSubscriptionModal(false)
+      // Actualizar el plan_id del usuario a 2
+      localStorage.setItem("plan_id", "2")
+      setUserPlanId("2")
+      alert("¡Suscripción exitosa! Ahora tienes acceso al plan Cliente Fiel.")
+    }, 2000)
+  }
+
+  const getTotalPrice = () => {
+    return paymentPlans[selectedPaymentPlan as keyof typeof paymentPlans].price
   }
 
   if (!user) {
@@ -100,22 +152,19 @@ export default function XPmarketPlusPage() {
         {/* Top Section */}
         <div className="flex items-center justify-center mb-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">XPmarket+</h1>
-            <p className="text-gray-600">Suscripción con beneficios en envíos, compras y ventas</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">XPMarket +</h1>
+            <p className="text-gray-600">Adquiere tu plan! Únete a la familia con una suscripción con beneficios en envíos, compras y ventas</p>
           </div>
         </div>
 
         {/* Plans Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Family Plan */}
-          <Card className="bg-white shadow-lg border-2 border-yellow-400 relative">
-            {familyPlan.badge && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-medium">
-                  {familyPlan.badge}
-                </Badge>
-              </div>
-            )}
+          <Card className={`bg-white shadow-lg border-4 relative ${
+            userPlanId === "1" 
+              ? "border-yellow-400 shadow-[0_0_20px_rgba(255,193,7,0.6),0_0_40px_rgba(255,193,7,0.3)] ring-2 ring-yellow-300 ring-opacity-30" 
+              : "border-gray-300"
+          }`}>
             <CardHeader className="text-center pt-8">
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                 {familyPlan.title}
@@ -148,9 +197,19 @@ export default function XPmarketPlusPage() {
               </ul>
               
               <div className="pt-6 space-y-3">
-                <Button className="w-full bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF]">
-                  Iniciar ahora
-                </Button>
+                {userPlanId === "1" ? (
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled
+                  >
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Plan Activo Actualmente
+                  </Button>
+                ) : (
+                  <Button className="w-full bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF]">
+                    Iniciar ahora
+                  </Button>
+                )}
                 <div className="text-center space-y-2">
                   <Link href="#" className="text-[#1B3C53] hover:underline text-sm block">
                     {familyPlan.monthlyPrice}
@@ -164,7 +223,11 @@ export default function XPmarketPlusPage() {
           </Card>
 
           {/* Personal Plan */}
-          <Card className="bg-white shadow-lg border border-gray-200">
+          <Card className={`bg-white shadow-lg border-4 ${
+            userPlanId === "2" 
+              ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.6),0_0_40px_rgba(34,197,94,0.3)] ring-2 ring-green-400 ring-opacity-30" 
+              : "border-gray-300"
+          }`}>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                 {personalPlan.title}
@@ -197,57 +260,312 @@ export default function XPmarketPlusPage() {
               </ul>
               
               <div className="pt-6 space-y-3">
-                <Button variant="outline" className="w-full border-[#1B3C53] text-[#1B3C53] hover:bg-[#F9F3EF]">
-                  Comprar ahora
-                </Button>
-                <div className="text-center">
-                  <Link href="#" className="text-[#1B3C53] hover:underline text-sm block">
-                    O comprar por {personalPlan.monthlyPrice}
-                  </Link>
-                </div>
+                {userPlanId === "2" ? (
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    disabled
+                  >
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Plan Adquirido
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      className="w-full bg-[#1B3C53] hover:bg-[#456882] text-[#F9F3EF]"
+                      onClick={() => {
+                        if (userPlanId !== "2") {
+                          setShowSubscriptionModal(true)
+                        }
+                      }}
+                    >
+                      Comprar ahora
+                    </Button>
+                    <div className="text-center">
+                      <Link href="#" className="text-[#1B3C53] hover:underline text-sm block">
+                        O comprar por {personalPlan.monthlyPrice}
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Additional Benefits */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Beneficios Exclusivos XPmarket+
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-3 mb-3">
-                  <Truck className="h-8 w-8 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Envíos Gratis</h3>
-                </div>
-                <p className="text-gray-600">Envíos gratuitos en todas tus compras sin mínimo de compra</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-3 mb-3">
-                  <Gift className="h-8 w-8 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Descuentos Exclusivos</h3>
-                </div>
-                <p className="text-gray-600">Acceso a ofertas especiales y descuentos únicos en tecnología</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-3 mb-3">
-                  <Zap className="h-8 w-8 text-orange-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Acceso Anticipado</h3>
-                </div>
-                <p className="text-gray-600">Sé el primero en conocer nuevos productos y ofertas especiales</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </div>
+
+      {/* Modal de Suscripción */}
+      <AnimatePresence>
+        {showSubscriptionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowSubscriptionModal(false)
+              }
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6 bg-[#1B3C53] text-white p-4 rounded-lg">
+                  <div>
+                    <h2 className="text-2xl font-bold">Costos del Plan Cliente Fiel</h2>
+                    <p className="text-sm opacity-90">Selecciona tu plan de suscripción</p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setShowSubscriptionModal(false)}
+                    className="hover:bg-[#456882] text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                  {/* Opciones de Precio */}
+                  <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4">Planes de Pago</h3>
+                    {Object.entries(paymentPlans).map(([key, plan]) => (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedPaymentPlan(key)}
+                        className={`w-full p-3 mb-3 rounded-lg border-2 transition-all ${
+                          selectedPaymentPlan === key
+                            ? "border-[#1B3C53] bg-[#1B3C53] text-white"
+                            : "border-gray-300 bg-white hover:border-[#456882] text-gray-800"
+                        }`}
+                      >
+                        <div className="text-left">
+                          <div className="font-bold text-lg">{plan.label}</div>
+                          <div className={`text-sm font-semibold ${selectedPaymentPlan === key ? "text-white" : "text-gray-800"}`}>${plan.price} MXN</div>
+                          <div className={`text-xs ${selectedPaymentPlan === key ? "text-white opacity-75" : "text-gray-600"}`}>(${plan.usd} USD)</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Método de Pago */}
+                  <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4">Método de Pago</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setPaymentMethod("card")}
+                        className={`p-3 border-2 rounded-lg flex flex-col items-center transition-all ${
+                          paymentMethod === "card" ? "border-[#1B3C53] bg-[#1B3C53] text-white" : "border-gray-300 bg-white hover:border-[#456882] text-gray-700"
+                        }`}
+                      >
+                        <CreditCard className="h-5 w-5 mb-1" />
+                        <span className="text-xs font-medium">Tarjeta</span>
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod("paypal")}
+                        className={`p-3 border-2 rounded-lg flex flex-col items-center transition-all ${
+                          paymentMethod === "paypal" ? "border-[#1B3C53] bg-[#1B3C53] text-white" : "border-gray-300 bg-white hover:border-[#456882] text-gray-700"
+                        }`}
+                      >
+                        <Wallet className="h-5 w-5 mb-1" />
+                        <span className="text-xs font-medium">PayPal</span>
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod("apple")}
+                        className={`p-3 border-2 rounded-lg flex flex-col items-center transition-all ${
+                          paymentMethod === "apple" ? "border-[#1B3C53] bg-[#1B3C53] text-white" : "border-gray-300 bg-white hover:border-[#456882] text-gray-700"
+                        }`}
+                      >
+                        <Smartphone className="h-5 w-5 mb-1" />
+                        <span className="text-xs font-medium">Apple Pay</span>
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod("oxxo")}
+                        className={`p-3 border-2 rounded-lg flex flex-col items-center transition-all ${
+                          paymentMethod === "oxxo" ? "border-[#1B3C53] bg-[#1B3C53] text-white" : "border-gray-300 bg-white hover:border-[#456882] text-gray-700"
+                        }`}
+                      >
+                        <ShoppingBag className="h-5 w-5 mb-1" />
+                        <span className="text-xs font-medium">Oxxo</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Total */}
+                  <div className="bg-gradient-to-br from-[#1B3C53] to-[#456882] text-white p-4 rounded-lg">
+                    <h3 className="text-sm font-semibold mb-4">Resumen</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Plan {paymentPlans[selectedPaymentPlan as keyof typeof paymentPlans].label}</span>
+                        <span>${getTotalPrice()} MXN</span>
+                      </div>
+                      <div className="border-t border-white/20 pt-2">
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Total</span>
+                          <span>${getTotalPrice()} MXN</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nota importante */}
+                <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-6">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-800 mb-1">Nota:</p>
+                      <p className="text-sm text-yellow-700">
+                        Aunque se denomine "ilimitado", existe un límite de 100 productos activos por persona o empresa. Para más productos, contacta soporte.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formulario de Pago */}
+                <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                  <h3 className="text-base font-semibold text-gray-800 mb-4">Información Personal</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">Correo Electrónico</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="tu@email.com"
+                        className="mt-1 h-9"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">Nombre</Label>
+                        <Input
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          placeholder="Juan"
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Apellido</Label>
+                        <Input
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          placeholder="Pérez"
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                    </div>
+
+                    {paymentMethod === "card" && (
+                      <>
+                        <div>
+                          <Label htmlFor="cardNumber" className="text-sm font-medium text-gray-700">Número de Tarjeta</Label>
+                          <Input
+                            id="cardNumber"
+                            name="cardNumber"
+                            value={formData.cardNumber}
+                            onChange={handleInputChange}
+                            placeholder="1234 5678 9012 3456"
+                            className="mt-1 h-9"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="expiryDate" className="text-sm font-medium text-gray-700">Fecha de Expiración</Label>
+                            <Input
+                              id="expiryDate"
+                              name="expiryDate"
+                              value={formData.expiryDate}
+                              onChange={handleInputChange}
+                              placeholder="MM/AA"
+                              className="mt-1 h-9"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="cvv" className="text-sm font-medium text-gray-700">CVV</Label>
+                            <Input
+                              id="cvv"
+                              name="cvv"
+                              value={formData.cvv}
+                              onChange={handleInputChange}
+                              placeholder="123"
+                              className="mt-1 h-9"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div>
+                      <Label htmlFor="address" className="text-sm font-medium text-gray-700">Dirección</Label>
+                      <Input
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="Calle Principal 123"
+                        className="mt-1 h-9"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="city" className="text-sm font-medium text-gray-700">Ciudad</Label>
+                        <Input
+                          id="city"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          placeholder="Ciudad de México"
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="zipCode" className="text-sm font-medium text-gray-700">Código Postal</Label>
+                        <Input
+                          id="zipCode"
+                          name="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleInputChange}
+                          placeholder="01000"
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botón de Pago */}
+                <Button
+                  className="w-full mt-4 bg-[#1B3C53] hover:bg-[#456882] text-white font-semibold h-11"
+                  onClick={handlePayment}
+                  disabled={isProcessing}
+                >
+                  {isProcessing
+                    ? "Procesando suscripción..."
+                    : paymentMethod === "oxxo"
+                      ? `Generar código Oxxo - $${getTotalPrice()} MXN`
+                      : `Pagar $${getTotalPrice()} MXN`}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 } 

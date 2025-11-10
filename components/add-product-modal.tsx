@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Upload, X } from "lucide-react"
 import { useApp } from "@/contexts/app-context"
+import { ApiUrl } from "@/lib/config"
 
 interface AddProductForm {
   name: string
@@ -51,7 +52,7 @@ if (!token) throw new Error("No hay token de autenticación")
     if (!isOpen) return
     const fetchCategorias = async () => {
       try {
-        const res = await fetch("https://backendxp-1.onrender.com/api/categorias")
+        const res = await fetch(`${ApiUrl}/api/categorias`)
         if (!res.ok) throw new Error("Error al cargar categorías")
         const data = await res.json()
         setCategorias(data)
@@ -68,7 +69,7 @@ if (!token) throw new Error("No hay token de autenticación")
     if (!form.categoria_id) return
     const fetchSubcategorias = async () => {
       try {
-        const res = await fetch(`https://backendxp-1.onrender.com/api/subcategories/${form.categoria_id}`)
+        const res = await fetch(`${ApiUrl}/api/subcategories/${form.categoria_id}`)
         if (!res.ok) throw new Error("Error al cargar subcategorías")
         const data = await res.json()
         setSubcategorias(data)

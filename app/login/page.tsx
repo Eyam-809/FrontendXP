@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApp } from "@/contexts/app-context"
 import axios from "axios";
+import { ApiUrl } from "@/lib/config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { X } from "lucide-react"
@@ -52,6 +53,20 @@ export default function LoginPage() {
     password: "",
     rememberMe: false,
   })
+  
+  // Redirige a proveedor social sólo si se aceptaron Términos
+  const handleSocialLogin = (url: string) => {
+    // si no está aceptado, mostrar error y no redirigir
+    if (!loginForm.rememberMe) {
+      setError("Debes aceptar los Términos y Condiciones antes de iniciar sesión con proveedores externos.")
+      // opcional: abrir modal de términos
+      // setShowTermsModal(true)
+      return
+    }
+    // limpiar errores y redirigir
+    setError(null)
+    window.location.href = url
+  }
 
   // Register form state
   const [registerForm, setRegisterForm] = useState({
@@ -77,90 +92,94 @@ export default function LoginPage() {
     },
   })
  //Login
-const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError(null)
+  setSuccessMessage(null)
+  setIsLoading(true)
 
-    // Limpiar mensajes previos
-    setError(null);
-    setSuccessMessage(null);
-    setIsLoading(true);
+  try {
+    const response = await axios.post(`${ApiUrl}/api/login`, { email, password }, { timeout: 10000 })
+    console.log("Usuario autenticado:", response.data)
 
-    axios
-  .post("https://backendxp-1.onrender.com/api/login", { email, password })
-  .then((response) => {
-    console.log("Usuario autenticado:", response.data); // Verifica la respuesta completa
-    
-    // Guarda el token
-    localStorage.setItem("token", response.data.token);
-    
-    // Guarda todos los datos del usuario
-    const userData = response.data.user;
+    // Guarda el token y userData (misma lógica que ya tenías)
+    localStorage.setItem("token", response.data.token)
+    const userData = response.data.user
     const fotoValue = userData.foto ?? userData.avatar ?? userData.photo ?? null
-    localStorage.setItem("userData", JSON.stringify({
-       id: userData.id,
-       name: userData.name,
-       email: userData.email,
-       phone: userData.telefono,
-       address: userData.direccion,
-       foto: fotoValue, // <--- re-agregado
-       plan_id: userData.plan_id,
-       created_at: userData.created_at,
-       updated_at: userData.updated_at,
-       email_verified_at: userData.email_verified_at,
-       // Datos por defecto para campos que no existen en la BD
-       rating: 4.8,
-       totalProducts: 12,
-       totalSales: 45,
-       joinDate: userData.created_at
-     }));
- 
-     // También guarda datos individuales para compatibilidad
-    localStorage.setItem("user_id", String(userData.id));
-    localStorage.setItem("plan_id", String(userData.plan_id));
-    localStorage.setItem("name", String(userData.name || ""));
-    // guardar foto por compatibilidad (clave antigua si la usas en otros sitios)
-    if (fotoValue) localStorage.setItem("foto", String(fotoValue))
- 
-     console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
-     
-     // Actualizar el contexto inmediatamente
-     dispatch({
-       type: "SET_USER_SESSION",
-       payload: { 
-         token: response.data.token, 
-        user_id: userData.id, 
-        plan_id: userData.plan_id, 
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({
+        id: userData.id,
         name: userData.name,
-        foto: fotoValue
-       },
-     })
-    
-    setIsLoading(false);
+        email: userData.email,
+        phone: userData.telefono,
+        address: userData.direccion,
+        foto: fotoValue,
+        plan_id: userData.plan_id,
+        created_at: userData.created_at,
+        updated_at: userData.updated_at,
+        email_verified_at: userData.email_verified_at,
+        rating: 4.8,
+        totalProducts: 12,
+        totalSales: 45,
+        joinDate: userData.created_at,
+      })
+    )
+    localStorage.setItem("user_id", String(userData.id))
+    localStorage.setItem("plan_id", String(userData.plan_id))
+    localStorage.setItem("name", String(userData.name || ""))
+    if (fotoValue) localStorage.setItem("foto", String(fotoValue))
 
-    setTimeout(() => {
-      router.push("/");
-    }, 100); // Reducido de 20 segundos a 2 segundos
-  })
-    .catch((error) => {
-       setIsLoading(false);
-    console.error("❌ Error en login:", error);
-    if (error.response) {
-      console.error("📨 Mensaje del backend:", error.response.data.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+    dispatch({
+      type: "SET_USER_SESSION",
+      payload: {
+        token: response.data.token,
+        user_id: userData.id,
+        plan_id: userData.plan_id,
+        name: userData.name,
+        foto: fotoValue,
+      },
+    })
+
+    setIsLoading(false)
+    setTimeout(() => router.push("/"), 100)
+  } catch (err: any) {
+    setIsLoading(false)
+
+    // Manejo específico para errores axios
+    if (axios.isAxiosError(err)) {
+      console.error("Axios error object:", err.toJSON ? err.toJSON() : err)
+
+      if (err.response) {
+        // El servidor respondió con estado != 2xx
+        console.error("Respuesta del backend:", err.response.status, err.response.data)
+        const backendMessage =
+          err.response.data?.message ||
+          (err.response.data?.errors && Object.values(err.response.data.errors).flat()[0]) ||
+          `Error del servidor (${err.response.status})`
+        setError(backendMessage)
+      } else if (err.request) {
+        // La petición se hizo pero no hubo respuesta => Network / CORS / backend caído
+        console.error("No hubo respuesta (request):", err.request)
+        setError("No se pudo conectar con el servidor. Comprueba que el backend esté en ejecución y que CORS permita tu origen.")
+      } else {
+        // Otro error (configuración, cancelación, etc.)
+        console.error("Error inesperado al configurar la petición:", err.message)
+        setError("Error inesperado: " + (err.message || "comprueba la consola"))
+      }
     } else {
-      console.error("⚠️ Error inesperado:", error.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+      // Errores no axios
+      console.error("⚠️ Error inesperado:", err)
+      setError("Ocurrió un error inesperado. Revisa la consola.")
     }
-  });
-  };
 
-  // Maneja el envío del formulario
+    // Clear inputs opcional
+    setEmail("")
+    setPassword("")
+  }
+}
+
+// Maneja el envío del formulario
   const handleRegister = async (e:React.FormEvent) => {
     e.preventDefault();
     setIsRegister(true);
@@ -196,7 +215,7 @@ const handleLogin = (e: React.FormEvent) => {
     };
     setIsRegister(false);
     try {
-      const response = await axios.post('https://backendxp-1.onrender.com/api/registros', datos);
+      const response = await axios.post(`${ApiUrl}/api/registros`, datos);
 
         setMessage(response.data.message);
         //setErrors({});
@@ -208,7 +227,7 @@ const handleLogin = (e: React.FormEvent) => {
 
 useEffect(() => {
     // Llama al backend para obtener los planes
-    fetch('https://backendxp-1.onrender.com/api/plan')
+    fetch(`${ApiUrl}/api/plan`)
       .then((response) => response.json())
       .then((data) => {
         setPlanes(data); // Guardamos los planes en el estado
@@ -309,13 +328,20 @@ useEffect(() => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="remember-me"
+                        id="agree-terms-login"
                         checked={loginForm.rememberMe}
                         onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
                       />
-                       <Label htmlFor="remember-me" className="text-sm text-[#1B3C53] font-medium">
-                         Recordarme
-                       </Label>
+                      <Label htmlFor="agree-terms-login" className="text-sm text-[#1B3C53] font-medium">
+                        Acepto los{" "}
+                        <button
+                          type="button"
+                          onClick={openTermsModal}
+                          className="underline text-[#1B3C53] hover:text-[#456882] p-0"
+                        >
+                          Términos y Condiciones
+                        </button>
+                      </Label>
                     </div>
                     <Link href="#" className="text-sm text-[#1B3C53] hover:text-[#456882]">
                       ¿Olvidaste tu contraseña?
@@ -325,7 +351,7 @@ useEffect(() => {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
-                    disabled={isLoading}
+                    disabled={isLoading || !loginForm.rememberMe}
                   >
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
@@ -345,13 +371,11 @@ useEffect(() => {
                       type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
-                      onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/github";
-                      }}
-                    >
-                      <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
-                    </Button>
+                      onClick={() => handleSocialLogin("https://backendxp-1.onrender.com/api/login/github")}
+                     >
+                       <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                     </Button>
 
 
 
@@ -361,8 +385,7 @@ useEffect(() => {
                       variant="outline" 
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" 
                       onClick={() => {
-                          // Abre el endpoint de login de Google
-                          window.location.href = "https://backendxp-1.onrender.com/api/login/google";
+                          handleSocialLogin("https://backendxp-1.onrender.com/api/login/google");
                       }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -385,7 +408,7 @@ useEffect(() => {
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft"
+                        handleSocialLogin("https://backendxp-1.onrender.com/api/login/microsoft")
                       }}
                     >
                       <svg

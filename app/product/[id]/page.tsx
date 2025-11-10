@@ -14,6 +14,7 @@ import CategoryPanel from "@/components/category-panel"
 import ImageZoom from "@/components/image-zoom"
 import { useApp } from "@/contexts/app-context"
 import type { Product } from "@/contexts/app-context"
+import { ApiUrl } from "@/lib/config"
 
 const translateCategory = (category: string) => {
   const translations: Record<string, string> = {
@@ -43,7 +44,7 @@ export default function ProductPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/products/${id}`)
+        const response = await fetch(`${ApiUrl}/api/products/${id}`)
         if (!response.ok) throw new Error("Producto no encontrado")
         const data = await response.json()
         setProduct(data)
@@ -105,7 +106,7 @@ export default function ProductPage() {
             {/* Carrusel único: imagen o video en el mismo contenedor */}
             <div className="bg-card p-6 rounded-xl shadow-sm">
               {(() => {
-                const base = "https://backendxp-1.onrender.com"
+                const base = ApiUrl
                 const mediaItems: { type: "image" | "video"; src: string }[] = []
                 const normalize = (s?: string) => {
                   if (!s) return ""

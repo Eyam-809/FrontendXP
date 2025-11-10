@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
+import { ApiUrl } from "@/lib/config"
 
 interface CheckoutModalProps {
   onClose?: () => void
@@ -126,7 +127,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
       console.log("Compra payload:", payload)
 
       const token = localStorage.getItem("token")
-      const res = await fetch("http://localhost:8000/api/compras", {
+      const res = await fetch(`${ApiUrl}/api/compras`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
