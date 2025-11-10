@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { ApiUrl } from "@/lib/config"
 import { useApp } from "@/contexts/app-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
@@ -78,7 +79,7 @@ export default function PersonalInfoPage() {
         direccion: formData.address || ""
       };
 
-      const response = await fetch("https://backendxp-1.onrender.com/api/usuario", {
+      const response = await fetch(`${ApiUrl}/api/usuario`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -160,7 +161,7 @@ useEffect(() => {
         return
       }
 
-      const res = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+      const res = await fetch(`${ApiUrl}/api/products/user/${userData.id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -226,7 +227,7 @@ useEffect(() => {
           return
         }
 
-        const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/user/${userId}`, {
+        const res = await fetch(`${ApiUrl}/api/conversations/user/${userId}`, {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "Content-Type": "application/json"
@@ -357,7 +358,7 @@ useEffect(() => {
         console.log("🔑 Token encontrado:", token ? "Sí" : "No")
         
         if (token) {
-          const response = await fetch("https://backendxp-1.onrender.com/api/user", {
+          const response = await fetch(`${ApiUrl}/api/user`, {
             headers: { Authorization: `Bearer ${token}` }
           })
           if (response.ok) {
@@ -402,14 +403,14 @@ useEffect(() => {
           console.log("🔍 Buscando productos del usuario:", userData.id)
           
           // Intentar diferentes endpoints para obtener productos del usuario
-          let response = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+          let response = await fetch(`${ApiUrl}/api/products/user/${userData.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           })
           
           // Si falla, intentar con endpoint alternativo
           if (!response.ok) {
             console.log("❌ Primer endpoint falló, intentando alternativo...")
-            response = await fetch(`https://backendxp-1.onrender.com/api/products?user_id=${userData.id}`, {
+            response = await fetch(`${ApiUrl}/api/products?user_id=${userData.id}`, {
               headers: { Authorization: `Bearer ${token}` }
             })
           }
@@ -417,7 +418,7 @@ useEffect(() => {
           // Si aún falla, intentar obtener todos los productos
           if (!response.ok) {
             console.log("❌ Segundo endpoint falló, intentando obtener todos los productos...")
-            response = await fetch(`https://backendxp-1.onrender.com/api/products`, {
+            response = await fetch(`${ApiUrl}/api/products`, {
               headers: { Authorization: `Bearer ${token}` }
             })
           }
@@ -494,7 +495,7 @@ useEffect(() => {
 
       console.log("Enviando datos de actualización:", updateData)
 
-      const response = await fetch("https://backendxp-1.onrender.com/api/usuario", {
+      const response = await fetch(`${ApiUrl}/api/usuario`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -556,7 +557,7 @@ useEffect(() => {
   try {
     setIsUploadingAvatar(true);
 
-    const response = await fetch("https://backendxp-1.onrender.com/api/usuario/foto", {
+    const response = await fetch(`${ApiUrl}/api/usuario/foto`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${state.userSession?.token}`,
@@ -625,7 +626,7 @@ useEffect(() => {
       const userData = JSON.parse(localStorage.getItem("userData") || "{}")
       
       if (token && userData.id) {
-        const response = await fetch(`https://backendxp-1.onrender.com/api/products/user/${userData.id}`, {
+        const response = await fetch(`${ApiUrl}/api/products/user/${userData.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -665,7 +666,7 @@ const handleConfirmDelete = async () => {
 
   try {
     const response = await fetch(
-      `https://backendxp-1.onrender.com/api/products/${deleteModal.productId}`,
+      `${ApiUrl}/api/products/${deleteModal.productId}`,
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -752,7 +753,7 @@ const handleCloseDeleteModal = () => {
 
     try {
       console.log("[sendMessage] llamando API...")
-      const res = await fetch(`https://backendxp-1.onrender.com/api/conversations/${conversationId}/messages`, {
+      const res = await fetch(`${ApiUrl}/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -829,11 +830,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
+                                  ? `${ApiUrl}/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
+                                  ? `${ApiUrl}/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}
@@ -998,11 +999,11 @@ const handleCloseDeleteModal = () => {
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
-                                  ? `https://backendxp-1.onrender.com/storage/${userInfo.foto}`
+                                  ? `${ApiUrl}/storage/${userInfo.foto}`
                                   : currentUser?.foto?.startsWith("data:image")
                                   ? currentUser.foto
                                   : currentUser?.foto
-                                  ? `https://backendxp-1.onrender.com/storage/${currentUser.foto}`
+                                  ? `https://backen dxp-1.onrender.com/storage/${currentUser.foto}`
                                   : undefined)
                               }
                               alt={currentUser?.name || "Usuario"}

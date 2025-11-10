@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ApiUrl } from "@/lib/config"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Navbar from "@/components/navbar"
 import { 
@@ -23,12 +24,14 @@ import {
   Users,
   Circle,
   Minus,
-  X
+  X,
+  Lock
 } from "lucide-react"
 import Link from "next/link"
 import { useApp } from "@/contexts/app-context"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
+import storage from "@/lib/storage"
 
 interface GlobalProduct {
   id: number
@@ -63,6 +66,21 @@ export default function GlobalChatPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<string>("newest")
+  const [hasAccess, setHasAccess] = useState(true)
+
+  // Verificar acceso al chat global basado en plan_id
+  useEffect(() => {
+    const planId = state.userSession?.plan_id || storage.getPlanId()
+    const hasGlobalChatAccess = planId === "2"
+    setHasAccess(hasGlobalChatAccess)
+    
+    if (!hasGlobalChatAccess) {
+      // Redirigir después de un momento si no tiene acceso
+      setTimeout(() => {
+        router.push("/profile/xpmarket-plus")
+      }, 3000)
+    }
+  }, [state.userSession, router])
 
   useEffect(() => {
     // Simular carga de productos globales
@@ -263,7 +281,7 @@ export default function GlobalChatPage() {
   const loadGlobalProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("https://backendxp-1.onrender.com/api/products/trueques", {
+      const response = await fetch(`${ApiUrl}/api/products/trueques`, {
         headers: { "Accept": "application/json" }
       })
       if (!response.ok) throw new Error("Error al obtener los productos")
@@ -290,7 +308,7 @@ export default function GlobalChatPage() {
           avatar: item.user?.avatar 
             ? (item.user.avatar.startsWith("http") 
                 ? item.user.avatar 
-                : `https://backendxp-1.onrender.com/storage/${item.user.avatar}`)
+                : `${ApiUrl}/storage/${item.user.avatar}`)
             : "/placeholder-user.jpg",
           rating: item.user?.rating ?? 0,
           isOnline: false,
@@ -411,7 +429,7 @@ export default function GlobalChatPage() {
         receiver_id: sellerId
       };
 
-      const res = await fetch("https://backendxp-1.onrender.com/api/conversations", {
+      const res = await fetch(`${ApiUrl}/api/conversations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -467,6 +485,40 @@ export default function GlobalChatPage() {
       console.error("Error al iniciar chat:", error);
       alert("Ocurrió un error al iniciar la conversación.");
     }
+  }
+
+  // Mostrar mensaje de acceso denegado si no tiene plan_id = 2
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-[#F9F3EF]">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <Card className="max-w-md mx-auto p-8 text-center">
+            <Lock className="h-16 w-16 text-[#1B3C53] mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-[#1B3C53] mb-4">Acceso Restringido</h2>
+            <p className="text-gray-600 mb-6">
+              El Chat Global es una característica exclusiva para usuarios con el plan <strong>Cliente Fiel</strong> (Plan ID: 2).
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Actualmente tienes el plan Básico. Actualiza tu suscripción para acceder a esta funcionalidad.
+            </p>
+            <div className="space-y-3">
+              <Link href="/profile/xpmarket-plus">
+                <Button className="w-full bg-[#1B3C53] hover:bg-[#456882]">
+                  Ver Planes de Suscripción
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={() => router.back()} className="w-full">
+                Volver
+              </Button>
+            </div>
+            <p className="text-xs text-gray-400 mt-4">
+              Serás redirigido automáticamente en 3 segundos...
+            </p>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

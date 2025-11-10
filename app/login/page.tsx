@@ -14,7 +14,10 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApp } from "@/contexts/app-context"
 import axios from "axios";
-import storage from "@/lib/storage"
+import { ApiUrl } from "@/lib/config";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { X } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,6 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +37,15 @@ export default function LoginPage() {
   const [telefono, setTelefono] = useState(""); // Nuevo estado para teléfono
   const [direccion, setDireccion] = useState(""); // Nuevo estado para dirección
   const [message, setMessage] = useState("");
-  const [verificationSuccess, setVerificationSuccess] = useState(false);
   //const [errors, setErrors] = useState({});
    //PLANES
   const [planSeleccionado, setPlanSeleccionado] = useState("");
-  const [planes, setPlanes] = useState([]);// Inicializa useNavigate
+  const [planes, setPlanes] = useState<Array<{id: number, nombre: string, descripcion: string}>>([]);// Inicializa useNavigate
+
+  // Función para abrir el modal de términos y condiciones
+  const openTermsModal = () => {
+    setShowTermsModal(true);
+  };
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -45,6 +53,20 @@ export default function LoginPage() {
     password: "",
     rememberMe: false,
   })
+  
+  // Redirige a proveedor social sólo si se aceptaron Términos
+  const handleSocialLogin = (url: string) => {
+    // si no está aceptado, mostrar error y no redirigir
+    if (!loginForm.rememberMe) {
+      setError("Debes aceptar los Términos y Condiciones antes de iniciar sesión con proveedores externos.")
+      // opcional: abrir modal de términos
+      // setShowTermsModal(true)
+      return
+    }
+    // limpiar errores y redirigir
+    setError(null)
+    window.location.href = url
+  }
 
   // Register form state
   const [registerForm, setRegisterForm] = useState({
@@ -70,90 +92,94 @@ export default function LoginPage() {
     },
   })
  //Login
-const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError(null)
+  setSuccessMessage(null)
+  setIsLoading(true)
 
-    // Limpiar mensajes previos
-    setError(null);
-    setSuccessMessage(null);
-    setIsLoading(true);
+  try {
+    const response = await axios.post(`${ApiUrl}/api/login`, { email, password }, { timeout: 10000 })
+    console.log("Usuario autenticado:", response.data)
 
-    axios
-  .post("https://backendxp-1.onrender.com/api/login", { email, password })
-  .then((response) => {
-    console.log("Usuario autenticado:", response.data); // Verifica la respuesta completa
-    
-    const { token, user: apiUser } = response.data; // Desestructuración para mayor claridad
+    // Guarda el token y userData (misma lógica que ya tenías)
+    localStorage.setItem("token", response.data.token)
+    const userData = response.data.user
+    const fotoValue = userData.foto ?? userData.avatar ?? userData.photo ?? null
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.telefono,
+        address: userData.direccion,
+        foto: fotoValue,
+        plan_id: userData.plan_id,
+        created_at: userData.created_at,
+        updated_at: userData.updated_at,
+        email_verified_at: userData.email_verified_at,
+        rating: 4.8,
+        totalProducts: 12,
+        totalSales: 45,
+        joinDate: userData.created_at,
+      })
+    )
+    localStorage.setItem("user_id", String(userData.id))
+    localStorage.setItem("plan_id", String(userData.plan_id))
+    localStorage.setItem("name", String(userData.name || ""))
+    if (fotoValue) localStorage.setItem("foto", String(fotoValue))
 
-    // Guarda el token
-    localStorage.setItem("token", token);
-    
-    // Guarda todos los datos del usuario
-    const userData = response.data.user;
-    localStorage.setItem("userData", JSON.stringify({
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.telefono,
-      address: userData.direccion,
-      plan_id: userData.plan_id,
-      foto: userData.foto,
-      created_at: userData.created_at,
-      updated_at: userData.updated_at,
-      email_verified_at: userData.email_verified_at,
-      // Datos por defecto para campos que no existen en la BD
-      rating: 4.8,
-      totalProducts: 12,
-      totalSales: 45,
-      joinDate: userData.created_at
-      
-    }));
-
-    // También guarda datos individuales para compatibilidad
-    localStorage.setItem("user_id", userData.id);
-    localStorage.setItem("plan_id", userData.plan_id);
-    localStorage.setItem("name", userData.name);
-
-    console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
-    
-    // Actualizar el contexto inmediatamente
-    storage.setToken(token)
-    storage.setUserData(apiUser)
-    storage.setUserSession({
-      token,
-      user_id: apiUser.id,
-      name: apiUser.name,
-      role: apiUser.role,
-      foto: apiUser.foto
+    dispatch({
+      type: "SET_USER_SESSION",
+      payload: {
+        token: response.data.token,
+        user_id: userData.id,
+        plan_id: userData.plan_id,
+        name: userData.name,
+        foto: fotoValue,
+      },
     })
-    dispatch({ type: "SET_USER_SESSION", payload: { token, user_id: apiUser.id, name: apiUser.name, foto: apiUser.foto } })
-    
-    setIsLoading(false);
 
-    setTimeout(() => {
-      router.push("/");
-    }, 2000); // Reducido de 20 segundos a 2 segundos
-  })
-    .catch((error) => {
-       setIsLoading(false);
-    console.error("❌ Error en login:", error);
-    if (error.response) {
-      console.error("📨 Mensaje del backend:", error.response.data.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+    setIsLoading(false)
+    setTimeout(() => router.push("/"), 100)
+  } catch (err: any) {
+    setIsLoading(false)
+
+    // Manejo específico para errores axios
+    if (axios.isAxiosError(err)) {
+      console.error("Axios error object:", err.toJSON ? err.toJSON() : err)
+
+      if (err.response) {
+        // El servidor respondió con estado != 2xx
+        console.error("Respuesta del backend:", err.response.status, err.response.data)
+        const backendMessage =
+          err.response.data?.message ||
+          (err.response.data?.errors && Object.values(err.response.data.errors).flat()[0]) ||
+          `Error del servidor (${err.response.status})`
+        setError(backendMessage)
+      } else if (err.request) {
+        // La petición se hizo pero no hubo respuesta => Network / CORS / backend caído
+        console.error("No hubo respuesta (request):", err.request)
+        setError("No se pudo conectar con el servidor. Comprueba que el backend esté en ejecución y que CORS permita tu origen.")
+      } else {
+        // Otro error (configuración, cancelación, etc.)
+        console.error("Error inesperado al configurar la petición:", err.message)
+        setError("Error inesperado: " + (err.message || "comprueba la consola"))
+      }
     } else {
-      console.error("⚠️ Error inesperado:", error.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+      // Errores no axios
+      console.error("⚠️ Error inesperado:", err)
+      setError("Ocurrió un error inesperado. Revisa la consola.")
     }
-  });
-  };
 
-  // Maneja el envío del formulario
+    // Clear inputs opcional
+    setEmail("")
+    setPassword("")
+  }
+}
+
+// Maneja el envío del formulario
   const handleRegister = async (e:React.FormEvent) => {
     e.preventDefault();
     setIsRegister(true);
@@ -161,6 +187,19 @@ const handleLogin = (e: React.FormEvent) => {
     // Verificar si los campos están vacíos
     if (!name || !emailR || !passwordR || !password_confirmation) {
         //setErrors({ general: 'Por favor, complete todos los campos obligatorios' });
+        return;
+    }
+
+    // Verificar que se hayan aceptado los términos y condiciones
+    if (!registerForm.agreeTerms) {
+        setErrors(prev => ({
+            ...prev,
+            register: {
+                ...prev.register,
+                agreeTerms: 'Debe aceptar los términos y condiciones para continuar'
+            }
+        }));
+        setIsRegister(false);
         return;
     }
 
@@ -176,13 +215,11 @@ const handleLogin = (e: React.FormEvent) => {
     };
     setIsRegister(false);
     try {
-      const response = await axios.post('https://backendxp-1.onrender.com/api/registros', datos);
+      const response = await axios.post(`${ApiUrl}/api/registros`, datos);
 
         setMessage(response.data.message);
         //setErrors({});
-        
-        // Redirigir a la página de verificación con el número de teléfono
-        router.push(`/verification?phone=${encodeURIComponent(telefono)}&email=${encodeURIComponent(emailR)}`);
+        window.location.reload()
     } catch (error) {
         setIsRegister(false);
     }
@@ -190,7 +227,7 @@ const handleLogin = (e: React.FormEvent) => {
 
 useEffect(() => {
     // Llama al backend para obtener los planes
-    fetch('https://backendxp-1.onrender.com/api/plan')
+    fetch(`${ApiUrl}/api/plan`)
       .then((response) => response.json())
       .then((data) => {
         setPlanes(data); // Guardamos los planes en el estado
@@ -198,15 +235,6 @@ useEffect(() => {
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
       });
-  }, []);
-
-  // Detectar si viene de verificación exitosa
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('verified') === 'true') {
-      setVerificationSuccess(true);
-      setSuccessMessage('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión.');
-    }
   }, []);
 
   return (
@@ -295,24 +323,25 @@ useEffect(() => {
                         <span className="block sm:inline ml-1">{error}</span>
                       </div>
                     )}
-                    {verificationSuccess && successMessage && (
-                      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                        <strong className="font-bold">¡Éxito!</strong>
-                        <span className="block sm:inline ml-1">{successMessage}</span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="remember-me"
+                        id="agree-terms-login"
                         checked={loginForm.rememberMe}
                         onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
                       />
-                       <Label htmlFor="remember-me" className="text-sm text-[#1B3C53] font-medium">
-                         Recordarme
-                       </Label>
+                      <Label htmlFor="agree-terms-login" className="text-sm text-[#1B3C53] font-medium">
+                        Acepto los{" "}
+                        <button
+                          type="button"
+                          onClick={openTermsModal}
+                          className="underline text-[#1B3C53] hover:text-[#456882] p-0"
+                        >
+                          Términos y Condiciones
+                        </button>
+                      </Label>
                     </div>
                     <Link href="#" className="text-sm text-[#1B3C53] hover:text-[#456882]">
                       ¿Olvidaste tu contraseña?
@@ -322,7 +351,7 @@ useEffect(() => {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
-                    disabled={isLoading}
+                    disabled={isLoading || !loginForm.rememberMe}
                   >
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
@@ -342,13 +371,11 @@ useEffect(() => {
                       type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
-                      onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/github";
-                      }}
-                    >
-                      <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
-                    </Button>
+                      onClick={() => handleSocialLogin("https://backendxp-1.onrender.com/api/login/github")}
+                     >
+                       <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                     </Button>
 
 
 
@@ -358,8 +385,7 @@ useEffect(() => {
                       variant="outline" 
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" 
                       onClick={() => {
-                          // Abre el endpoint de login de Google
-                          window.location.href = "https://backendxp-1.onrender.com/api/login/google";
+                          handleSocialLogin("https://backendxp-1.onrender.com/api/login/google");
                       }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -382,7 +408,7 @@ useEffect(() => {
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft"
+                        handleSocialLogin("https://backendxp-1.onrender.com/api/login/microsoft")
                       }}
                     >
                       <svg
@@ -514,7 +540,7 @@ useEffect(() => {
                         className="w-full mt-2 p-2 border border-[#E8DDD4] rounded-md bg-white text-[#1B3C53] focus:border-[#456882] focus:outline-none"
                       >
                         <option value="">-- Selecciona una opción --</option>
-                        {planes.map((plan) => (
+                        {planes.map((plan: {id: number, nombre: string, descripcion: string}) => (
                           <option key={plan.nombre} value={plan.id}>
                             {plan.nombre}
                           </option>
@@ -528,12 +554,12 @@ useEffect(() => {
                               </p>
                               <p className="text-[#1B3C53] font-semibold text-base mb-2">
                                 {
-                                  planes.find((plan) => plan.id === parseInt(planSeleccionado))?.nombre
+                                  planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.nombre
                                 }
                               </p>
                               <p className="text-[#456882] text-sm leading-relaxed">
                                 {
-                                  planes.find((plan) => plan.id === parseInt(planSeleccionado))?.descripcion
+                                  planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.descripcion
                                 }
                               </p>
                             </div>
@@ -544,9 +570,19 @@ useEffect(() => {
                     <Checkbox
                       id="terms"
                       checked={registerForm.agreeTerms}
-                      onCheckedChange={(checked) =>
-                        setRegisterForm({ ...registerForm, agreeTerms: checked as boolean })
-                      }
+                      onCheckedChange={(checked) => {
+                        setRegisterForm({ ...registerForm, agreeTerms: checked as boolean });
+                        // Limpiar el error cuando se marque el checkbox
+                        if (checked && errors.register.agreeTerms) {
+                          setErrors(prev => ({
+                            ...prev,
+                            register: {
+                              ...prev.register,
+                              agreeTerms: ''
+                            }
+                          }));
+                        }
+                      }}
                       className={errors.register.agreeTerms ? "border-red-500" : ""}
                     />
                     <div className="grid gap-1.5 leading-none">
@@ -555,13 +591,21 @@ useEffect(() => {
                          className="text-sm font-medium text-[#1B3C53] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Acepto los{" "}
-                        <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
+                        <button 
+                          type="button"
+                          onClick={openTermsModal}
+                          className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+                        >
                           términos de servicio
-                        </Link>{" "}
+                        </button>{" "}
                         y la{" "}
-                        <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
+                        <button 
+                          type="button"
+                          onClick={openTermsModal}
+                          className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+                        >
                           política de privacidad
-                        </Link>
+                        </button>
                       </Label>
                       {errors.register.agreeTerms && (
                         <p className="text-red-500 text-sm">{errors.register.agreeTerms}</p>
@@ -589,14 +633,22 @@ useEffect(() => {
           >
             <p>
               Al continuar, aceptas los{" "}
-              <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
+              <button 
+                type="button"
+                onClick={openTermsModal}
+                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+              >
                 Términos de Servicio
-              </Link>{" "}
+              </button>{" "}
               y la{" "}
-              <Link href="#" className="text-[#1B3C53] hover:text-[#456882]">
+              <button 
+                type="button"
+                onClick={openTermsModal}
+                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+              >
                 Política de Privacidad
-              </Link>{" "}
-              de SuperMercado
+              </button>{" "}
+              de XPMarket
             </p>
           </motion.div>
         </motion.div>
@@ -604,9 +656,443 @@ useEffect(() => {
 
       <footer className="bg-[#1B3C53] text-[#F9F3EF] py-6">
         <div className="container mx-auto px-4 text-center">
-          <p>&copy; {new Date().getFullYear()} XpMarket. Todos los derechos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} XPMarket. Todos los derechos reservados.</p>
         </div>
       </footer>
+
+      {/* Modal de Términos y Condiciones */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-bold text-[#1B3C53]">
+                Términos y Condiciones de Uso - XPMarket
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTermsModal(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-[#456882] text-sm mt-2">
+              Última actualización: 17-Octubre-2025
+            </p>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[70vh] px-6 pb-6">
+            <div className="space-y-6">
+              
+              {/* Introducción */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">BIENVENIDO A XPMARKET</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">1.1 Introducción a la Plataforma</h4>
+                      <p className="text-[#456882] leading-relaxed text-sm">
+                        Gracias por formar parte de nuestra comunidad. XPMarket es una plataforma digital diseñada para facilitar la compraventa de productos entre usuarios de forma segura, práctica y accesible. Al usar nuestra plataforma, ya sea como comprador o vendedor, aceptas los términos y condiciones aquí descritos. Estos lineamientos buscan proteger tanto a los usuarios como al buen funcionamiento del servicio.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">1.2 Responsabilidades de Cuenta</h4>
+                      <p className="text-[#456882] leading-relaxed text-sm">
+                        Para acceder a las funciones principales de XPMarket, deberás crear una cuenta proporcionando información verdadera y actualizada. Eres responsable de mantener la confidencialidad de tus credenciales de acceso y de toda actividad que ocurra en tu cuenta. XPMarket se reserva el derecho de suspender cuentas que infrinjan nuestras políticas, realicen prácticas fraudulentas o incumplan los presentes términos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Planes de Suscripción y Tarifas */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-4">PLANES DE SUSCRIPCIÓN Y TARIFAS</h3>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Plan Gratuito */}
+                  <div className="bg-[#F9F3EF] p-4 rounded-lg border-l-4 border-[#1B3C53] h-full">
+                    <div className="text-center mb-3">
+                      <h4 className="text-lg font-bold text-[#1B3C53] mb-1">PLAN GRATUITO</h4>
+                      <div className="text-2xl font-bold text-[#1B3C53]">$0 MXN</div>
+                      <p className="text-xs text-[#456882]">Sin costo mensual</p>
+                    </div>
+                    
+                    <p className="text-[#456882] mb-3 text-xs">
+                      Este plan está pensado para usuarios que inician en la plataforma o desean vender ocasionalmente.
+                    </p>
+                    
+                    <h5 className="font-semibold text-[#1B3C53] mb-2 text-sm">Incluye:</h5>
+                    <ul className="text-[#456882] space-y-1 text-xs">
+                      <li>• Publicación de hasta 5 productos activos a la vez</li>
+                      <li>• Visualización de anuncios publicitarios</li>
+                      <li>• Comisión del 5% sobre cada venta</li>
+                      <li>• Sin acceso al chat global</li>
+                      <li>• Sin verificación premium</li>
+                    </ul>
+                    
+                    <div className="mt-3 p-2 bg-white rounded-lg">
+                      <p className="text-[#456882] text-xs">
+                        El Plan Gratuito te permite conocer el funcionamiento de XPMarket antes de optar por un servicio de mayor alcance.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Plan Cliente Fiel */}
+                  <div className="bg-[#E8DDD4] p-4 rounded-lg border-l-4 border-[#456882] h-full">
+                    <div className="text-center mb-3">
+                      <h4 className="text-lg font-bold text-[#1B3C53] mb-1">PLAN CLIENTE FIEL</h4>
+                      <div className="text-2xl font-bold text-[#1B3C53]">$99 MXN</div>
+                      <p className="text-xs text-[#456882]">por mes</p>
+                    </div>
+                    
+                    <p className="text-[#456882] mb-3 text-xs">
+                      Pensado para vendedores activos que desean expandir su presencia y mejorar su experiencia.
+                    </p>
+                    
+                    <h5 className="font-semibold text-[#1B3C53] mb-2 text-sm">Incluye:</h5>
+                    <ul className="text-[#456882] space-y-1 text-xs">
+                      <li>• Hasta 100 productos activos</li>
+                      <li>• Eliminación de anuncios publicitarios</li>
+                      <li>• Comisión reducida del 2.5% por venta</li>
+                      <li>• Acceso al chat global</li>
+                      <li>• Verificación básica incluida</li>
+                    </ul>
+                    
+                    <div className="mt-3 p-2 bg-white rounded-lg">
+                      <h5 className="font-semibold text-[#1B3C53] mb-1 text-xs">Costos del Plan Cliente Fiel:</h5>
+                      <ul className="text-[#456882] space-y-1 text-xs">
+                        <li>• Mensual: $99 MXN ($5.50 USD)</li>
+                        <li>• Trimestral: $249 MXN ($13.80 USD)</li>
+                        <li>• Anual: $899 MXN ($49.80 USD)</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
+                      <p className="text-[#1B3C53] text-xs">
+                        <strong>Nota:</strong> Aunque se denomine "ilimitado", existe un límite de 100 productos por persona o empresa. Para más productos, contacta soporte.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Costos de Envío */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">3. COSTOS DE ENVÍO</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.1 Empresas de Mensajería</h4>
+                      <p className="text-[#456882] mb-2 text-sm">
+                        XPMarket trabaja con distintas empresas de mensajería para ofrecer opciones de envío seguras y adaptadas a las necesidades del comprador. El costo del envío se calcula como un porcentaje del valor del producto, considerando peso, destino y nivel de seguridad.
+                      </p>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• <strong>Estafeta:</strong> 8% - 12%</li>
+                        <li>• <strong>FedEx:</strong> 12% - 15%</li>
+                        <li>• <strong>DHL:</strong> 15% - 20%</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.2 Deducciones Automáticas</h4>
+                      <p className="text-[#456882] text-sm">
+                        Ten en cuenta que el monto final recibido por el vendedor incluirá las deducciones correspondientes a los costos de envío y las comisiones de XPMarket. Por lo tanto, el dinero transferido no será equivalente al valor total del producto publicado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Responsabilidades del Usuario */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">4. RESPONSABILIDADES DEL USUARIO</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">4.1 Reglas Básicas</h4>
+                      <p className="text-[#456882] mb-2 text-sm">
+                        Todos los usuarios de XPMarket deben actuar de buena fe y respetar las siguientes reglas básicas:
+                      </p>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Publicar únicamente productos reales y propios, con información veraz y actualizada sin fraudulencia.</li>
+                        <li>• Cumplir los tiempos de entrega establecidos con los compradores.</li>
+                        <li>• No publicar contenido ilegal, ofensivo o que viole derechos de autor.</li>
+                        <li>• Mantener una comunicación respetuosa con otros usuarios y con el equipo de XPMarket.</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">4.2 Consecuencias del Incumplimiento</h4>
+                      <p className="text-[#456882] text-sm">
+                        El incumplimiento de estas normas puede derivar en la suspensión o eliminación de la cuenta.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Política de Reembolsos */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">5. POLÍTICA DE REEMBOLSOS Y PAGOS</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">5.1 Procesamiento de Transacciones</h4>
+                      <p className="text-[#456882] leading-relaxed text-sm">
+                        Las transacciones realizadas en XPMarket se procesan de manera segura y transparente. Las comisiones y deducciones se aplican automáticamente al momento de cada venta. En caso de existir un reclamo o solicitud de reembolso, XPMarket evaluará la situación caso por caso, considerando las pruebas aportadas por ambas partes antes de emitir una resolución.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Legislación Aplicable */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">6. LEGISLACIÓN APLICABLE</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">6.1 Jurisdicción Legal</h4>
+                      <p className="text-[#456882] leading-relaxed text-sm">
+                        Estos Términos y Condiciones se rigen por las leyes de los Estados Unidos Mexicanos. Cualquier controversia relacionada con el uso de la plataforma será resuelta ante los tribunales competentes de la Ciudad de México.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Política de Privacidad */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">7. POLÍTICA DE PRIVACIDAD Y PROTECCIÓN DE DATOS</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">7.1 Información que Recopilamos</h4>
+                      <p className="text-[#456882] mb-2 text-sm">
+                        XPMarket se compromete a proteger la privacidad y seguridad de la información personal de nuestros usuarios.
+                      </p>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Datos de registro (nombre, email, teléfono)</li>
+                        <li>• Información de productos y transacciones</li>
+                        <li>• Datos de navegación y uso de la plataforma</li>
+                        <li>• Información de contacto y dirección de envío</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">7.2 Uso de la Información</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Proporcionar y mejorar nuestros servicios</li>
+                        <li>• Procesar transacciones y comunicaciones</li>
+                        <li>• Cumplir con obligaciones legales</li>
+                        <li>• Prevenir fraudes y actividades ilegales</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">7.3 Protección de Datos</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Implementamos medidas de seguridad técnicas y organizativas</li>
+                        <li>• No compartimos información personal con terceros sin consentimiento</li>
+                        <li>• Los usuarios pueden solicitar acceso, rectificación o eliminación de sus datos</li>
+                        <li>• Cumplimos con las leyes de protección de datos aplicables</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Propiedad Intelectual */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">8. PROPIEDAD INTELECTUAL Y CONTENIDO</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">8.1 Contenido de XPMarket</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Toda la plataforma, diseño, código y funcionalidades son propiedad de XPMarket</li>
+                        <li>• Los usuarios no pueden copiar, modificar o distribuir nuestro contenido</li>
+                        <li>• Las marcas comerciales y logos están protegidos por derechos de autor</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">8.2 Contenido del Usuario</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Los usuarios mantienen los derechos sobre su contenido (productos, imágenes, descripciones)</li>
+                        <li>• Al subir contenido, otorgan a XPMarket una licencia para usarlo en la plataforma</li>
+                        <li>• Los usuarios son responsables de tener los derechos sobre el contenido que publican</li>
+                        <li>• No se permite contenido que viole derechos de terceros</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">8.3 Infracción de Derechos</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• XPMarket respeta los derechos de propiedad intelectual de terceros</li>
+                        <li>• Los usuarios deben reportar cualquier infracción de derechos</li>
+                        <li>• Nos reservamos el derecho de remover contenido que viole derechos de autor</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Limitaciones de Responsabilidad */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">9. LIMITACIONES DE RESPONSABILIDAD</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">9.1 Servicios de Intermediación</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• XPMarket actúa como intermediario entre compradores y vendedores</li>
+                        <li>• No somos responsables por la calidad, autenticidad o estado de los productos</li>
+                        <li>• Los usuarios deben verificar la información antes de realizar compras</li>
+                        <li>• No garantizamos la disponibilidad continua del servicio</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">9.2 Limitaciones Generales</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• XPMarket no será responsable por daños indirectos, incidentales o consecuenciales</li>
+                        <li>• La responsabilidad total no excederá el monto pagado por el usuario en los últimos 12 meses</li>
+                        <li>• No somos responsables por pérdidas de datos o interrupciones del servicio</li>
+                        <li>• Los usuarios utilizan la plataforma bajo su propio riesgo</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Suspensión y Terminación */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">10. SUSPENSIÓN Y TERMINACIÓN DE CUENTAS</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">10.1 Suspensión por XPMarket</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Podemos suspender cuentas que violen estos términos y condiciones</li>
+                        <li>• Las suspensiones pueden ser temporales o permanentes según la gravedad</li>
+                        <li>• Causas comunes: actividades fraudulentas, contenido inapropiado, spam</li>
+                        <li>• Se notificará al usuario sobre la razón de la suspensión</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">10.2 Terminación por el Usuario</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• Los usuarios pueden cancelar su cuenta en cualquier momento</li>
+                        <li>• Las suscripciones pagadas no son reembolsables por cancelación anticipada</li>
+                        <li>• Los datos del usuario se eliminarán según nuestra política de retención</li>
+                        <li>• Las transacciones pendientes deben completarse antes de la terminación</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">10.3 Efectos de la Terminación</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• El acceso a la cuenta se revocará inmediatamente</li>
+                        <li>• Los productos activos serán removidos de la plataforma</li>
+                        <li>• Las obligaciones pendientes deben cumplirse</li>
+                        <li>• Los datos pueden conservarse por períodos legales requeridos</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Modificaciones de Términos */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">11. MODIFICACIONES DE LOS TÉRMINOS</h3>
+                
+                <div className="bg-[#F9F3EF] p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">11.1 Derecho a Modificar</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• XPMarket se reserva el derecho de modificar estos términos en cualquier momento</li>
+                        <li>• Los cambios serán notificados a través de la plataforma y por email</li>
+                        <li>• Las modificaciones entrarán en vigor 30 días después de la notificación</li>
+                        <li>• Los cambios importantes serán destacados claramente</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-white p-3 rounded-lg">
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">11.2 Aceptación de Cambios</h4>
+                      <ul className="text-[#456882] space-y-1 text-sm">
+                        <li>• El uso continuado de la plataforma constituye aceptación de los nuevos términos</li>
+                        <li>• Si no estás de acuerdo con los cambios, debes dejar de usar la plataforma</li>
+                        <li>• Los usuarios pueden cancelar su cuenta si no aceptan las modificaciones</li>
+                        <li>• Se mantendrá un historial de versiones anteriores de los términos</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Información de Contacto */}
+              <section>
+                <h3 className="text-xl font-bold text-[#1B3C53] mb-3">12. INFORMACIÓN DE CONTACTO Y SOPORTE</h3>
+                
+                <div className="bg-gradient-to-r from-[#1B3C53] to-[#456882] p-4 rounded-lg text-white">
+                  <p className="mb-3 text-sm">Para consultas, reportes o asistencia relacionada con estos términos y condiciones:</p>
+                  
+                  <div className="grid md:grid-cols-1 gap-4">
+                    <div>
+                      <h4 className="font-semibold mb-2 text-sm">Soporte General</h4>
+                      <ul className="space-y-1 text-sm">
+                        <li>• Email: xpmarketoficial@gmail.com</li>
+                        <li>• Teléfono: +52 55 1234 5678</li>
+                        <li>• Horario: Lunes a Viernes 9:00 - 18:00</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 p-2 bg-white/10 rounded">
+                    <p className="text-xs">
+                      <strong>Nota:</strong> Para reportes urgentes de seguridad o actividades fraudulentas, 
+                      contacta inmediatamente a nuestro equipo de soporte.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {/* Agradecimiento Final */}
+              <section className="bg-gradient-to-r from-[#1B3C53] to-[#456882] p-4 rounded-lg text-white">
+                <h3 className="text-xl font-bold mb-3">GRACIAS POR USAR XPMARKET</h3>
+                <p className="text-sm">
+                  Al utilizar nuestra plataforma, contribuyes a una comunidad confiable y profesional de vendedores y compradores. Nuestro compromiso es ofrecerte un espacio transparente, seguro y en constante mejora.
+                </p>
+              </section>
+
+              {/* Footer del modal */}
+              <div className="text-center pt-6 border-t border-gray-200">
+                <p className="text-[#456882] mb-3 text-sm">
+                  Al utilizar XPMarket, usted confirma que ha leído, entendido y aceptado estos términos y condiciones en su totalidad.
+                </p>
+                <p className="text-[#1B3C53] font-semibold text-sm">
+                  XPMarket - 17-Octubre-2025
+                </p>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

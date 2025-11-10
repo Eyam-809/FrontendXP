@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
+import { ApiUrl } from "@/lib/config"
 
 const translateSubcategory = (subcategory: string) => {
   const translations: Record<string, string> = {
@@ -51,7 +52,7 @@ export default function CategoryPanel() {
     const fetchSubcategories = async () => {
       try {
         const res = await fetch(
-          `https://backendxp-1.onrender.com/api/subcategories/${state.selectedCategory.id}`
+          `${ApiUrl}/api/subcategories/${state.selectedCategory.id}`
         )
         if (!res.ok) throw new Error("Error al cargar subcategorías")
         const data = await res.json()
