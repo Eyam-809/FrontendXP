@@ -6,6 +6,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Navbar from "@/components/navbar"
+import { ApiUrl } from "@/lib/config"
 import ImageZoom from "@/components/image-zoom"
 
 interface GlobalProduct {
@@ -103,7 +104,7 @@ export default function ChatProductPage() {
           setProduct(foundProduct)
         } else {
           // Si no se encuentra en los datos mock, intentar obtener del backend
-          const response = await fetch(`https://backendxp-1.onrender.com/api/products/${id}`)
+          const response = await fetch(`${ApiUrl}/api/products/${id}`)
           if (response.ok) {
             const data = await response.json()
             setProduct(data)

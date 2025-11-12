@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ApiUrl } from "@/lib/config"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Navbar from "@/components/navbar"
 import { 
@@ -280,7 +281,7 @@ export default function GlobalChatPage() {
   const loadGlobalProducts = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:8000/api/products/trueques", {
+      const response = await fetch(`${ApiUrl}/api/products/trueques`, {
         headers: { "Accept": "application/json" }
       })
       if (!response.ok) throw new Error("Error al obtener los productos")
@@ -307,7 +308,7 @@ export default function GlobalChatPage() {
           avatar: item.user?.avatar 
             ? (item.user.avatar.startsWith("http") 
                 ? item.user.avatar 
-                : `http://localhost:8000/storage/${item.user.avatar}`)
+                : `${ApiUrl}/storage/${item.user.avatar}`)
             : "/placeholder-user.jpg",
           rating: item.user?.rating ?? 0,
           isOnline: false,
@@ -428,7 +429,7 @@ export default function GlobalChatPage() {
         receiver_id: sellerId
       };
 
-      const res = await fetch("http://localhost:8000/api/conversations", {
+      const res = await fetch(`${ApiUrl}/api/conversations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

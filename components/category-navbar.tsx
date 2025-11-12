@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useApp } from "@/contexts/app-context"
 import { useRouter } from "next/navigation"
 import { Monitor, Shirt, Home, Dumbbell, Star, ToyBrick } from "lucide-react"
+import { ApiUrl } from "@/lib/config"
 
 export default function CategoryNavbar() {
   const { dispatch } = useApp()
@@ -63,7 +64,7 @@ export default function CategoryNavbar() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("https://backendxp-1.onrender.com/api/categorias")
+        const res = await fetch(`${ApiUrl}/api/categorias`)
         if (!res.ok) throw new Error("Error al cargar categorías")
         const data = await res.json()
 
@@ -111,7 +112,7 @@ export default function CategoryNavbar() {
 
     try {
       const res = await fetch(
-        `https://backendxp-1.onrender.com/api/subcategories/${categoryId}`
+        `${ApiUrl}/api/subcategories/${categoryId}`
       )
       if (!res.ok) throw new Error("Error al cargar subcategorías")
       const data = await res.json()

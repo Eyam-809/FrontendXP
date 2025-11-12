@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Upload, X } from "lucide-react"
 import { useApp } from "@/contexts/app-context"
+import { ApiUrl } from "@/lib/config"
 
 interface AddProductForm {
   name: string
@@ -16,6 +17,7 @@ interface AddProductForm {
   price: string
   stock: string
   image: File | null
+  video?: File | null
   categoria_id?: string
   subcategoria_id?: string
 }
@@ -31,6 +33,9 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
   const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
   const [subcategorias, setSubcategorias] = useState<{ id: number; nombre: string }[]>([])
   const [modo, setModo] = useState<"venta" | "trueque" | null>(null)
+  const token = localStorage.getItem("token")
+if (!token) throw new Error("No hay token de autenticación")
+
 
   const [form, setForm] = useState<AddProductForm>({
     name: "",
@@ -47,7 +52,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
     if (!isOpen) return
     const fetchCategorias = async () => {
       try {
-        const res = await fetch("https://backendxp-1.onrender.com/api/categorias")
+        const res = await fetch(`${ApiUrl}/api/categorias`)
         if (!res.ok) throw new Error("Error al cargar categorías")
         const data = await res.json()
         setCategorias(data)
@@ -64,7 +69,7 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
     if (!form.categoria_id) return
     const fetchSubcategorias = async () => {
       try {
-        const res = await fetch(`https://backendxp-1.onrender.com/api/subcategories/${form.categoria_id}`)
+        const res = await fetch(`${ApiUrl}/api/subcategories/${form.categoria_id}`)
         if (!res.ok) throw new Error("Error al cargar subcategorías")
         const data = await res.json()
         setSubcategorias(data)
@@ -94,6 +99,37 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
     setForm(prev => ({ ...prev, image: file }))
   }
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith("video/")) {
+    alert(`El archivo ${file.name} no es un video válido`)
+    return
+  }
+
+  if (file.size > 50 * 1024 * 1024) { // 50 MB máx.
+    alert(`El archivo ${file.name} es demasiado grande. Máximo 50MB`)
+    return
+  }
+
+  // Verificar duración del video
+  const videoElement = document.createElement("video")
+  videoElement.preload = "metadata"
+  videoElement.onloadedmetadata = () => {
+    window.URL.revokeObjectURL(videoElement.src)
+    const duration = videoElement.duration
+    if (duration > 90) {
+      alert("El video no puede durar más de 1 minuto y 30 segundos.")
+      e.target.value = "" // limpiar input
+      return
+    }
+    setForm(prev => ({ ...prev, video: file }))
+  }
+  videoElement.src = URL.createObjectURL(file)
+}
+
+
   const removeImage = () => {
     setForm(prev => ({ ...prev, image: null }))
   }
@@ -120,18 +156,25 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
       formData.append('stock', form.stock)
       formData.append('id_user', userData.id.toString())
       formData.append('tipo', modo || "venta") // 🔹 Tipo de publicación
-      formData.append('price', modo === 'trueque' ? '0' : form.price)
+      if (modo === "venta") {
+    formData.append('price', form.price)
+} else {
+    formData.append('price', '0')
+}
 
-      if (modo === "venta") formData.append('price', form.price)
       if (form.image) formData.append('image', form.image)
+      if (modo === "venta" && form.video) formData.append('video', form.video)
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
       if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
-      const response = await fetch("http://127.0.0.1:8000/api/products", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      })
+      const response = await fetch("http://localhost:8000/api/products", {
+  method: "POST",
+  headers: {
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  },
+  body: formData,
+  credentials: "include" // 🔹 necesario si usas Sanctum con cookies
+})
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -330,6 +373,46 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
                 )}
               </CardContent>
             </Card>
+            {/* Video (solo si es venta) */}
+            {modo === "venta" && (         
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h3 className="font-semibold text-lg">Video del producto (opcional)</h3>
+
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <Label htmlFor="video" className="cursor-pointer">
+                      <span className="text-sm text-gray-600">Haz clic para subir un video</span>
+                      <Input
+                        id="video"
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                      />
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">MP4 o WebM hasta 50MB y máximo 1:30 min</p>
+                  </div>
+
+                  {form.video && (
+                    <div className="relative group">
+                      <video
+                        controls
+                        src={URL.createObjectURL(form.video)}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, video: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              )}
 
             {/* Botones */}
             <div className="flex justify-end space-x-4">

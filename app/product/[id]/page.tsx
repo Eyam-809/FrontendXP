@@ -14,6 +14,7 @@ import CategoryPanel from "@/components/category-panel"
 import ImageZoom from "@/components/image-zoom"
 import { useApp } from "@/contexts/app-context"
 import type { Product } from "@/contexts/app-context"
+import { ApiUrl } from "@/lib/config"
 
 const translateCategory = (category: string) => {
   const translations: Record<string, string> = {
@@ -33,14 +34,21 @@ export default function ProductPage() {
   const { state, dispatch } = useApp()
   const [product, setProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
+  const [mediaIndex, setMediaIndex] = useState(0)
+
+  // reset al cambiar de producto
+  useEffect(() => {
+    setMediaIndex(0)
+  }, [product])
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`https://backendxp-1.onrender.com/api/products/${id}`)
+        const response = await fetch(`${ApiUrl}/api/products/${id}`)
         if (!response.ok) throw new Error("Producto no encontrado")
         const data = await response.json()
         setProduct(data)
+        console.log(data)
 
         if (state.products.length === 0) {
           dispatch({ type: "SET_PRODUCTS", payload: [data] })
@@ -95,12 +103,90 @@ export default function ProductPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-card p-6 rounded-xl shadow-sm">
-            <ImageZoom
-              src={product.image}
-              alt={product.name}
-              className="w-full rounded-lg"
-              style={{ maxHeight: "400px" }}
-            />
+            {/* Carrusel único: imagen o video en el mismo contenedor */}
+            <div className="bg-card p-6 rounded-xl shadow-sm">
+              {(() => {
+                const base = ApiUrl
+                const mediaItems: { type: "image" | "video"; src: string }[] = []
+                const normalize = (s?: string) => {
+                  if (!s) return ""
+                  // si es base64 (empieza con data:image/ o data:video/)
+                  if (s.startsWith("data:image") || s.startsWith("data:video")) return s
+                  return s.startsWith("http") ? s : `${base}${s.startsWith("/") ? "" : "/"}${s}`
+                }
+
+                if (product.image) mediaItems.push({ type: "image", src: normalize(product.image) })
+                if (product.video) mediaItems.push({ type: "video", src: normalize(product.video) })
+
+                if (mediaItems.length === 0) {
+                  return (
+                    <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg">
+                      <span className="text-muted-foreground">Sin imagen ni video</span>
+                    </div>
+                  )
+                }
+
+                const current = mediaItems[mediaIndex % mediaItems.length]
+                const prev = () => setMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length)
+                const next = () => setMediaIndex((i) => (i + 1) % mediaItems.length)
+
+                return (
+                  <div className="relative">
+                    <div className="h-[400px] flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                      {current.type === "image" ? (
+                        <ImageZoom
+                          src={current.src}
+                          alt={product.name}
+                          className="w-full h-full object-contain"
+                          style={{ maxHeight: "400px" }}
+                        />
+                      ) : (
+                        <video
+                          src={current.src}
+                          controls
+                          className="w-full h-full object-contain"
+                          style={{ maxHeight: "400px" }}
+                        >
+                          Tu navegador no soporta video HTML5.
+                        </video>
+                      )}
+                    </div>
+
+                    {mediaItems.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Anterior"
+                          onClick={prev}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white px-3 py-2 rounded-full shadow"
+                        >
+                          <ArrowLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Siguiente"
+                          onClick={next}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white px-3 py-2 rounded-full shadow"
+                        >
+                          <ArrowRight className="h-5 w-5" />
+                        </button>
+
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                          {mediaItems.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setMediaIndex(i)}
+                              aria-label={`Ver ${i + 1}`}
+                              className={`h-2.5 w-8 rounded-full ${i === mediaIndex ? "bg-primary" : "bg-gray-300"}`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
           </div>
 
           <div className="bg-card p-6 rounded-xl shadow-sm">

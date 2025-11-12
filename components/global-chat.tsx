@@ -9,6 +9,7 @@ import { Globe, MessageCircle, Heart, Eye, Star, Clock, MapPin, User, Package } 
 import Link from "next/link"
 import { useApp } from "@/contexts/app-context"
 import { useRouter } from "next/navigation"
+import { ApiUrl } from "@/lib/config"
 
 interface GlobalProduct {
   id: number
@@ -47,7 +48,7 @@ export default function GlobalChat({ isOpen, onClose }: GlobalChatProps) {
   useEffect(() => {
     const loadGlobalProducts = async () => {
       try {
-        const response = await fetch("https://backendxp-1.onrender.com/api/products")
+        const response = await fetch(`${ApiUrl}/api/products`)
         const data = await response.json()
         setProducts(data) // Asume que el backend devuelve un array de productos
         setIsLoading(false)

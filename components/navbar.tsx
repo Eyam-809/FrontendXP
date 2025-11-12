@@ -246,7 +246,7 @@ export default function Navbar() {
                     <Link href="/profile/datos-cuenta">
                       <DropdownMenuItem>
                         <UserCircle className="mr-2 h-4 w-4" />
-                        <span>Datos de tu cuenta</span>
+                        <span>Seguimientos de pedidos</span>
                       </DropdownMenuItem>
                     </Link>
                     

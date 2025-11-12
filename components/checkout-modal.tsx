@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
+import { ApiUrl } from "@/lib/config"
 
 interface CheckoutModalProps {
   onClose?: () => void
@@ -76,13 +77,86 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
     })
   }
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true)
-    setTimeout(() => {
-      setIsProcessing(false)
+
+    try {
+      // Preferir user desde el estado global; si no existe, intentar localStorage
+      const userFromState = (state as any).user
+      let user = userFromState
+      if (!user) {
+        const stored = localStorage.getItem("user") || localStorage.getItem("userData") || localStorage.getItem("userInfo")
+        user = stored ? JSON.parse(stored) : null
+      }
+
+      const userId = user?.id
+      const phone = user?.phone || ""
+
+      if (!userId) {
+        alert("Por favor inicia sesión para completar la compra")
+        setIsProcessing(false)
+        return
+      }
+
+      if (state.cart.length === 0) {
+        alert("El carrito está vacío")
+        setIsProcessing(false)
+        return
+      }
+
+      // Preparar productos según lo que espera el backend
+      const productos = state.cart.map((item: any) => ({
+        producto_id: item.id,
+        tipo: item.tipo ?? "venta",
+        cantidad: item.quantity,
+        precio_unitario: item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price,
+      }))
+
+      // Payload con los nombres que indicó el backend
+      const payload = {
+        user_id: userId,
+        fecha_pago: new Date().toISOString().split("T")[0],
+        total: getTotalPrice(),
+        direccion_envio: formData.address,
+        telefono_contacto: phone,
+        tipo: productos[0]?.tipo ?? "venta",
+        metodo_pago: paymentMethod,
+        productos,
+      }
+
+      console.log("Compra payload:", payload)
+
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${ApiUrl}/api/compras`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        let body: any = null
+        try { body = await res.json() } catch { body = await res.text().catch(() => null) }
+        console.error("Error crear compra:", res.status, body)
+        const firstError =
+          body?.message ||
+          (body?.errors && Object.values(body.errors).flat()[0]) ||
+          (typeof body === "string" ? body : null)
+        throw new Error(firstError || `Error ${res.status} al crear la compra`)
+      }
+
+      // Éxito
       dispatch({ type: "CLEAR_CART" })
-      alert("Payment successful! Your order has been placed.")
-    }, 2000)
+      alert("Compra realizada con éxito 🎉")
+      handleClose()
+    } catch (error: any) {
+      console.error("Error al procesar la compra:", error)
+      alert(error?.message || "Error al procesar la compra")
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   if (!isModalOpen) return null
@@ -207,7 +281,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="tu@email.com"
-                      className="mt-1 h-8"
+                     className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                     />
                   </div>
 
@@ -220,7 +294,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.firstName}
                         onChange={handleInputChange}
                         placeholder="Juan"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                     <div>
@@ -231,7 +305,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.lastName}
                         onChange={handleInputChange}
                         placeholder="Pérez"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                   </div>
@@ -246,7 +320,10 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                           value={formData.cardNumber}
                           onChange={handleInputChange}
                           placeholder="1234 5678 9012 3456"
-                          className="mt-1 h-8"
+                          maxLength={19}
+                          pattern="[0-9\s]{13,19}"
+                          inputMode="numeric"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
 
@@ -259,7 +336,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                             value={formData.expiryDate}
                             onChange={handleInputChange}
                             placeholder="MM/AA"
-                            className="mt-1 h-8"
+                            className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                           />
                         </div>
                         <div>
@@ -270,7 +347,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                             value={formData.cvv}
                             onChange={handleInputChange}
                             placeholder="123"
-                            className="mt-1 h-8"
+                            className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                           />
                         </div>
                       </div>
@@ -285,7 +362,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                       value={formData.address}
                       onChange={handleInputChange}
                       placeholder="Calle Principal 123"
-                      className="mt-1 h-8"
+                      className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                     />
                   </div>
 
@@ -298,7 +375,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder="Ciudad de México"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                     <div>
@@ -309,7 +386,7 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
                         value={formData.zipCode}
                         onChange={handleInputChange}
                         placeholder="01000"
-                        className="mt-1 h-8"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
                   </div>

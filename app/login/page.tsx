@@ -14,10 +14,10 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApp } from "@/contexts/app-context"
 import axios from "axios";
+import { ApiUrl } from "@/lib/config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { X } from "lucide-react"
-import { storage } from "@/lib/storage"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [name, setName] = useState("");
   const [emailR, setEmailR] = useState("");
   const [passwordR, setPasswordR] = useState("");
@@ -37,7 +37,6 @@ export default function LoginPage() {
   const [telefono, setTelefono] = useState(""); // Nuevo estado para teléfono
   const [direccion, setDireccion] = useState(""); // Nuevo estado para dirección
   const [message, setMessage] = useState("");
-  const [verificationSuccess, setVerificationSuccess] = useState(false);
   //const [errors, setErrors] = useState({});
    //PLANES
   const [planSeleccionado, setPlanSeleccionado] = useState("");
@@ -54,6 +53,20 @@ export default function LoginPage() {
     password: "",
     rememberMe: false,
   })
+  
+  // Redirige a proveedor social sólo si se aceptaron Términos
+  const handleSocialLogin = (url: string) => {
+    // si no está aceptado, mostrar error y no redirigir
+    if (!loginForm.rememberMe) {
+      setError("Debes aceptar los Términos y Condiciones antes de iniciar sesión con proveedores externos.")
+      // opcional: abrir modal de términos
+      // setShowTermsModal(true)
+      return
+    }
+    // limpiar errores y redirigir
+    setError(null)
+    window.location.href = url
+  }
 
   // Register form state
   const [registerForm, setRegisterForm] = useState({
@@ -79,90 +92,94 @@ export default function LoginPage() {
     },
   })
  //Login
-const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError(null)
+  setSuccessMessage(null)
+  setIsLoading(true)
 
-    // Limpiar mensajes previos
-    setError(null);
-    setSuccessMessage(null);
-    setIsLoading(true);
+  try {
+    const response = await axios.post(`${ApiUrl}/api/login`, { email, password }, { timeout: 10000 })
+    console.log("Usuario autenticado:", response.data)
 
-    axios
-  .post("https://backendxp-1.onrender.com/api/login", { email, password })
-  .then((response) => {
-    console.log("Usuario autenticado:", response.data); // Verifica la respuesta completa
-    
-    const { token, user: apiUser } = response.data; // Desestructuración para mayor claridad
+    // Guarda el token y userData (misma lógica que ya tenías)
+    localStorage.setItem("token", response.data.token)
+    const userData = response.data.user
+    const fotoValue = userData.foto ?? userData.avatar ?? userData.photo ?? null
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.telefono,
+        address: userData.direccion,
+        foto: fotoValue,
+        plan_id: userData.plan_id,
+        created_at: userData.created_at,
+        updated_at: userData.updated_at,
+        email_verified_at: userData.email_verified_at,
+        rating: 4.8,
+        totalProducts: 12,
+        totalSales: 45,
+        joinDate: userData.created_at,
+      })
+    )
+    localStorage.setItem("user_id", String(userData.id))
+    localStorage.setItem("plan_id", String(userData.plan_id))
+    localStorage.setItem("name", String(userData.name || ""))
+    if (fotoValue) localStorage.setItem("foto", String(fotoValue))
 
-    // Guarda el token
-    localStorage.setItem("token", token);
-    
-    // Guarda todos los datos del usuario
-    const userData = response.data.user;
-    localStorage.setItem("userData", JSON.stringify({
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      phone: userData.telefono,
-      address: userData.direccion,
-      plan_id: userData.plan_id,
-      foto: userData.foto,
-      created_at: userData.created_at,
-      updated_at: userData.updated_at,
-      email_verified_at: userData.email_verified_at,
-      // Datos por defecto para campos que no existen en la BD
-      rating: 4.8,
-      totalProducts: 12,
-      totalSales: 45,
-      joinDate: userData.created_at
-      
-    }));
-
-    // También guarda datos individuales para compatibilidad
-    localStorage.setItem("user_id", userData.id);
-    localStorage.setItem("plan_id", userData.plan_id);
-    localStorage.setItem("name", userData.name);
-
-    console.log("Datos guardados en localStorage:", localStorage.getItem('userData'));
-    
-    // Actualizar el contexto inmediatamente
-    storage.setToken(token)
-    storage.setUserData(apiUser)
-    storage.setUserSession({
-      token,
-      user_id: apiUser.id,
-      name: apiUser.name,
-      role: apiUser.role,
-      foto: apiUser.foto
+    dispatch({
+      type: "SET_USER_SESSION",
+      payload: {
+        token: response.data.token,
+        user_id: userData.id,
+        plan_id: userData.plan_id,
+        name: userData.name,
+        foto: fotoValue,
+      },
     })
-    dispatch({ type: "SET_USER_SESSION", payload: { token, user_id: apiUser.id, name: apiUser.name, foto: apiUser.foto, plan_id: apiUser.plan_id } })
-    
-    setIsLoading(false);
 
-    setTimeout(() => {
-      router.push("/");
-    }, 2000); // Reducido de 20 segundos a 2 segundos
-  })
-    .catch((error) => {
-       setIsLoading(false);
-    console.error("❌ Error en login:", error);
-    if (error.response) {
-      console.error("📨 Mensaje del backend:", error.response.data.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+    setIsLoading(false)
+    setTimeout(() => router.push("/"), 100)
+  } catch (err: any) {
+    setIsLoading(false)
+
+    // Manejo específico para errores axios
+    if (axios.isAxiosError(err)) {
+      console.error("Axios error object:", err.toJSON ? err.toJSON() : err)
+
+      if (err.response) {
+        // El servidor respondió con estado != 2xx
+        console.error("Respuesta del backend:", err.response.status, err.response.data)
+        const backendMessage =
+          err.response.data?.message ||
+          (err.response.data?.errors && Object.values(err.response.data.errors).flat()[0]) ||
+          `Error del servidor (${err.response.status})`
+        setError(backendMessage)
+      } else if (err.request) {
+        // La petición se hizo pero no hubo respuesta => Network / CORS / backend caído
+        console.error("No hubo respuesta (request):", err.request)
+        setError("No se pudo conectar con el servidor. Comprueba que el backend esté en ejecución y que CORS permita tu origen.")
+      } else {
+        // Otro error (configuración, cancelación, etc.)
+        console.error("Error inesperado al configurar la petición:", err.message)
+        setError("Error inesperado: " + (err.message || "comprueba la consola"))
+      }
     } else {
-      console.error("⚠️ Error inesperado:", error.message);
-      setError("Correo Electrónico o Contraseña incorrecta, inténtalo de nuevo");
-      // Limpiar los campos de entrada
-      setEmail("");
-      setPassword("");
+      // Errores no axios
+      console.error("⚠️ Error inesperado:", err)
+      setError("Ocurrió un error inesperado. Revisa la consola.")
     }
-  });
-  };
 
-  // Maneja el envío del formulario
+    // Clear inputs opcional
+    setEmail("")
+    setPassword("")
+  }
+}
+
+// Maneja el envío del formulario
   const handleRegister = async (e:React.FormEvent) => {
     e.preventDefault();
     setIsRegister(true);
@@ -198,13 +215,11 @@ const handleLogin = (e: React.FormEvent) => {
     };
     setIsRegister(false);
     try {
-      const response = await axios.post('https://backendxp-1.onrender.com/api/registros', datos);
+      const response = await axios.post(`${ApiUrl}/api/registros`, datos);
 
         setMessage(response.data.message);
         //setErrors({});
-        
-        // Redirigir a la página de verificación con el número de teléfono
-        router.push(`/verification?phone=${encodeURIComponent(telefono)}&email=${encodeURIComponent(emailR)}`);
+        window.location.reload()
     } catch (error) {
         setIsRegister(false);
     }
@@ -212,7 +227,7 @@ const handleLogin = (e: React.FormEvent) => {
 
 useEffect(() => {
     // Llama al backend para obtener los planes
-    fetch('https://backendxp-1.onrender.com/api/plan')
+    fetch(`${ApiUrl}/api/plan`)
       .then((response) => response.json())
       .then((data) => {
         setPlanes(data); // Guardamos los planes en el estado
@@ -220,15 +235,6 @@ useEffect(() => {
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
       });
-  }, []);
-
-  // Detectar si viene de verificación exitosa
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('verified') === 'true') {
-      setVerificationSuccess(true);
-      setSuccessMessage('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión.');
-    }
   }, []);
 
   return (
@@ -317,24 +323,25 @@ useEffect(() => {
                         <span className="block sm:inline ml-1">{error}</span>
                       </div>
                     )}
-                    {verificationSuccess && successMessage && (
-                      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                        <strong className="font-bold">¡Éxito!</strong>
-                        <span className="block sm:inline ml-1">{successMessage}</span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="remember-me"
+                        id="agree-terms-login"
                         checked={loginForm.rememberMe}
                         onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
                       />
-                       <Label htmlFor="remember-me" className="text-sm text-[#1B3C53] font-medium">
-                         Recordarme
-                       </Label>
+                      <Label htmlFor="agree-terms-login" className="text-sm text-[#1B3C53] font-medium">
+                        Acepto los{" "}
+                        <button
+                          type="button"
+                          onClick={openTermsModal}
+                          className="underline text-[#1B3C53] hover:text-[#456882] p-0"
+                        >
+                          Términos y Condiciones
+                        </button>
+                      </Label>
                     </div>
                     <Link href="#" className="text-sm text-[#1B3C53] hover:text-[#456882]">
                       ¿Olvidaste tu contraseña?
@@ -344,7 +351,7 @@ useEffect(() => {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
-                    disabled={isLoading}
+                    disabled={isLoading || !loginForm.rememberMe}
                   >
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
@@ -364,13 +371,11 @@ useEffect(() => {
                       type="button"
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
-                      onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/github";
-                      }}
-                    >
-                      <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
-                      <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
-                    </Button>
+                      onClick={() => handleSocialLogin("https://backendxp-1.onrender.com/api/login/github")}
+                     >
+                       <Github size={18} className="mr-2 text-[#181717] group-hover:text-[#F9F3EF]" />
+                       <span className="sr-only md:not-sr-only md:text-xs md:truncate">GitHub</span>
+                     </Button>
 
 
 
@@ -380,8 +385,7 @@ useEffect(() => {
                       variant="outline" 
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200" 
                       onClick={() => {
-                          // Abre el endpoint de login de Google
-                          window.location.href = "https://backendxp-1.onrender.com/api/login/google";
+                          handleSocialLogin("https://backendxp-1.onrender.com/api/login/google");
                       }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -404,7 +408,7 @@ useEffect(() => {
                       variant="outline"
                       className="w-full bg-[#E8DDD4] border-2 border-[#E8DDD4] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-[#F9F3EF] font-medium transition-all duration-200"
                       onClick={() => {
-                        window.location.href = "https://backendxp-1.onrender.com/api/login/microsoft"
+                        handleSocialLogin("https://backendxp-1.onrender.com/api/login/microsoft")
                       }}
                     >
                       <svg
@@ -593,6 +597,14 @@ useEffect(() => {
                           className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
                         >
                           términos de servicio
+                        </button>{" "}
+                        y la{" "}
+                        <button 
+                          type="button"
+                          onClick={openTermsModal}
+                          className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+                        >
+                          política de privacidad
                         </button>
                       </Label>
                       {errors.register.agreeTerms && (
@@ -628,6 +640,14 @@ useEffect(() => {
               >
                 Términos de Servicio
               </button>{" "}
+              y la{" "}
+              <button 
+                type="button"
+                onClick={openTermsModal}
+                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
+              >
+                Política de Privacidad
+              </button>{" "}
               de XPMarket
             </p>
           </motion.div>
@@ -646,7 +666,7 @@ useEffect(() => {
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl font-bold text-[#1B3C53]">
-                Términos de Servicio y Política de Privacidad - XPMarket
+                Términos y Condiciones de Uso - XPMarket
               </DialogTitle>
               <Button
                 variant="ghost"
@@ -767,47 +787,21 @@ useEffect(() => {
                 <div className="bg-[#F9F3EF] p-4 rounded-lg">
                   <div className="space-y-3">
                     <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Tarifas de Envío</h4>
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.1 Empresas de Mensajería</h4>
                       <p className="text-[#456882] mb-2 text-sm">
-                      XPMarket ofrece a los usuarios la posibilidad de seleccionar la empresa de paquetería a través de la cual desean que se realice la entrega de los productos adquiridos dentro de la plataforma. Las opciones disponibles son: Estafeta, FedEx y DHL.
+                        XPMarket trabaja con distintas empresas de mensajería para ofrecer opciones de envío seguras y adaptadas a las necesidades del comprador. El costo del envío se calcula como un porcentaje del valor del producto, considerando peso, destino y nivel de seguridad.
                       </p>
                       <ul className="text-[#456882] space-y-1 text-sm">
-                        <li>• <strong>Estafeta:</strong> $50MXN</li>
-                        <li>• <strong>FedEx:</strong> $100MXN</li>
-                        <li>• <strong>DHL:</strong> $150MXN</li>
+                        <li>• <strong>Estafeta:</strong> 8% - 12%</li>
+                        <li>• <strong>FedEx:</strong> 12% - 15%</li>
+                        <li>• <strong>DHL:</strong> 15% - 20%</li>
                       </ul>
                     </div>
                     
                     <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Productos Excluidos</h4>
+                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">3.2 Deducciones Automáticas</h4>
                       <p className="text-[#456882] text-sm">
-                      Quedan expresamente excluidos del servicio de envío todos aquellos productos que por su tamaño, peso o naturaleza resulten especiales o difíciles de transportar, incluyendo, pero no limitándose a:
-                      </p>
-                      <ul className="text-[#456882] space-y-1 text-sm">
-                       <li>• Refrigeradores</li>
-                       <li>• Pianos</li>
-                       <li>• Objetos de gran tamaño o peso significativo</li>
-                       </ul>
-                       <p className="text-[#456882] mb-2 text-sm">
-                       XPMarket no aceptará envíos de este tipo de productos, y cualquier intento de incluirlos será rechazado automáticamente.
-                       </p>
-                     
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Alcance y Responsabilidad</h4>
-                     
-                      <ul className="text-[#456882] space-y-1 text-sm">
-                       <li>• XPMarket se encarga únicamente de la gestión y coordinación del envío dentro de la plataforma.</li>
-                       <li>• Los tiempos de entrega, la cobertura, y cualquier costo adicional o eventualidad durante el transporte dependen directamente de la paquetería seleccionada y no son responsabilidad de XPMarket.</li>
-                       <li>• Los usuarios comprenden y aceptan que las tarifas aplicadas son tarifas de gestión de envío establecidas por XPMarket, y no corresponden al costo final exacto del servicio proporcionado por la paquetería.</li>
-                       </ul>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg">
-                      <h4 className="font-semibold text-[#1B3C53] mb-2 text-sm">Aceptación del Usuario</h4>
-                      <p className="text-[#456882] text-sm">
-                      Al utilizar XPMarket para la compra de productos y seleccionar un tipo de envío, el usuario acepta las tarifas fijas descritas, reconoce las exclusiones de productos y entiende que XPMarket actúa únicamente como intermediario digital, sin asumir responsabilidades sobre retrasos, pérdidas, daños o modificaciones en los costos de envío por parte de las empresas de mensajería.
+                        Ten en cuenta que el monto final recibido por el vendedor incluirá las deducciones correspondientes a los costos de envío y las comisiones de XPMarket. Por lo tanto, el dinero transferido no será equivalente al valor total del producto publicado.
                       </p>
                     </div>
                   </div>

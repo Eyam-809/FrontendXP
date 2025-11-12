@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/contexts/app-context"
 import Link from "next/link"
 import CategoryNavbar from "@/components/category-navbar"
+import { ApiUrl } from "@/lib/config"
 
 interface ProductGridProps {
   products?: any[] // opcional, si no se pasa hace fetch de todos
@@ -50,7 +51,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
 
     const fetchProductos = async () => {
       try {
-        const response = await fetch("https://backendxp-1.onrender.com/api/products")
+        const response = await fetch(`${ApiUrl}/api/products`)
         if (!response.ok) throw new Error("Error al cargar productos")
         const data = await response.json()
         setProductos(data)
