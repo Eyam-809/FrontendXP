@@ -54,15 +54,8 @@ export default function LoginPage() {
     rememberMe: false,
   })
   
-  // Redirige a proveedor social sólo si se aceptaron Términos
+  // Redirige a proveedor social
   const handleSocialLogin = (url: string) => {
-    // si no está aceptado, mostrar error y no redirigir
-    if (!loginForm.rememberMe) {
-      setError("Debes aceptar los Términos y Condiciones antes de iniciar sesión con proveedores externos.")
-      // opcional: abrir modal de términos
-      // setShowTermsModal(true)
-      return
-    }
     // limpiar errores y redirigir
     setError(null)
     window.location.href = url
@@ -228,12 +221,21 @@ const handleLogin = async (e: React.FormEvent) => {
 useEffect(() => {
     // Llama al backend para obtener los planes
     fetch(`${ApiUrl}/api/plan`)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Error al obtener los planes');
+        }
+        return response.json();
+      })
       .then((data) => {
-        setPlanes(data); // Guardamos los planes en el estado
+        // Asegurar que data sea un array
+        // Si la respuesta viene envuelta en un objeto, extraer el array
+        const planesArray = Array.isArray(data) ? data : (data?.data || data?.planes || []);
+        setPlanes(planesArray); // Guardamos los planes en el estado
       })
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
+        setPlanes([]); // Asegurar que siempre sea un array, incluso en caso de error
       });
   }, []);
 
@@ -325,24 +327,7 @@ useEffect(() => {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="agree-terms-login"
-                        checked={loginForm.rememberMe}
-                        onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
-                      />
-                      <Label htmlFor="agree-terms-login" className="text-sm text-[#1B3C53] font-medium">
-                        Acepto los{" "}
-                        <button
-                          type="button"
-                          onClick={openTermsModal}
-                          className="underline text-[#1B3C53] hover:text-[#456882] p-0"
-                        >
-                          Términos y Condiciones
-                        </button>
-                      </Label>
-                    </div>
+                  <div className="flex items-center justify-end">
                     <Link href="#" className="text-sm text-[#1B3C53] hover:text-[#456882]">
                       ¿Olvidaste tu contraseña?
                     </Link>
@@ -351,7 +336,7 @@ useEffect(() => {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#456882] hover:to-[#1B3C53] text-white"
-                    disabled={isLoading || !loginForm.rememberMe}
+                    disabled={isLoading}
                   >
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
@@ -540,7 +525,7 @@ useEffect(() => {
                         className="w-full mt-2 p-2 border border-[#E8DDD4] rounded-md bg-white text-[#1B3C53] focus:border-[#456882] focus:outline-none"
                       >
                         <option value="">-- Selecciona una opción --</option>
-                        {planes.map((plan: {id: number, nombre: string, descripcion: string}) => (
+                        {Array.isArray(planes) && planes.map((plan: {id: number, nombre: string, descripcion: string}) => (
                           <option key={plan.nombre} value={plan.id}>
                             {plan.nombre}
                           </option>
@@ -554,12 +539,12 @@ useEffect(() => {
                               </p>
                               <p className="text-[#1B3C53] font-semibold text-base mb-2">
                                 {
-                                  planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.nombre
+                                  Array.isArray(planes) && planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.nombre
                                 }
                               </p>
                               <p className="text-[#456882] text-sm leading-relaxed">
                                 {
-                                  planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.descripcion
+                                  Array.isArray(planes) && planes.find((plan: {id: number, nombre: string, descripcion: string}) => plan.id === parseInt(planSeleccionado))?.descripcion
                                 }
                               </p>
                             </div>
@@ -625,32 +610,6 @@ useEffect(() => {
             </Tabs>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-center mt-6 text-[#456882]"
-          >
-            <p>
-              Al continuar, aceptas los{" "}
-              <button 
-                type="button"
-                onClick={openTermsModal}
-                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
-              >
-                Términos de Servicio
-              </button>{" "}
-              y la{" "}
-              <button 
-                type="button"
-                onClick={openTermsModal}
-                className="text-[#1B3C53] hover:text-[#456882] underline cursor-pointer bg-transparent border-none p-0"
-              >
-                Política de Privacidad
-              </button>{" "}
-              de XPMarket
-            </p>
-          </motion.div>
         </motion.div>
       </main>
 

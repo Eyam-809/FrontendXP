@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
 import { ApiUrl } from "@/lib/config"
+import { useNotification } from "@/components/ui/notification"
 
 interface CheckoutModalProps {
   onClose?: () => void
@@ -18,6 +19,7 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalProps) {
   const { state, dispatch } = useApp()
+  const { showNotification } = useNotification()
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -93,13 +95,13 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
       const phone = user?.phone || ""
 
       if (!userId) {
-        alert("Por favor inicia sesión para completar la compra")
+        showNotification("Por favor inicia sesión para completar la compra", "warning")
         setIsProcessing(false)
         return
       }
 
       if (state.cart.length === 0) {
-        alert("El carrito está vacío")
+        showNotification("El carrito está vacío", "warning")
         setIsProcessing(false)
         return
       }
@@ -149,11 +151,11 @@ export default function CheckoutModal({ onClose, isOpen, total }: CheckoutModalP
 
       // Éxito
       dispatch({ type: "CLEAR_CART" })
-      alert("Compra realizada con éxito 🎉")
+      showNotification("Compra realizada con éxito 🎉", "success")
       handleClose()
     } catch (error: any) {
       console.error("Error al procesar la compra:", error)
-      alert(error?.message || "Error al procesar la compra")
+      showNotification(error?.message || "Error al procesar la compra", "error")
     } finally {
       setIsProcessing(false)
     }
