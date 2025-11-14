@@ -246,7 +246,7 @@ if (!token) throw new Error("No hay token de autenticación")
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descripción (opcional)</Label>
+                  <Label htmlFor="description">Descripción</Label>
                   <Textarea
                     id="description"
                     value={form.description}
@@ -377,7 +377,7 @@ if (!token) throw new Error("No hay token de autenticación")
             {modo === "venta" && (         
               <Card>
                 <CardContent className="pt-6 space-y-4">
-                  <h3 className="font-semibold text-lg">Video del producto (opcional)</h3>
+                  <h3 className="font-semibold text-lg">Video del producto</h3>
 
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />

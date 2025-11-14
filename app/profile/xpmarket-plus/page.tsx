@@ -29,6 +29,7 @@ import {
 import Link from "next/link"
 import Navbar from "@/components/navbar"
 import { motion, AnimatePresence } from "framer-motion"
+import { ApiUrl } from "@/lib/config"
 
 interface UserData {
   name: string
@@ -119,16 +120,97 @@ export default function XPmarketPlusPage() {
     })
   }
 
-  const handlePayment = () => {
+  // nueva función: realiza compra contra el endpoint /api/compras
+  const handlePayment = async () => {
     setIsProcessing(true)
-    setTimeout(() => {
-      setIsProcessing(false)
-      setShowSubscriptionModal(false)
-      // Actualizar el plan_id del usuario a 2
+    try {
+      const stored = localStorage.getItem("userData") || localStorage.getItem("user") || localStorage.getItem("userInfo")
+      const localUser = stored ? JSON.parse(stored) : user
+      const userId = localUser?.id
+      const phone = localUser?.phone || ""
+
+      if (!userId) {
+        alert("Debes iniciar sesión para comprar la suscripción.")
+        setIsProcessing(false)
+        return
+      }
+
+      const total = getTotalPrice()
+
+      // Determinar plan_id: intenta obtener de un estado/selección, localStorage o un mapeo por defecto
+      const planIdFromState = (selectedPaymentPlan as any)?.id ?? null
+      const planIdFromStorage = localStorage.getItem("selected_plan_id") || localStorage.getItem("plan_id")
+      const planMap: Record<string, number> = { mensual: 1, trimestral: 2, anual: 3 }
+      const mappedPlanId = planMap[selectedPaymentPlan] ?? null
+      const plan_id = planIdFromState ?? (planIdFromStorage ? Number(planIdFromStorage) : null) ?? mappedPlanId
+
+      if (!plan_id) {
+        console.warn("No se encontró plan_id; verifica los ids reales de tus planes. Se enviará plan_id: null")
+      }
+
+      // montar payload similar al checkout-modal, tipo 'suscripcion'
+      const productos = [{
+        producto_id: plan_id ?? null,
+        tipo: "suscripcion",
+        cantidad: 1,
+        precio_unitario: total
+      }]
+
+      const payload: any = {
+        user_id: userId,
+        fecha_pago: new Date().toISOString().split("T")[0],
+        total,
+        direccion_envio: formData.address,
+        telefono_contacto: phone,
+        tipo: "suscripcion",
+        metodo_pago: paymentMethod,
+        productos,
+        plan_id // <-- campo añadido para que el backend reciba el id del plan
+      }
+
+      console.log("Enviando compra suscripción:", payload)
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${ApiUrl}/api/compras`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        // intentar leer respuesta para debug y mostrar detalle
+        let body: any = null
+        try {
+          body = await res.json()
+        } catch (e) {
+          body = await res.text().catch(() => null)
+        }
+        console.error("Error compra suscripción:", res.status, body)
+        const firstError =
+          body?.message ||
+          (body?.errors && Object.values(body.errors).flat()[0]) ||
+          (typeof body === "string" ? body : null) ||
+          `Error ${res.status}`
+        // sugerencia rápida al dev sobre plan_id faltante
+        if (res.status === 400 && (!plan_id || plan_id === null)) {
+          console.warn("400 recibido: revisa si el backend requiere plan_id con un id válido. Plan enviado:", plan_id)
+        }
+        throw new Error(firstError)
+      }
+
+      // éxito: actualizar plan local y cerrar modal
       localStorage.setItem("plan_id", "2")
       setUserPlanId("2")
       alert("¡Suscripción exitosa! Ahora tienes acceso al plan Cliente Fiel.")
-    }, 2000)
+      setShowSubscriptionModal(false)
+    } catch (err: any) {
+      console.error("Error procesando suscripción:", err)
+      alert(err?.message || "Error al procesar la suscripción")
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const getTotalPrice = () => {
@@ -440,7 +522,7 @@ export default function XPmarketPlusPage() {
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder="tu@email.com"
-                        className="mt-1 h-9"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
 
@@ -453,7 +535,7 @@ export default function XPmarketPlusPage() {
                           value={formData.firstName}
                           onChange={handleInputChange}
                           placeholder="Juan"
-                          className="mt-1 h-9"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
                       <div>
@@ -464,7 +546,7 @@ export default function XPmarketPlusPage() {
                           value={formData.lastName}
                           onChange={handleInputChange}
                           placeholder="Pérez"
-                          className="mt-1 h-9"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
                     </div>
@@ -479,7 +561,7 @@ export default function XPmarketPlusPage() {
                             value={formData.cardNumber}
                             onChange={handleInputChange}
                             placeholder="1234 5678 9012 3456"
-                            className="mt-1 h-9"
+                            className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                           />
                         </div>
 
@@ -492,7 +574,7 @@ export default function XPmarketPlusPage() {
                               value={formData.expiryDate}
                               onChange={handleInputChange}
                               placeholder="MM/AA"
-                              className="mt-1 h-9"
+                              className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                             />
                           </div>
                           <div>
@@ -503,7 +585,7 @@ export default function XPmarketPlusPage() {
                               value={formData.cvv}
                               onChange={handleInputChange}
                               placeholder="123"
-                              className="mt-1 h-9"
+                              className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                             />
                           </div>
                         </div>
@@ -518,7 +600,7 @@ export default function XPmarketPlusPage() {
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder="Calle Principal 123"
-                        className="mt-1 h-9"
+                        className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                       />
                     </div>
 
@@ -531,7 +613,7 @@ export default function XPmarketPlusPage() {
                           value={formData.city}
                           onChange={handleInputChange}
                           placeholder="Ciudad de México"
-                          className="mt-1 h-9"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
                       <div>
@@ -542,7 +624,7 @@ export default function XPmarketPlusPage() {
                           value={formData.zipCode}
                           onChange={handleInputChange}
                           placeholder="01000"
-                          className="mt-1 h-9"
+                          className="mt-1 h-8 text-card-foreground placeholder:text-card-foreground/60"
                         />
                       </div>
                     </div>
@@ -568,4 +650,4 @@ export default function XPmarketPlusPage() {
       </AnimatePresence>
     </div>
   )
-} 
+}
