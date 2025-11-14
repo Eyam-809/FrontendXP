@@ -107,10 +107,19 @@ export default function Navbar() {
   
   // Función para actualizar la foto desde múltiples fuentes
   const updateUserFoto = useCallback(() => {
+    // Si no hay sesión, limpiar la foto
+    if (!state.userSession) {
+      setUserFoto(null)
+      return
+    }
+    
     const foto = localStorage.getItem("foto")
     const userData = storage.getUserData() as any
     const fotoFromUserData = userData?.foto || userData?.avatar || userData?.photo
-    const finalFoto = foto || fotoFromUserData || state.userSession?.foto || null
+    const fotoFromSession = state.userSession?.foto
+    
+    // Prioridad: foto del userSession > foto del localStorage > foto del userData
+    const finalFoto = fotoFromSession || foto || fotoFromUserData || null
     setUserFoto(finalFoto)
   }, [state.userSession])
   
@@ -152,6 +161,7 @@ export default function Navbar() {
   storage.clearAll()
   dispatch({ type: "CLEAR_USER_SESSION" })
   setUser(null)
+  setUserFoto(null) // Limpiar la foto al cerrar sesión
   window.location.href = "/login"
 }
 

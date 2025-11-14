@@ -92,8 +92,11 @@ const handleLogin = async (e: React.FormEvent) => {
   setIsLoading(true)
 
   try {
-    const response = await axios.post(`${ApiUrl}/api/login`, { email, password }, { timeout: 10000 })
-    console.log("Usuario autenticado:", response.data)
+      const response = await axios.post(`${ApiUrl}/api/login`, { email, password }, { timeout: 10000 })
+      // Solo loggear en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Usuario autenticado:", response.data)
+      }
 
     // Guarda el token y userData (misma lógica que ya tenías)
     localStorage.setItem("token", response.data.token)
@@ -141,29 +144,31 @@ const handleLogin = async (e: React.FormEvent) => {
 
     // Manejo específico para errores axios
     if (axios.isAxiosError(err)) {
-      console.error("Axios error object:", err.toJSON ? err.toJSON() : err)
-
       if (err.response) {
         // El servidor respondió con estado != 2xx
-        console.error("Respuesta del backend:", err.response.status, err.response.data)
+        // Solo loggear errores que no sean 401 (credenciales incorrectas) para evitar ruido
+        if (err.response.status !== 401) {
+          console.error("Error del servidor:", err.response.status, err.response.data)
+        }
+        
         const backendMessage =
           err.response.data?.message ||
           (err.response.data?.errors && Object.values(err.response.data.errors).flat()[0]) ||
-          `Error del servidor (${err.response.status})`
+          (err.response.status === 401 ? "Credenciales incorrectas. Por favor, verifica tu email y contraseña." : `Error del servidor (${err.response.status})`)
         setError(backendMessage)
       } else if (err.request) {
         // La petición se hizo pero no hubo respuesta => Network / CORS / backend caído
-        console.error("No hubo respuesta (request):", err.request)
+        console.error("No se pudo conectar con el servidor")
         setError("No se pudo conectar con el servidor. Comprueba que el backend esté en ejecución y que CORS permita tu origen.")
       } else {
         // Otro error (configuración, cancelación, etc.)
-        console.error("Error inesperado al configurar la petición:", err.message)
-        setError("Error inesperado: " + (err.message || "comprueba la consola"))
+        console.error("Error de configuración:", err.message)
+        setError("Error inesperado: " + (err.message || "Por favor, intenta nuevamente"))
       }
     } else {
       // Errores no axios
-      console.error("⚠️ Error inesperado:", err)
-      setError("Ocurrió un error inesperado. Revisa la consola.")
+      console.error("Error inesperado:", err)
+      setError("Ocurrió un error inesperado. Por favor, intenta nuevamente.")
     }
 
     // Clear inputs opcional
@@ -231,7 +236,14 @@ useEffect(() => {
         // Asegurar que data sea un array
         // Si la respuesta viene envuelta en un objeto, extraer el array
         const planesArray = Array.isArray(data) ? data : (data?.data || data?.planes || []);
-        setPlanes(planesArray); // Guardamos los planes en el estado
+        // Filtrar el plan admin para que no sea visible ni seleccionable
+        // Excluir planes que contengan "admin" en el nombre (case-insensitive)
+        const planesFiltrados = planesArray.filter((plan: {id: number, nombre: string, descripcion: string}) => {
+          const nombrePlan = (plan.nombre || '').toLowerCase().trim();
+          // Excluir si el nombre contiene "admin" o "administrador"
+          return !nombrePlan.includes('admin') && !nombrePlan.includes('administrador');
+        });
+        setPlanes(planesFiltrados); // Guardamos los planes filtrados en el estado
       })
       .catch((error) => {
         console.error("Error al obtener los planes:", error);
