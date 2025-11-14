@@ -43,6 +43,7 @@ interface UserData {
   phone?: string
   address?: string
   avatar?: string
+  foto?: string
   joinDate?: string
   rating?: number
   totalProducts?: number
@@ -282,7 +283,7 @@ useEffect(() => {
 
         // actualizar localStorage con una versión simplificada para compatibilidad con el resto de la UI
         try {
-          const simple = formatted.map(fc => ({
+          const simple = formatted.map((fc: any) => ({
             id: fc.id,
             sellerId: fc.user.id,
             sellerName: fc.user.name,
@@ -569,17 +570,25 @@ useEffect(() => {
 
     if (response.ok) {
       // Actualizar contexto
-      const newSession = {
-        ...state.userSession,
-        foto: data.foto,
-      };
-      dispatch({
-        type: "SET_USER_SESSION",
-        payload: newSession,
-      });
+      let newSession = null;
+      if (state.userSession) {
+        newSession = {
+          token: state.userSession.token,
+          user_id: state.userSession.user_id,
+          plan_id: state.userSession.plan_id,
+          name: state.userSession.name,
+          foto: data.foto,
+        };
+        dispatch({
+          type: "SET_USER_SESSION",
+          payload: newSession,
+        });
+      }
 
       // Actualizar userSession en localStorage
-      localStorage.setItem("userSession", JSON.stringify(newSession));
+      if (newSession) {
+        localStorage.setItem("userSession", JSON.stringify(newSession));
+      }
 
       // Actualizar userData.foto en localStorage (si existe)
       try {
@@ -592,6 +601,12 @@ useEffect(() => {
       } catch (err) {
         console.error("Error al actualizar userData en localStorage:", err);
       }
+
+      // Guardar la foto directamente en localStorage para que el navbar la detecte
+      localStorage.setItem("foto", data.foto);
+      
+      // Disparar un evento personalizado para notificar el cambio
+      window.dispatchEvent(new CustomEvent('fotoUpdated', { detail: { foto: data.foto } }));
 
       // Actualizar estados locales usados en esta página
       setUserInfo((prev) => ({ ...prev, foto: data.foto }));
@@ -1024,7 +1039,12 @@ const handleCloseDeleteModal = () => {
 
                         <div>
                           <Button variant="outline"
-                          onClick={() => document.getElementById("fileInput").click()}>
+                          onClick={() => {
+                            const fileInput = document.getElementById("fileInput");
+                            if (fileInput) {
+                              fileInput.click();
+                            }
+                          }}>
                             <Edit className="h-4 w-4 mr-2" />
                             Cambiar foto
                           </Button>

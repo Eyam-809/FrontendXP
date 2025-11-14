@@ -20,6 +20,7 @@ import {
   Check
 } from "lucide-react"
 import Link from "next/link"
+import { useNotification } from "@/components/ui/notification"
 
 interface MessageItem {
   id: number | string
@@ -47,6 +48,7 @@ interface Props {
 }
 
 export default function ChatConversations({ conversations = [], onSendMessage, onSelectConversation, onDeleteConversation }: Props) {
+  const { showNotification } = useNotification()
   const [activeConvId, setActiveConvId] = useState<number | string | null>(conversations?.[0]?.id ?? null)
   const [messages, setMessages] = useState<MessageItem[]>([])
   const [text, setText] = useState("")
@@ -222,7 +224,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
   // El envío se utilizaba en el JSX pero no estaba definido — lo añadimos aquí.
   const handleSend = async () => {
     if (!activeConvId) {
-      alert("Selecciona una conversación");
+      showNotification("Selecciona una conversación", "warning");
       return;
     }
     if (!text.trim()) return;
@@ -259,7 +261,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
 
         if (!res.ok) {
           console.error("Fallo envío directo:", await res.text());
-          alert("No se pudo enviar el mensaje (ver consola).");
+          showNotification("No se pudo enviar el mensaje (ver consola).", "error");
           // opcional: remover mensaje optimista o marcar fallo
         } else {
           // refrescar para obtener mensajes reales (reemplaza tempId)
@@ -271,7 +273,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
       }
     } catch (err) {
       console.error("Error handleSend:", err);
-      alert("Error al enviar mensaje (ver consola).");
+      showNotification("Error al enviar mensaje (ver consola).", "error");
     } finally {
       setSending(false);
     }

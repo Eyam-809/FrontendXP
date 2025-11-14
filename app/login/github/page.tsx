@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 
-export default function GitHubCallback() {
+function GitHubCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { dispatch } = useApp();
@@ -12,9 +12,9 @@ export default function GitHubCallback() {
   useEffect(() => {
     const token = searchParams.get("token");
     const id = searchParams.get("id");
-    const planId = searchParams.get("plan_id"); // si lo mandas desde backend
+    const planId = searchParams.get("plan_id");
     const name = searchParams.get("name");
-    const email = searchParams.get("email"); // asegúrate que el backend lo incluya
+    const email = searchParams.get("email");
     const phone = searchParams.get("telefono") || "";
     const address = searchParams.get("direccion") || "";
 
@@ -35,14 +35,12 @@ export default function GitHubCallback() {
         joinDate: new Date().toISOString(),
       };
 
-      // Guarda datos en localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("userData", JSON.stringify(userData));
       localStorage.setItem("user_id", id);
       localStorage.setItem("plan_id", planId || "");
       localStorage.setItem("name", name || "");
 
-      // Actualiza el contexto global
       dispatch({
         type: "SET_USER_SESSION",
         payload: {
@@ -53,9 +51,17 @@ export default function GitHubCallback() {
         },
       });
 
-      router.push("/"); // redirige a tu página principal o dashboard
+      router.push("/");
     }
   }, [router, searchParams, dispatch]);
 
   return <p>Iniciando sesión con GitHub…</p>;
+}
+
+export default function GitHubCallback() {
+  return (
+    <Suspense fallback={<p>Cargando login de GitHub…</p>}>
+      <GitHubCallbackContent />
+    </Suspense>
+  );
 }

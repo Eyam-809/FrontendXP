@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Search, ShoppingCart, Heart, Bell, Menu, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ApiUrl } from "@/lib/config"
 import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle } from "lucide-react"
 import storage from "@/lib/storage"
 
@@ -65,10 +66,21 @@ export default function Navbar() {
     avatar: string
     isLoggedIn: boolean
   } | null>(null)
+  const [userFoto, setUserFoto] = useState<string | null>(null)
 
   useEffect(() => {
     const userData = storage.getUserData()
     if (userData) setUser(userData as any)
+    
+    // Obtener la foto del usuario
+    const foto = localStorage.getItem("foto")
+    const userDataWithFoto = userData as any
+    const fotoFromUserData = userDataWithFoto?.foto || userDataWithFoto?.avatar || userDataWithFoto?.photo
+    
+    // Prioridad: foto del localStorage > foto del userData > foto del userSession
+    const finalFoto = foto || fotoFromUserData || state.userSession?.foto || null
+    setUserFoto(finalFoto)
+    
     if (typeof window !== "undefined") {
       // Si guardas role dentro de userData o userSession, ajústalo aquí
       const sess = storage.getUserSession()
@@ -78,18 +90,78 @@ export default function Navbar() {
       const planId = storage.getPlanId()
       setHasGlobalChatAccess(planId === "2")
     }
-  }, [])
+  }, [state.userSession])
   
   useEffect(() => {
     // Verificar plan_id cuando cambie el userSession del contexto
     const planId = state.userSession?.plan_id || storage.getPlanId()
     setHasGlobalChatAccess(planId === "2")
+    
+    // Actualizar la foto cuando cambie el userSession
+    const foto = localStorage.getItem("foto")
+    const userData = storage.getUserData() as any
+    const fotoFromUserData = userData?.foto || userData?.avatar || userData?.photo
+    const finalFoto = foto || fotoFromUserData || state.userSession?.foto || null
+    setUserFoto(finalFoto)
   }, [state.userSession])
+  
+  // Función para actualizar la foto desde múltiples fuentes
+  const updateUserFoto = useCallback(() => {
+    // Si no hay sesión, limpiar la foto
+    if (!state.userSession) {
+      setUserFoto(null)
+      return
+    }
+    
+    const foto = localStorage.getItem("foto")
+    const userData = storage.getUserData() as any
+    const fotoFromUserData = userData?.foto || userData?.avatar || userData?.photo
+    const fotoFromSession = state.userSession?.foto
+    
+    // Prioridad: foto del userSession > foto del localStorage > foto del userData
+    const finalFoto = fotoFromSession || foto || fotoFromUserData || null
+    setUserFoto(finalFoto)
+  }, [state.userSession])
+  
+  // Escuchar cambios en localStorage y eventos personalizados
+  useEffect(() => {
+    // Función para manejar cambios de storage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'foto' || e.key === 'userData' || e.key === 'userSession') {
+        updateUserFoto()
+      }
+    }
+    
+    // Función para manejar el evento personalizado de actualización de foto
+    const handleFotoUpdated = (e: CustomEvent) => {
+      if (e.detail?.foto) {
+        setUserFoto(e.detail.foto)
+      } else {
+        updateUserFoto()
+      }
+    }
+    
+    // Escuchar cambios en localStorage (entre pestañas)
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Escuchar evento personalizado (misma pestaña)
+    window.addEventListener('fotoUpdated', handleFotoUpdated as EventListener)
+    
+    // También verificar periódicamente (por si el cambio es en la misma pestaña)
+    const interval = setInterval(updateUserFoto, 500)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('fotoUpdated', handleFotoUpdated as EventListener)
+      clearInterval(interval)
+    }
+  }, [updateUserFoto])
 
   const handleLogout = () => {
   storage.clearAll()
   dispatch({ type: "CLEAR_USER_SESSION" })
   setUser(null)
+  setUserFoto(null) // Limpiar la foto al cerrar sesión
   window.location.href = "/login"
 }
 
@@ -218,9 +290,23 @@ export default function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#456882] transition-colors h-auto p-2">
                       <div className="flex items-center space-x-2">
-                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-[#456882] text-[#F9F3EF] text-sm font-bold">
-                          {(state.userSession.name || "U")[0].toUpperCase()}
-                        </div>
+                        <Avatar className="h-8 w-8">
+                          {userFoto ? (
+                            <AvatarImage
+                              src={
+                                userFoto.startsWith("data:image")
+                                  ? userFoto
+                                  : userFoto.startsWith("http")
+                                  ? userFoto
+                                  : `${ApiUrl}/storage/${userFoto}`
+                              }
+                              alt={state.userSession.name || "Usuario"}
+                            />
+                          ) : null}
+                          <AvatarFallback className="bg-[#456882] text-[#F9F3EF] text-sm font-bold">
+                            {(state.userSession.name || "U")[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="hidden md:block text-left">
                           <p className="text-sm font-medium">
                             {state.userSession.name ? state.userSession.name : "Usuario"}

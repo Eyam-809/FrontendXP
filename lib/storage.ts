@@ -46,6 +46,8 @@ export const storage = {
     this.removePlanId()
     this.removeName()
     this.removeConversations()
+    // Limpiar también la foto
+    localStorage.removeItem("foto")
   }
 }
 
