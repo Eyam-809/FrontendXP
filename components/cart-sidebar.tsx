@@ -5,6 +5,7 @@ import { X, Plus, Minus, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
+import { useNotification } from "@/components/ui/notification"
 
 export default function CartSidebar() {
   const { state, dispatch } = useApp()
@@ -158,6 +159,7 @@ interface CheckoutModalProps {
 
 function CheckoutModal({ isOpen, onClose, total }: CheckoutModalProps) {
   const { state, dispatch } = useApp()
+  const { showNotification } = useNotification()
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -190,12 +192,12 @@ function CheckoutModal({ isOpen, onClose, total }: CheckoutModalProps) {
         setIsProcessing(false)
         dispatch({ type: "CLEAR_CART" })
         onClose()
-        alert(`¡Pago exitoso! Has ganado ${Math.floor(totalAmount)} puntos por tu compra.`)
+        showNotification(`¡Pago exitoso! Has ganado ${Math.floor(totalAmount)} puntos por tu compra.`, "success")
       }, 2000)
     } catch (error) {
       console.error('Error al procesar pago:', error)
       setIsProcessing(false)
-      alert("Error al procesar el pago. Inténtalo de nuevo.")
+      showNotification("Error al procesar el pago. Inténtalo de nuevo.", "error")
     }
   }
 

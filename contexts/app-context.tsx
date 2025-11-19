@@ -159,10 +159,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const plan_id = localStorage.getItem("plan_id")
       const name = localStorage.getItem("name")
       const foto = localStorage.getItem("foto")
-      console.log("Cargando sesión desde localStorage:", { token, user_id, plan_id, name, foto }) 
+      // Solo loggear en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Cargando sesión desde localStorage:", { token, user_id, plan_id, name, foto })
+      } 
 
       if (token && user_id && plan_id) {
-        dispatch({ type: "SET_USER_SESSION", payload: { token, user_id, plan_id, name: name || "" } })
+        dispatch({ type: "SET_USER_SESSION", payload: { token, user_id, plan_id, name: name || "", foto: foto || "" } })
       } else {
         dispatch({ type: "CLEAR_USER_SESSION" })
       }
@@ -178,7 +181,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (["token", "user_id", "plan_id", "name"].includes(e.key || "")) loadUserSession()
+      if (["token", "user_id", "plan_id", "name", "foto"].includes(e.key || "")) loadUserSession()
     }
 
     window.addEventListener("storage", handleStorageChange)
@@ -188,12 +191,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const currentUserId = localStorage.getItem("user_id")
       const currentPlanId = localStorage.getItem("plan_id")
       const currentName = localStorage.getItem("name")
+      const currentFoto = localStorage.getItem("foto")
 
       if (!state.userSession && currentToken && currentUserId && currentPlanId) {
         loadUserSession()
       } else if (state.userSession) {
-        const { token, user_id, plan_id, name } = state.userSession
-        if (token !== currentToken || user_id !== currentUserId || plan_id !== currentPlanId || name !== currentName) {
+        const { token, user_id, plan_id, name, foto } = state.userSession
+        if (token !== currentToken || user_id !== currentUserId || plan_id !== currentPlanId || name !== currentName || foto !== currentFoto) {
           loadUserSession()
         }
       }

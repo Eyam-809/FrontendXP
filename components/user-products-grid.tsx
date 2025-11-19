@@ -27,7 +27,7 @@ interface UserProduct {
   price: number
   image: string
   category: string
-  status: 'active' | 'sold' | 'pending'
+  status: string // Ahora viene de la tabla statuses (Validando, Activo, Rechazado, Desactivado)
   views: number
   likes: number
   createdAt: string
@@ -46,31 +46,39 @@ export default function UserProductsGrid({
   onDelete, 
   onToggleStatus,
 }: UserProductsGridProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-[#1B3C53]'
-      case 'sold':
-        return 'bg-[#E63946]'
-      case 'pending':
-        return 'bg-yellow-500'
-      default:
-        return 'bg-gray-500'
-    }
+  // Colores del nuevo estatus
+  // Colores por ID de estatus
+const getStatusColor = (statusId: number | undefined) => {
+  switch (statusId) {
+    case 1: // Validando
+      return 'bg-yellow-500'
+    case 2: // Activo
+      return 'bg-green-600'
+    case 3: // Rechazado
+      return 'bg-red-500'
+    case 4: // Desactivado
+      return 'bg-gray-800' // oscuro
+    default:
+      return 'bg-gray-400'
   }
+}
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Activo'
-      case 'sold':
-        return 'Vendido'
-      case 'pending':
-        return 'Pendiente'
-      default:
-        return 'Desconocido'
-    }
+// Texto por ID de estatus
+const getStatusText = (statusId: number | undefined) => {
+  switch (statusId) {
+    case 1:
+      return 'Validando'
+    case 2:
+      return 'Activo'
+    case 3:
+      return 'Rechazado'
+    case 4:
+      return 'Desactivado'
+    default:
+      return 'Desconocido'
   }
+}
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -103,11 +111,11 @@ export default function UserProductsGrid({
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             />
             
-            {/* Badge de estado */}
+            {/* Nuevo Badge de estatus del producto */}
             <Badge 
-              className={`absolute top-2 left-2 ${getStatusColor(product.status)}`}
+              className={`absolute top-2 left-2 text-white ${getStatusColor(product.status_id)}`}
             >
-              {getStatusText(product.status)}
+              {getStatusText(product.status_id)}
             </Badge>
 
             {/* Menú de opciones */}
@@ -126,20 +134,26 @@ export default function UserProductsGrid({
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onToggleStatus?.(product.id, product.status === 'active' ? 'pending' : 'active')}>
+
+                {/* Solo permitir cambiar entre activo / desactivado */}
+                <DropdownMenuItem 
+                  onClick={() => onToggleStatus?.(product.id, product.status === 'Activo' ? 'Desactivado' : 'Activo')}
+                >
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  {product.status === 'active' ? 'Pausar' : 'Activar'}
+                  {product.status === 'Activo' ? 'Desactivar' : 'Activar'}
                 </DropdownMenuItem>
+
                 <DropdownMenuItem 
                   onClick={() => onDelete?.(product.id)}
                   className="text-[#E63946]"
                 >
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Eliminar
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Overlay con información rápida */}
+            {/* Overlay con botón Ver */}
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <Link href={`/product/${product.id}`}>
@@ -162,7 +176,7 @@ export default function UserProductsGrid({
               ${product.price.toLocaleString()}
             </p>
 
-            {/* Estadísticas del producto */}
+            {/* Estadísticas */}
             <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
               <div className="flex items-center space-x-1">
                 <Eye className="h-4 w-4" />
@@ -174,7 +188,7 @@ export default function UserProductsGrid({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                {/*<span>{formatDate(product.created_at)}</span> */}
+                {/* <span>{formatDate(product.createdAt)}</span> */}
               </div>
             </div>
 
@@ -203,7 +217,7 @@ export default function UserProductsGrid({
                 </Button>
               </Link>
 
-               {/*Boton de borrar articulo*/}
+              {/* Borrar */}
               <Button 
                 variant="outline" 
                 size="sm" 

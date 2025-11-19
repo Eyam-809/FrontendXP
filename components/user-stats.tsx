@@ -1,15 +1,15 @@
 "use client"
 
+import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ApiUrl } from "@/lib/config"
 import { 
   TrendingUp, 
-  Eye, 
-  Heart, 
   Package, 
-  Star, 
-  Users,
   ShoppingCart,
+  Users,
+  Star,
   DollarSign
 } from "lucide-react"
 
@@ -19,8 +19,6 @@ interface UserStatsProps {
   rating: number
   followers: number
   following: number
-  totalViews: number
-  totalLikes: number
   activeProducts: number
   soldProducts: number
 }
@@ -31,39 +29,140 @@ export default function UserStats({
   rating,
   followers,
   following,
-  totalViews,
-  totalLikes,
   activeProducts,
   soldProducts
 }: UserStatsProps) {
+
+  const [soldCount, setSoldCount] = useState<number>(soldProducts ?? 0)
+  const [activeCount, setActiveCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    // Si el prop viene y es mayor a 0 → úsalo
+    if (soldProducts > 0) {
+      setSoldCount(soldProducts)
+      return
+    }
+
+    const fetchSoldCount = async () => {
+      try {
+        const stored =
+          localStorage.getItem("userData") ||
+          localStorage.getItem("user") ||
+          localStorage.getItem("userInfo")
+        const user = stored ? JSON.parse(stored) : null
+        const userId = user?.id
+        if (!userId) return
+
+        const token = localStorage.getItem("token")
+        const tryUrls = [
+          `${ApiUrl}/api/products/user/${userId}/sold-count`,
+          `${ApiUrl}/products/user/${userId}/sold-count`
+        ]
+
+        let success = false
+        for (const url of tryUrls) {
+          try {
+            const res = await fetch(url, {
+              headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+            })
+            if (!res.ok) continue
+
+            const data = await res.json()
+            // aceptar { sold_count } u otras variantes
+            let value = 0
+            if (typeof data === "number") value = data
+            else if (data && typeof data === "object")
+              value = Number(data.sold_count ?? data.count ?? data.sold ?? data.total ?? data.data?.count ?? 0)
+            else value = Number(data ?? 0)
+            if (Number.isNaN(value)) value = 0
+
+            setSoldCount(value)
+            success = true
+            break
+          } catch (e) {
+            console.warn("fetch sold-count intento fallido:", url, e)
+            continue
+          }
+        }
+
+        if (!success) console.warn("No se pudo obtener sold-count desde la API")
+
+      } catch (err) {
+        console.error("Error obteniendo sold count:", err)
+      }
+    }
+
+    fetchSoldCount()
+
+    // También obtener la cuenta de productos activos desde la nueva API
+    const fetchActiveCount = async () => {
+      try {
+        const stored =
+          localStorage.getItem("userData") ||
+          localStorage.getItem("user") ||
+          localStorage.getItem("userInfo")
+        const user = stored ? JSON.parse(stored) : null
+        const userId = user?.id
+        if (!userId) return
+
+        const token = localStorage.getItem("token")
+        const tryUrls = [
+          `${ApiUrl}/api/products/active/${userId}/count`,
+          `${ApiUrl}/products/active/${userId}/count`,
+          `${ApiUrl}/api/products/user/${userId}/active-count`
+        ]
+
+        for (const url of tryUrls) {
+          try {
+            const res = await fetch(url, {
+              headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+            })
+            if (!res.ok) continue
+            const data = await res.json()
+            let value = 0
+            if (typeof data === "number") value = data
+            else if (data && typeof data === "object")
+              value = Number(data.sold_count_active ?? data.count ?? data.total ?? data.data?.count ?? 0)
+            else value = Number(data ?? 0)
+            if (Number.isNaN(value)) value = 0
+            setActiveCount(value)
+            break
+          } catch (e) {
+            console.warn("fetch active-count intento fallido:", url, e)
+            continue
+          }
+        }
+      } catch (err) {
+        console.error("Error obteniendo active count:", err)
+      }
+    }
+
+    fetchActiveCount()
+  }, [soldProducts])
+
+  // mostrar Productos activos como prop + valor obtenido desde API (si existe)
+  const displayedActive = (activeProducts ?? 0) + (activeCount ?? 0)
+
   const stats = [
     {
       title: "Productos activos",
-      value: activeProducts,
+      value: displayedActive,
       icon: Package,
       color: "text-green-600",
       bgColor: "bg-green-100"
     },
     {
       title: "Productos vendidos",
-      value: soldProducts,
+      value: soldCount,
       icon: ShoppingCart,
       color: "text-blue-600",
       bgColor: "bg-blue-100"
-    },
-    {
-      title: "Total de vistas",
-      value: totalViews,
-      icon: Eye,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100"
-    },
-    {
-      title: "Total de likes",
-      value: totalLikes,
-      icon: Heart,
-      color: "text-red-600",
-      bgColor: "bg-red-100"
     }
   ]
 
@@ -93,13 +192,13 @@ export default function UserStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full ${stat.bgColor} mb-3`}>
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-gray-900">{(stat.value ?? 0).toLocaleString()}</div>
                 <div className="text-sm text-gray-500">{stat.title}</div>
               </div>
             ))}
@@ -122,7 +221,7 @@ export default function UserStats({
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 mb-3">
                   <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-gray-900">{(stat.value ?? 0).toLocaleString()}</div>
                 <div className="text-sm text-gray-500">{stat.title}</div>
               </div>
             ))}
@@ -130,7 +229,7 @@ export default function UserStats({
         </CardContent>
       </Card>
 
-      {/* Métricas de rendimiento */}
+      {/* Rendimiento */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -157,7 +256,7 @@ export default function UserStats({
                 <span className="text-sm text-gray-600">Total de ventas</span>
               </div>
               <Badge variant="secondary" className="text-lg">
-                {totalSales}
+                {(soldCount ?? totalSales).toLocaleString()}
               </Badge>
             </div>
 
@@ -175,4 +274,4 @@ export default function UserStats({
       </Card>
     </div>
   )
-} 
+}

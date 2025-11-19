@@ -6,6 +6,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
 import { ApiUrl } from "@/lib/config"
+import { useNotification } from "@/components/ui/notification"
 
 const translateSubcategory = (subcategory: string) => {
   const translations: Record<string, string> = {
@@ -38,6 +39,7 @@ const translateSubcategory = (subcategory: string) => {
 }
 
 export default function CategoryPanel() {
+  const { showNotification } = useNotification()
   const { state, dispatch } = useApp()
   // 👇 ahora subcategories guarda {id, name}
   const [subcategories, setSubcategories] = useState<{ id: number; name: string }[]>([])
@@ -66,7 +68,7 @@ export default function CategoryPanel() {
         setSubcategories(mapped)
       } catch (error) {
         console.error(error)
-        alert("No se pudieron cargar las subcategorías")
+        showNotification("No se pudieron cargar las subcategorías", "error")
       } finally {
         setLoading(false)
       }

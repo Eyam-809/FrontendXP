@@ -165,14 +165,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <span className="font-bold text-lg text-gray-800">${finalPrice.toFixed(2)}</span>
-                        {product.discount > 0 && (
-                          <span className="text-sm text-gray-500 line-through ml-2">${product.price.toFixed(2)}</span>
-                        )}
-                      </div>
-                    </div>
+                    
                     <Button
                       size="icon"
                       variant="ghost"

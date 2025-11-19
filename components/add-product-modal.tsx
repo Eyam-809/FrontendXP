@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Upload, X } from "lucide-react"
 import { useApp } from "@/contexts/app-context"
 import { ApiUrl } from "@/lib/config"
+import { useNotification } from "@/components/ui/notification"
 
 interface AddProductForm {
   name: string
@@ -28,6 +29,7 @@ interface AddProductModalProps {
 
 export default function AddProductModal({ onProductAdded }: AddProductModalProps) {
   const { state } = useApp()
+  const { showNotification } = useNotification()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
@@ -58,7 +60,7 @@ if (!token) throw new Error("No hay token de autenticación")
         setCategorias(data)
       } catch (error) {
         console.error(error)
-        alert("No se pudieron cargar las categorías")
+        showNotification("No se pudieron cargar las categorías", "error")
       }
     }
     fetchCategorias()
@@ -75,7 +77,7 @@ if (!token) throw new Error("No hay token de autenticación")
         setSubcategorias(data)
       } catch (error) {
         console.error(error)
-        alert("No se pudieron cargar las subcategorías")
+        showNotification("No se pudieron cargar las subcategorías", "error")
       }
     }
     fetchSubcategorias()
@@ -89,11 +91,11 @@ if (!token) throw new Error("No hay token de autenticación")
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      alert(`El archivo ${file.name} no es una imagen válida`)
+      showNotification(`El archivo ${file.name} no es una imagen válida`, "error")
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert(`El archivo ${file.name} es demasiado grande. Máximo 10MB`)
+      showNotification(`El archivo ${file.name} es demasiado grande. Máximo 10MB`, "error")
       return
     }
     setForm(prev => ({ ...prev, image: file }))
@@ -104,12 +106,12 @@ if (!token) throw new Error("No hay token de autenticación")
   if (!file) return
 
   if (!file.type.startsWith("video/")) {
-    alert(`El archivo ${file.name} no es un video válido`)
+    showNotification(`El archivo ${file.name} no es un video válido`, "error")
     return
   }
 
   if (file.size > 50 * 1024 * 1024) { // 50 MB máx.
-    alert(`El archivo ${file.name} es demasiado grande. Máximo 50MB`)
+    showNotification(`El archivo ${file.name} es demasiado grande. Máximo 50MB`, "error")
     return
   }
 
@@ -120,7 +122,7 @@ if (!token) throw new Error("No hay token de autenticación")
     window.URL.revokeObjectURL(videoElement.src)
     const duration = videoElement.duration
     if (duration > 90) {
-      alert("El video no puede durar más de 1 minuto y 30 segundos.")
+      showNotification("El video no puede durar más de 1 minuto y 30 segundos.", "error")
       e.target.value = "" // limpiar input
       return
     }
@@ -186,11 +188,11 @@ if (!token) throw new Error("No hay token de autenticación")
       setForm({ name: "", description: "", price: "", stock: "1", image: null, categoria_id: "", subcategoria_id: "" })
       setModo(null)
       setIsOpen(false)
-      alert(`¡${modo === "venta" ? "Venta" : "Trueque"} agregado exitosamente!`)
+      showNotification(`¡${modo === "venta" ? "Venta" : "Trueque"} agregado exitosamente!`, "success")
       onProductAdded?.()
     } catch (error) {
       console.error("Error adding product:", error)
-      alert(`Error al agregar producto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      showNotification(`Error al agregar producto: ${error instanceof Error ? error.message : 'Error desconocido'}`, "error")
     } finally {
       setIsLoading(false)
     }
@@ -246,7 +248,7 @@ if (!token) throw new Error("No hay token de autenticación")
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descripción (opcional)</Label>
+                  <Label htmlFor="description">Descripción</Label>
                   <Textarea
                     id="description"
                     value={form.description}
@@ -377,7 +379,7 @@ if (!token) throw new Error("No hay token de autenticación")
             {modo === "venta" && (         
               <Card>
                 <CardContent className="pt-6 space-y-4">
-                  <h3 className="font-semibold text-lg">Video del producto (opcional)</h3>
+                  <h3 className="font-semibold text-lg">Video del producto</h3>
 
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />

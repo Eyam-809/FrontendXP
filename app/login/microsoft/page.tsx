@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useApp } from "@/contexts/app-context"
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useApp } from "@/contexts/app-context";
 
-export default function MicrosoftCallback() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { dispatch } = useApp()
+function MicrosoftCallbackContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { dispatch } = useApp();
 
   useEffect(() => {
-    const token = searchParams.get("token")
-    const id = searchParams.get("id")
-    const planId = searchParams.get("plan_id")
-    const name = searchParams.get("name")
-    const email = searchParams.get("email") // Asegúrate que tu backend lo mande
-    const phone = searchParams.get("telefono") || ""
-    const address = searchParams.get("direccion") || ""
+    const token = searchParams.get("token");
+    const id = searchParams.get("id");
+    const planId = searchParams.get("plan_id");
+    const name = searchParams.get("name");
+    const email = searchParams.get("email"); // 👈 asegúrate que backend lo mande
+    const phone = searchParams.get("telefono") || "";
+    const address = searchParams.get("direccion") || "";
 
     if (token && id) {
       const userData = {
@@ -33,14 +33,14 @@ export default function MicrosoftCallback() {
         totalProducts: 12,
         totalSales: 45,
         joinDate: new Date().toISOString(),
-      }
+      };
 
       // Guardar en localStorage
-      localStorage.setItem("token", token)
-      localStorage.setItem("userData", JSON.stringify(userData))
-      localStorage.setItem("user_id", id)
-      localStorage.setItem("plan_id", planId || "")
-      localStorage.setItem("name", name || "")
+      localStorage.setItem("token", token);
+      localStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem("user_id", id);
+      localStorage.setItem("plan_id", planId || "");
+      localStorage.setItem("name", name || "");
 
       // Actualizar contexto global
       dispatch({
@@ -51,11 +51,19 @@ export default function MicrosoftCallback() {
           plan_id: planId,
           name,
         },
-      })
+      });
 
-      router.push("/")
+      router.push("/");
     }
-  }, [router, searchParams, dispatch])
+  }, [router, searchParams, dispatch]);
 
-  return <p>Iniciando sesión con Microsoft…</p>
+  return <p>Iniciando sesión con Microsoft…</p>;
+}
+
+export default function MicrosoftCallback() {
+  return (
+    <Suspense fallback={<p>Cargando login de Microsoft…</p>}>
+      <MicrosoftCallbackContent />
+    </Suspense>
+  );
 }
