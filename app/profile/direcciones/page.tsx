@@ -25,8 +25,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Navbar from "@/components/navbar"
+import { ApiUrl } from "@/lib/config"
 
 interface UserData {
+  id: string
   name: string
   email: string
   avatar?: string
@@ -34,23 +36,24 @@ interface UserData {
 
 interface Address {
   id: string
-  type: "home" | "work" | "other"
-  name: string
-  street: string
-  number: string
-  apartment?: string
-  city: string
-  state: string
-  zipCode: string
-  country: string
-  phone: string
-  isDefault: boolean
-  instructions?: string
+  tipo: "home" | "work" | "other"
+  nombre_direccion: string
+  calle: string
+  numero: string
+  apartamento_oficina?: string
+  ciudad: string
+  estado: string
+  codigo_postal: string
+  pais: string
+  telefono: string
+  isDefault?: boolean
+  instrucciones?: string
 }
 
 export default function DireccionesPage() {
   const [user, setUser] = useState<UserData | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [showAddDialog, setShowAddDialog] = useState(false)
@@ -69,11 +72,45 @@ export default function DireccionesPage() {
   const [phone, setPhone] = useState("")
   const [instructions, setInstructions] = useState("")
 
+  // Cargar datos del usuario y sus direcciones
   useEffect(() => {
-    const userData = localStorage.getItem("userData")
-    if (userData) {
-      setUser(JSON.parse(userData))
+    const loadUserData = async () => {
+      try {
+        const userData = localStorage.getItem("userData")
+        const token = localStorage.getItem("token")
+        
+        if (userData) {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+
+          // Cargar direcciones del usuario
+          if (parsedUser.id && token) {
+            setIsLoadingAddresses(true)
+            const res = await fetch(`${ApiUrl}/api/direcciones/${parsedUser.id}`, {
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              }
+            })
+
+            if (!res.ok) {
+              console.error("Error cargando direcciones:", res.statusText)
+              setAddresses([])
+            } else {
+              const data = await res.json()
+              setAddresses(Array.isArray(data) ? data : [])
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error al cargar datos:", err)
+        setAddresses([])
+      } finally {
+        setIsLoadingAddresses(false)
+      }
     }
+
+    loadUserData()
   }, [])
 
   const addressTypes = [
@@ -117,79 +154,135 @@ export default function DireccionesPage() {
     setInstructions("")
   }
 
-  const handleAddAddress = (e: React.FormEvent) => {
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!addressName || !street || !number || !city || !state || !zipCode || !phone) {
-      alert("Por favor completa todos los campos obligatorios")
+      alert("Completa los campos obligatorios")
       return
     }
-    
-    setIsAddingAddress(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const newAddress: Address = {
-        id: Date.now().toString(),
-        type: addressType,
-        name: addressName,
-        street,
-        number,
-        apartment,
-        city,
-        state,
-        zipCode,
-        country,
-        phone,
-        isDefault: addresses.length === 0,
-        instructions
+
+    const payload = {
+      tipo: addressType || "home",
+      nombre_direccion: addressName,
+      calle: street,
+      numero: number,
+      apartamento_oficina: apartment || null,
+      ciudad: city,
+      estado: state,
+      codigo_postal: zipCode,
+      pais: country || "México",
+      telefono: phone.replace(/\D/g, ""),
+      instrucciones: instructions || ""
+    }
+
+    try {
+      setIsAddingAddress(true)
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${ApiUrl}/api/direcciones`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => res.statusText)
+        throw new Error(errText || `Error ${res.status}`)
       }
-      
-      setAddresses([...addresses, newAddress])
+
+      const created = await res.json()
+      setAddresses(prev => [created, ...prev])
       resetForm()
-      setIsAddingAddress(false)
       setShowAddDialog(false)
-      alert("Dirección agregada exitosamente")
-    }, 2000)
+      alert("Dirección guardada correctamente")
+    } catch (err: any) {
+      console.error("Error guardando dirección:", err)
+      alert(err.message || "Error al guardar la dirección")
+    } finally {
+      setIsAddingAddress(false)
+    }
   }
 
-  const handleEditAddress = (e: React.FormEvent) => {
+  const handleEditAddress = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingAddress || !addressName || !street || !number || !city || !state || !zipCode || !phone) {
-      alert("Por favor completa todos los campos obligatorios")
+    if (!editingAddress) return
+
+    if (!addressName || !street || !number || !city || !state || !zipCode || !phone) {
+      alert("Completa los campos obligatorios")
       return
     }
-    
-    setIsAddingAddress(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const updatedAddress: Address = {
-        ...editingAddress,
-        type: addressType,
-        name: addressName,
-        street,
-        number,
-        apartment,
-        city,
-        state,
-        zipCode,
-        country,
-        phone,
-        instructions
+
+    const payload = {
+      tipo: addressType,
+      nombre_direccion: addressName,
+      calle: street,
+      numero: number,
+      apartamento_oficina: apartment || null,
+      ciudad: city,
+      estado: state,
+      codigo_postal: zipCode,
+      pais: country,
+      telefono: phone.replace(/\D/g, ""),
+      instrucciones: instructions || ""
+    }
+
+    try {
+      setIsAddingAddress(true)
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${ApiUrl}/api/direcciones/${editingAddress.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => res.statusText)
+        throw new Error(errText || `Error ${res.status}`)
       }
-      
-      setAddresses(addresses.map(addr => addr.id === editingAddress.id ? updatedAddress : addr))
+
+      const updated = await res.json()
+      setAddresses(prev => prev.map(a => a.id === updated.id ? updated : a))
       resetForm()
-      setIsAddingAddress(false)
       setShowEditDialog(false)
       setEditingAddress(null)
-      alert("Dirección actualizada exitosamente")
-    }, 2000)
+      alert("Dirección actualizada correctamente")
+    } catch (err: any) {
+      console.error("Error actualizando dirección:", err)
+      alert(err.message || "Error al actualizar la dirección")
+    } finally {
+      setIsAddingAddress(false)
+    }
   }
 
-  const handleDeleteAddress = (addressId: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar esta dirección?")) {
-      setAddresses(addresses.filter(addr => addr.id !== addressId))
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar esta dirección?")) return
+
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${ApiUrl}/api/direcciones/${addressId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      })
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => res.statusText)
+        throw new Error(errText || `Error ${res.status}`)
+      }
+
+      setAddresses(prev => prev.filter(addr => addr.id !== addressId))
+      alert("Dirección eliminada correctamente")
+    } catch (err: any) {
+      console.error("Error eliminando dirección:", err)
+      alert(err.message || "Error al eliminar la dirección")
     }
   }
 
@@ -202,17 +295,17 @@ export default function DireccionesPage() {
 
   const openEditDialog = (address: Address) => {
     setEditingAddress(address)
-    setAddressType(address.type)
-    setAddressName(address.name)
-    setStreet(address.street)
-    setNumber(address.number)
-    setApartment(address.apartment || "")
-    setCity(address.city)
-    setState(address.state)
-    setZipCode(address.zipCode)
-    setCountry(address.country)
-    setPhone(address.phone)
-    setInstructions(address.instructions || "")
+    setAddressType(address.tipo)
+    setAddressName(address.nombre_direccion)
+    setStreet(address.calle)
+    setNumber(address.numero)
+    setApartment(address.apartamento_oficina || "")
+    setCity(address.ciudad)
+    setState(address.estado)
+    setZipCode(address.codigo_postal)
+    setCountry(address.pais)
+    setPhone(address.telefono)
+    setInstructions(address.instrucciones || "")
     setShowEditDialog(true)
   }
 
@@ -232,7 +325,7 @@ export default function DireccionesPage() {
     }
   }
 
-  if (!user) {
+  if (!user || isLoadingAddresses) {
     return (
       <div className="min-h-screen bg-[#F9F3EF] flex items-center justify-center">
         <div className="text-center">
@@ -451,12 +544,12 @@ export default function DireccionesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${getAddressTypeColor(address.type)}`}>
-                        {getAddressTypeIcon(address.type)}
+                      <div className={`p-2 rounded-lg ${getAddressTypeColor(address.tipo)}`}>
+                        {getAddressTypeIcon(address.tipo)}
                       </div>
                       <div>
-                        <h3 className="font-medium text-[#1B3C53]">{address.name}</h3>
-                        <p className="text-sm text-[#456882] capitalize">{address.type}</p>
+                        <h3 className="font-medium text-[#1B3C53]">{address.nombre_direccion}</h3>
+                        <p className="text-sm text-[#456882] capitalize">{address.tipo}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -486,17 +579,17 @@ export default function DireccionesPage() {
                   
                   <div className="space-y-2 mb-4">
                     <p className="text-[#1B3C53]">
-                      {address.street} {address.number}
-                      {address.apartment && `, ${address.apartment}`}
+                      {address.calle} {address.numero}
+                      {address.apartamento_oficina && `, ${address.apartamento_oficina}`}
                     </p>
                     <p className="text-[#1B3C53]">
-                      {address.city}, {address.state} {address.zipCode}
+                      {address.ciudad}, {address.estado} {address.codigo_postal}
                     </p>
-                    <p className="text-[#1B3C53]">{address.country}</p>
-                    <p className="text-[#456882]">{address.phone}</p>
-                    {address.instructions && (
+                    <p className="text-[#1B3C53]">{address.pais}</p>
+                    <p className="text-[#456882]">{address.telefono}</p>
+                    {address.instrucciones && (
                       <p className="text-sm text-[#456882] italic">
-                        Instrucciones: {address.instructions}
+                        Instrucciones: {address.instrucciones}
                       </p>
                     )}
                   </div>
@@ -521,14 +614,14 @@ export default function DireccionesPage() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Editar Dirección</DialogTitle>
+              <DialogTitle className="text-[#1B3C53]">Editar Dirección</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleEditAddress} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-address-type" className="text-[#1B3C53]">Tipo de dirección</Label>
                    <Select value={addressType} onValueChange={(value: "home" | "work" | "other") => setAddressType(value)}>
-                     <SelectTrigger>
+                     <SelectTrigger className="text-[#1B3C53]">
                        <SelectValue placeholder="Selecciona el tipo" />
                      </SelectTrigger>
                      <SelectContent>
@@ -607,7 +700,7 @@ export default function DireccionesPage() {
                  <div className="space-y-2">
                   <Label htmlFor="edit-state" className="text-[#1B3C53]">Estado</Label>
                    <Select value={state} onValueChange={setState}>
-                     <SelectTrigger>
+                     <SelectTrigger className="text-[#1B3C53]">
                        <SelectValue placeholder="Selecciona estado" />
                      </SelectTrigger>
                      <SelectContent>

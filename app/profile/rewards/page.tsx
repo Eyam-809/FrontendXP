@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation" // ← agregar
 import { useApp } from "@/contexts/app-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,8 @@ interface UserPoints {
 
 export default function RewardsPage() {
   const { state } = useApp()
+  const router = useRouter() // ← agregar
+
   const [userPoints, setUserPoints] = useState<UserPoints>({
     current: 0,
     totalEarned: 0,
@@ -130,7 +133,7 @@ export default function RewardsPage() {
         setLoading(false)
       }, 3000)
 
-      if (!state.userSession?.user?.id) {
+      if (!state.userSession?.user_id) {
         // Si no hay usuario logueado, usar datos de prueba
         clearTimeout(timeoutId)
         setUserPoints({
@@ -148,7 +151,7 @@ export default function RewardsPage() {
       
       try {
         const token = localStorage.getItem('token')
-        const response = await fetch(`http://localhost:8000/api/points/${state.userSession.user.id}`, {
+        const response = await fetch(`http://localhost:8000/api/points/${state.userSession.user_id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -205,7 +208,7 @@ export default function RewardsPage() {
   // Cargar historial de puntos
   useEffect(() => {
     const fetchPointsHistory = async () => {
-      if (!state.userSession?.user?.id) {
+      if (!state.userSession?.user_id) {
         // Usar datos de prueba si no hay usuario
         setRecentEarnings([
           { id: 1, description: "Compra de $150", points: 150, date: "2025-01-15" },
@@ -217,7 +220,7 @@ export default function RewardsPage() {
       
       try {
         const token = localStorage.getItem('token')
-        const response = await fetch(`http://localhost:8000/api/points/${state.userSession.user.id}/history`, {
+        const response = await fetch(`http://localhost:8000/api/points/${state.userSession.user_id}/history`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -276,7 +279,7 @@ export default function RewardsPage() {
 
   const handleRedeemReward = async (rewardId: number) => {
     const reward = rewards.find(r => r.id === rewardId)
-    if (!reward || !state.userSession?.user?.id) return
+    if (!reward || !state.userSession?.user_id) return
 
     try {
       const token = localStorage.getItem('token')
@@ -287,10 +290,12 @@ export default function RewardsPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          user_id: state.userSession.user.id,
+          user_id: state.userSession.user_id,
           reward_id: rewardId,
           points_required: reward.pointsRequired,
-          description: `Canjeado: ${reward.name}`
+          description: `Canjeado: ${reward.name}`,
+          coupon_name: reward.name,
+          coupon_type: reward.category
         })
       })
 
@@ -308,7 +313,11 @@ export default function RewardsPage() {
           current: data.current_points
         }))
         
-        alert('¡Recompensa canjeada exitosamente!')
+        // Mostrar mensaje de éxito con código de cupón
+        alert(`¡Recompensa canjeada exitosamente!\n\nCódigo de cupón: ${data.coupon_code}\nPuntos restantes: ${data.current_points}`)
+        
+        // Redirigir a la vista de cupones para que se muestre el cupón recién creado
+        router.push('/profile/coupons')
       } else {
         const error = await response.json()
         alert(`Error: ${error.error}`)
@@ -347,9 +356,17 @@ export default function RewardsPage() {
                 <p className="text-sm opacity-90">Gana puntos con tus compras</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold">{userPoints.current.toLocaleString()}</div>
-              <div className="text-sm opacity-90">Puntos disponibles</div>
+            <div className="flex items-center space-x-4">
+              <Link href="/profile/coupons">
+                <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
+                  <Gift className="h-4 w-4 mr-2" />
+                  Mis Cupones
+                </Button>
+              </Link>
+              <div className="text-right">
+                <div className="text-3xl font-bold">{userPoints.current.toLocaleString()}</div>
+                <div className="text-sm opacity-90">Puntos disponibles</div>
+              </div>
             </div>
           </div>
         </div>
@@ -454,55 +471,75 @@ export default function RewardsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rewards.map((reward) => (
-              <Card key={reward.id} className={`bg-white/95 backdrop-blur-sm transition-all hover:scale-105 ${
-                !reward.isAvailable ? 'opacity-50' : ''
-              }`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Gift className="h-5 w-5 text-[#1B3C53]" />
-                      <CardTitle className="text-lg">{reward.name}</CardTitle>
-                    </div>
-                    {reward.isRedeemed && (
-                      <Badge className="bg-green-100 text-green-800">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Canjeado
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription>{reward.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
+              <Card key={reward.id} className="bg-white overflow-hidden">
+                {/* ...existing image... */}
+                
+                <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Puntos requeridos:</span>
-                      <span className="font-semibold">{reward.pointsRequired}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Tus puntos:</span>
-                      <span className="font-semibold">{reward.pointsCurrent}</span>
+                    {/* Nombre y descripción */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{reward.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{reward.description}</p>
                     </div>
 
-                    {reward.pointsCurrent >= reward.pointsRequired && !reward.isRedeemed ? (
-                      <Button 
-                        onClick={() => handleRedeemReward(reward.id)}
-                        className="w-full bg-[#1B3C53] hover:bg-[#456882]"
-                      >
-                        <Gift className="h-4 w-4 mr-2" />
-                        Canjear
-                      </Button>
-                    ) : reward.isRedeemed ? (
-                      <Button disabled className="w-full bg-green-100 text-green-800">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Ya canjeado
-                      </Button>
-                    ) : (
-                      <Button disabled className="w-full bg-gray-100 text-gray-500">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Puntos insuficientes
-                      </Button>
-                    )}
+                    {/* Puntos requeridos vs Puntos actuales */}
+                    <div className="space-y-3 bg-gray-50 p-3 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Puntos requeridos:</span>
+                        <span className="font-semibold text-gray-900">{reward.pointsRequired}</span>
+                      </div>
+                      
+                      {/* CAMBIO PRINCIPAL: Mostrar puntos actuales con badge */}
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Tus puntos:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-lg text-[#1B3C53]">{userPoints.current}</span>
+                          {userPoints.current >= reward.pointsRequired && !reward.isRedeemed && (
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              ✓ Disponible
+                            </Badge>
+                          )}
+                          {userPoints.current < reward.pointsRequired && !reward.isRedeemed && (
+                            <Badge className="bg-red-100 text-red-800 text-xs">
+                              Faltan {reward.pointsRequired - userPoints.current}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Mostrar puntos que quedarían después del canje */}
+                      {!reward.isRedeemed && (
+                        <div className="flex justify-between items-center text-xs text-gray-500 border-t pt-2">
+                          <span>Te quedarían:</span>
+                          <span className="font-semibold text-gray-700">
+                            {Math.max(0, userPoints.current - reward.pointsRequired)} puntos
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Botones de acción */}
+                    <div>
+                      {userPoints.current >= reward.pointsRequired && !reward.isRedeemed ? (
+                        <Button 
+                          onClick={() => handleRedeemReward(reward.id)}
+                          className="w-full bg-[#1B3C53] hover:bg-[#456882] text-white"
+                        >
+                          <Gift className="h-4 w-4 mr-2" />
+                          Canjear
+                        </Button>
+                      ) : reward.isRedeemed ? (
+                        <Button disabled className="w-full bg-green-100 text-green-800 border border-green-300">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Ya canjeado
+                        </Button>
+                      ) : (
+                        <Button disabled className="w-full bg-gray-100 text-gray-500 border border-gray-300">
+                          <Clock className="h-4 w-4 mr-2" />
+                          Puntos insuficientes
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
