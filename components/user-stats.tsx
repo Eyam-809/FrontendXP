@@ -56,6 +56,7 @@ export default function UserStats({
         const tryUrls = [
           `${ApiUrl}/api/products/user/${userId}/sold-count`,
           `${ApiUrl}/products/user/${userId}/sold-count`,
+          `${ApiUrl}/api/products/active/${userId}/count`,
         ]
 
         let success = false
@@ -71,8 +72,10 @@ export default function UserStats({
 
             const data = await res.json()
             const value = Number(data?.sold_count ?? 0)
+            //const value = Number(data?.sold_count_active ?? 0)
 
             setSoldCount(Number.isNaN(value) ? 0 : value)
+           // set
             success = true
             break
           } catch (e) {
