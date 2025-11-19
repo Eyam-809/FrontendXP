@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ApiUrl } from "@/lib/config"
-import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle } from "lucide-react"
+import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle, CheckCircle2, CheckCircle, XCircle, ShoppingBag } from "lucide-react"
 import storage from "@/lib/storage"
 
 const categories = [
@@ -50,6 +50,7 @@ export default function Navbar() {
   const [searchInput, setSearchInput] = useState("")
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasGlobalChatAccess, setHasGlobalChatAccess] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false); // Para plan_id 3
 
   const handleResetFilters = () => {
   dispatch({ type: "SET_SELECTED_CATEGORY", payload: null })
@@ -89,6 +90,8 @@ export default function Navbar() {
       // Verificar plan_id para acceso al chat global
       const planId = storage.getPlanId()
       setHasGlobalChatAccess(planId === "2")
+      // Verificar plan_id para acceso de admin (plan_id 3)
+      setHasAdminAccess(planId === "3")
     }
   }, [state.userSession])
   
@@ -96,6 +99,7 @@ export default function Navbar() {
     // Verificar plan_id cuando cambie el userSession del contexto
     const planId = state.userSession?.plan_id || storage.getPlanId()
     setHasGlobalChatAccess(planId === "2")
+    setHasAdminAccess(planId === "3")
     
     // Actualizar la foto cuando cambie el userSession
     const foto = localStorage.getItem("foto")
@@ -361,6 +365,38 @@ export default function Navbar() {
                       <DropdownMenuItem>
                         <AlertTriangle className="mr-2 h-4 w-4" />
                         <span>Seguridad</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    {/* Opción Validaciones solo para usuarios con plan_id 3 */}
+                    {hasAdminAccess && (
+                      <Link href="/profile/validaciones">
+                        <DropdownMenuItem>
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          <span>Validaciones</span>
+                        </DropdownMenuItem>
+                      </Link>
+                    )}
+                    
+                    {/* Nuevas opciones de productos */}
+                    <Link href="/profile/productos-aprobados">
+                      <DropdownMenuItem>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        <span>Aprobados</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/productos-rechazados">
+                      <DropdownMenuItem>
+                        <XCircle className="mr-2 h-4 w-4" />
+                        <span>Rechazados</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    
+                    <Link href="/profile/productos-vendidos">
+                      <DropdownMenuItem>
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        <span>Vendidos</span>
                       </DropdownMenuItem>
                     </Link>
                     
