@@ -123,6 +123,7 @@ export default function PersonalInfoPage() {
   })
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
+  const [totalSales, setTotalSales] = useState<number>(0)
   
   const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
   const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
@@ -178,6 +179,54 @@ useEffect(() => {
   fetchProducts()
 }, [refresh])
 
+useEffect(() => {
+
+  const fetchSoldCount = async () => {
+    try {
+      const stored = localStorage.getItem("userData") 
+        || localStorage.getItem("user") 
+        || localStorage.getItem("userInfo");
+
+      const user = stored ? JSON.parse(stored) : null;
+      const userId = user?.id;
+      if (!userId) return;
+
+      const token = localStorage.getItem("token");
+
+      const tryUrls = [
+        `${ApiUrl}/api/products/user/${userId}/sold-count`,
+        `${ApiUrl}/products/user/${userId}/sold-count`
+      ];
+
+      for (const url of tryUrls) {
+        try {
+          const res = await fetch(url, {
+            headers: {
+              Accept: "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+          });
+
+          if (!res.ok) continue;
+          
+          const data = await res.json();
+          const value = Number(data?.sold_count ?? data?.count ?? data ?? 0);
+
+          setTotalSales(Number.isNaN(value) ? 0 : value);
+
+          break;
+        } catch (e) {
+          continue;
+        }
+      }
+
+    } catch (err) {
+      console.error("Error obteniendo sold_count:", err);
+    }
+  };
+
+  fetchSoldCount();
+}, []);
 
 
   // Cargar conversaciones: primero intenta la API y si falla usa localStorage (compatibilidad)
@@ -870,17 +919,14 @@ const handleCloseDeleteModal = () => {
               <h1 className="text-3xl font-bold">{currentUser.name}</h1>
               <p className="text-lg opacity-90">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
               <div className="flex items-center space-x-4 mt-2">
-                <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4 text-[#E8DDD4] fill-current" />
-                  <span className="text-sm">{currentUser.rating}</span>
-                </div>
+                
                 <div className="flex items-center space-x-1">
                   <Package className="h-4 w-4" />
                   <span className="text-sm">{userProducts.length} productos</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm">{currentUser.totalSales} ventas</span>
+                  <span className="text-sm">{totalSales} ventas</span>
                 </div>
               </div>
             </div>
@@ -943,7 +989,7 @@ const handleCloseDeleteModal = () => {
                       <div className="text-sm text-gray-500">Productos</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-[#1B3C53]">{currentUser.totalSales}</div>
+                      <div className="text-2xl font-bold text-[#1B3C53]">{totalSales}</div>
                       <div className="text-sm text-[#456882]">Ventas</div>
                     </div>
                   </div>

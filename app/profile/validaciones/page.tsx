@@ -71,7 +71,7 @@ export default function ValidacionesPage() {
       setLoading(true)
       try {
         const token = localStorage.getItem("token")
-        const response = await fetch(`${ApiUrl}/api/products?status_id=1`, {
+        const response = await fetch(`${ApiUrl}/api/products/status/1`, {
           headers: {
             "Accept": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -179,7 +179,7 @@ export default function ValidacionesPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Validaciones de Productos</h1>
-          <p className="text-[#456882]">Productos pendientes de validación (status_id: 1)</p>
+          <p className="text-[#456882]">Productos pendientes de validación</p>
         </div>
 
         {loading ? (
@@ -247,7 +247,7 @@ export default function ValidacionesPage() {
                     <Link href={`/product/${product.id}`} className="flex-1">
                       <Button variant="outline" className="w-full">
                         <Eye className="h-4 w-4 mr-2" />
-                        Ver Detalles
+                        Detalles
                       </Button>
                     </Link>
                     <Button

@@ -44,12 +44,13 @@ export default function ProductosAprobadosPage() {
       setLoading(true)
       try {
         const token = localStorage.getItem("token")
-        const response = await fetch(`${ApiUrl}/api/products?status_id=2`, {
+        const response = await fetch(`${ApiUrl}/api/products/approved`, {
           headers: {
             "Accept": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+            Authorization: `Bearer ${token}`
           }
-        })
+        });
+
 
         if (!response.ok) {
           throw new Error("Error al obtener productos")
@@ -80,7 +81,7 @@ export default function ProductosAprobadosPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#1B3C53] mb-2">Productos Aprobados</h1>
-          <p className="text-[#456882]">Productos con estado aprobado (status_id: 2)</p>
+          <p className="text-[#456882]">Productos con estado aprobado</p>
         </div>
 
         {loading ? (
