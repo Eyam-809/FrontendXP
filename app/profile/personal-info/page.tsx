@@ -125,10 +125,12 @@ export default function PersonalInfoPage() {
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
   const [totalSales, setTotalSales] = useState<number>(0)
   
-  const [favoriteProducts, setFavoriteProducts] = useState<UserProduct[]>([])
-  const [purchasedProducts, setPurchasedProducts] = useState<UserProduct[]>([])
   const [conversations, setConversations] = useState<any[]>([])
   const { state, dispatch } = useApp(); // ✅ Esto soluciona los errores
+  
+  // Usar el estado global del contexto para favoritos y carrito
+  const favoriteProducts = state.favorites || []
+  const purchasedProducts = state.cart || []
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",
@@ -1284,12 +1286,22 @@ const handleCloseDeleteModal = () => {
               </TabsContent>
 
               <TabsContent value="favorites" className="mt-6">
-                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Favoritos</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mis Favoritos</h2>
+                  <Badge className="bg-[#F9F3EF] text-[#1B3C53] border border-[#E8DDD4] px-4 py-1 font-semibold">
+                    {favoriteProducts.length} {favoriteProducts.length === 1 ? 'producto' : 'productos'}
+                  </Badge>
+                </div>
                 <FavoritesGrid products={favoriteProducts} />
               </TabsContent>
 
               <TabsContent value="cart" className="mt-6">
-                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mi Carrito</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mi Carrito</h2>
+                  <Badge className="bg-[#F9F3EF] text-[#1B3C53] border border-[#E8DDD4] px-4 py-1 font-semibold">
+                    {purchasedProducts.length} {purchasedProducts.length === 1 ? 'producto' : 'productos'}
+                  </Badge>
+                </div>
                 <CartItemsList items={purchasedProducts} />
               </TabsContent>
 

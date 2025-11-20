@@ -72,110 +72,187 @@ export default function ProductGrid({ products }: ProductGridProps) {
 
   return (
     <section className="my-10">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#1B3C53]">
           {products ? "Productos filtrados" : "Todos los productos"}
         </h2>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4 flex-wrap">
           {products && (
             <Button
               onClick={clearFilter}
               variant="outline"
-              className="bg-[#E8DDD4] border-[#1B3C53] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-white transition-all duration-200"
+              className="bg-white border-2 border-[#1B3C53] text-[#1B3C53] hover:bg-[#1B3C53] hover:text-white transition-all duration-200 font-semibold"
             >
               <X className="h-4 w-4 mr-2" />
               Borrar Filtro
             </Button>
           )}
-          <div className="text-sm text-gray-500">
-            {productos.length} producto{productos.length !== 1 ? "s" : ""} encontrado
+          <div className="text-sm font-medium text-[#456882] bg-[#F9F3EF] px-4 py-2 rounded-lg">
+            {productos.length} producto{productos.length !== 1 ? "s" : ""} encontrado{productos.length !== 1 ? "s" : ""}
           </div>
         </div>
       </div>
 
       <CategoryNavbar />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {productos.map((product, index) => {
           const finalPrice = product.stock > 0
             ? product.price * (1 - (product.discount || 0) / 100)
             : product.price
+          const originalPrice = product.discount > 0 ? product.price : null
 
           const isFavorite = state.favorites.some((fav) => fav.id === product.id)
+          
+          // Manejar imagen
+          const imageSrc = product.image?.startsWith("data:image")
+            ? product.image
+            : product.image?.startsWith("http")
+            ? product.image
+            : product.image?.startsWith("/")
+            ? `${ApiUrl}${product.image}`
+            : `${ApiUrl}/storage/${product.image}`
 
           return (
             <motion.div
               key={product.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.3 }}
               onHoverStart={() => setHoveredProduct(product.id)}
               onHoverEnd={() => setHoveredProduct(null)}
-              className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 group"
+              className="bg-white rounded-2xl shadow-lg hover:shadow-xl overflow-hidden border-0 group transition-all duration-300 hover:-translate-y-1"
             >
               <Link href={`/product/${product.id}`} className="block">
-                <div className="relative">
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                   <motion.img
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "tween" }}
-                    src={product.image}
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ type: "tween", duration: 0.3 }}
+                    src={imageSrc}
                     alt={product.name}
-                    className="w-full h-48 object-contain p-4 cursor-pointer"
+                    className="w-full h-full object-contain p-4 cursor-pointer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder-product.png'
+                    }}
                   />
 
-                  {product.discount > 0 && (
-                    <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">-{product.discount}%</Badge>
-                  )}
+                  {/* Overlay gradient al hacer hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  {product.isNew && (
-                    <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600">Nuevo</Badge>
-                  )}
+                  {/* Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    {product.discount > 0 && (
+                      <Badge className="bg-red-600 text-white shadow-lg px-3 py-1 font-bold text-xs border-2 border-white/20">
+                        -{product.discount}%
+                      </Badge>
+                    )}
+                    {product.isNew && (
+                      <Badge className="bg-green-600 text-white shadow-lg px-3 py-1 font-bold text-xs border-2 border-white/20">
+                        Nuevo
+                      </Badge>
+                    )}
+                  </div>
 
+                  {/* Botones de acción al hacer hover */}
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: hoveredProduct === product.id ? 1 : 0 }}
-                    className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: hoveredProduct === product.id ? 1 : 0,
+                      y: hoveredProduct === product.id ? 0 : 10
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10"
                   >
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="secondary">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" onClick={(e) => addToCart(product, e)}>
-                        <ShoppingCart className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      className="bg-white/95 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-[#1B3C53] hover:bg-[#2d5a7a] text-white shadow-lg"
+                      onClick={(e) => addToCart(product, e)}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                    </Button>
                   </motion.div>
+
+                  {/* Botón de favoritos */}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className={`absolute top-3 right-3 bg-white/95 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200 ${isFavorite ? "text-red-600" : "text-gray-600"} hover:text-red-600`}
+                    onClick={(e) => toggleFavorite(product, e)}
+                  >
+                    <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                    <span className="sr-only">Añadir a favoritos</span>
+                  </Button>
                 </div>
 
-                <div className="p-4">
-                  <div className="text-xs text-purple-600 font-medium mb-1">{product.subcategory}</div>
-                  <h3 className="font-medium text-gray-800 mb-1 truncate">{product.name}</h3>
-                  <div className="flex items-center mb-2">
-                    <div className="flex text-yellow-400">
+                <div className="p-5 space-y-3">
+                  {/* Subcategoría */}
+                  {product.subcategory && (
+                    <div className="text-xs font-semibold text-[#456882] uppercase tracking-wide">
+                      {product.subcategory}
+                    </div>
+                  )}
+
+                  {/* Nombre del producto */}
+                  <h3 className="font-bold text-lg text-[#1B3C53] line-clamp-2 min-h-[3.5rem] group-hover:text-[#2d5a7a] transition-colors">
+                    {product.name}
+                  </h3>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-yellow-400 gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < Math.floor(product.rating) ? "fill-current" : "stroke-current fill-none"
+                            i < Math.floor(product.rating || 0) 
+                              ? "fill-current" 
+                              : "stroke-current fill-none opacity-30"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500 ml-1">({product.rating})</span>
+                    <span className="text-xs text-[#456882] font-medium">
+                      ({product.rating || 0})
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className={`${isFavorite ? "text-red-500" : "text-gray-500"} hover:text-red-500`}
-                      onClick={(e) => toggleFavorite(product, e)}
-                    >
-                      <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                      <span className="sr-only">Añadir a favoritos</span>
-                    </Button>
+                  {/* Precio */}
+                  <div className="flex items-baseline gap-2 pt-2">
+                    <span className="text-2xl font-bold text-[#1B3C53]">
+                      ${finalPrice.toFixed(2)}
+                    </span>
+                    {originalPrice && (
+                      <span className="text-sm text-gray-400 line-through">
+                        ${originalPrice.toFixed(2)}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Stock */}
+                  {product.stock !== undefined && (
+                    <div className="pt-2">
+                      {product.stock > 0 ? (
+                        <Badge className="bg-green-100 text-green-700 border border-green-300 text-xs font-semibold">
+                          En Stock
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-red-100 text-red-700 border border-red-300 text-xs font-semibold">
+                          Agotado
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Link>
             </motion.div>
