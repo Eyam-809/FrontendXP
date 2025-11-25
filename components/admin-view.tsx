@@ -6,6 +6,7 @@ import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import CheckoutModal from "@/components/checkout-modal"
 import { ApiUrl } from "@/lib/config"
+import Superset from "@/components/Superset"
 
 interface AdminStats {
   total_users?: number
@@ -121,38 +122,44 @@ export default function AdminView() {
         )}
 
         {!loading && !error && adminStats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-white rounded shadow">
-              <div className="text-sm text-muted-foreground">Usuarios</div>
-              <div className="text-2xl font-bold">{(adminStats.total_users ?? 0).toLocaleString()}</div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-white rounded shadow">
+                <div className="text-sm text-muted-foreground">Usuarios</div>
+                <div className="text-2xl font-bold">{(adminStats.total_users ?? 0).toLocaleString()}</div>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow">
+                <div className="text-sm text-muted-foreground">Ventas Totales</div>
+                <div className="text-2xl font-bold">{(adminStats.total_sales ?? 0).toLocaleString()}</div>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow">
+                <div className="text-sm text-muted-foreground">Productos</div>
+                <div className="text-2xl font-bold">{(adminStats.total_products ?? 0).toLocaleString()}</div>
+              </div>
+
+              <div className="p-4 bg-white rounded shadow col-span-1 md:col-span-3">
+                <div className="text-sm text-muted-foreground">Pedidos pendientes</div>
+                <div className="text-2xl font-bold">{(adminStats.pending_orders ?? 0).toLocaleString()}</div>
+              </div>
+
+              {/* mostrar cualquier otra clave útil */}
+              {Object.keys(adminStats).map((k) => (
+                ["total_users","total_sales","total_products","pending_orders"].includes(k) ? null : (
+                  <div key={k} className="p-3 bg-card rounded">
+                    <div className="text-xs text-muted-foreground">{k}</div>
+                    <div className="font-medium">{String(adminStats[k])}</div>
+                  </div>
+                )
+              ))}
             </div>
 
-            <div className="p-4 bg-white rounded shadow">
-              <div className="text-sm text-muted-foreground">Ventas Totales</div>
-              <div className="text-2xl font-bold">{(adminStats.total_sales ?? 0).toLocaleString()}</div>
-            </div>
+            {/* Iframe de Superset */}
+            <Superset dashboardId="f8416863-b8d0-4013-bf37-92d66d027b01" />
 
-            <div className="p-4 bg-white rounded shadow">
-              <div className="text-sm text-muted-foreground">Productos</div>
-              <div className="text-2xl font-bold">{(adminStats.total_products ?? 0).toLocaleString()}</div>
-            </div>
-
-            <div className="p-4 bg-white rounded shadow col-span-1 md:col-span-3">
-              <div className="text-sm text-muted-foreground">Pedidos pendientes</div>
-              <div className="text-2xl font-bold">{(adminStats.pending_orders ?? 0).toLocaleString()}</div>
-            </div>
-
-            {/* mostrar cualquier otra clave útil */}
-            {Object.keys(adminStats).map((k) => (
-              ["total_users","total_sales","total_products","pending_orders"].includes(k) ? null : (
-                <div key={k} className="p-3 bg-card rounded">
-                  <div className="text-xs text-muted-foreground">{k}</div>
-                  <div className="font-medium">{String(adminStats[k])}</div>
-                </div>
-              )
-            ))}
-          </div>
-        )}
+          </>
+         )}
       </main>
     </div>
   )
