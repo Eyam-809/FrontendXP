@@ -11,7 +11,7 @@ import Footer from "@/components/footer"
 import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import CategoryPanel from "@/components/category-panel"
-import CheckoutModal from "@/components/checkout-modal"
+// import CheckoutModal from "@/components/checkout-modal" // Importante para la API, no eliminar
 import AnnounceBar from "@/components/announce-bar"
 import { useApp } from "@/contexts/app-context"
 import { products } from "@/data/products"
@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import FilteredProductsGrid from "@/components/filtered-products-grid"
 import AdminView from "@/components/admin-view"
 import storage from "@/lib/storage"
+import MobileHomePage from "@/app/mobile/page"
 
 export default function Home() {
   const { state, dispatch } = useApp()
@@ -83,7 +84,12 @@ export default function Home() {
     return <AdminView />
   }
 
-  // Vista normal para todos los demás usuarios
+  // Si es mobile, mostrar la vista móvil
+  if (isMobile) {
+    return <MobileHomePage />
+  }
+
+  // Vista normal para web (todos los demás usuarios)
   return (
     <div className="min-h-screen bg-[#F9F3EF]">
       <Navbar />
@@ -103,7 +109,8 @@ export default function Home() {
       <Footer />
       <CartSidebar />
       <FavoritesSidebar />
-      <CheckoutModal onClose={() => {}} />
+      {/* <CheckoutModal onClose={() => {}} /> */}
+      {/* CheckoutModal comentado - ahora se usa la página /checkout en su lugar. Importante para la API, no eliminar */}
     </div>
   )
 }

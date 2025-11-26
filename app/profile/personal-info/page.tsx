@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { ApiUrl } from "@/lib/config"
 import { useApp } from "@/contexts/app-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { 
   User, 
   Mail, 
@@ -25,7 +26,8 @@ import {
   Heart,
   ShoppingCart,
   MessageCircle,
-  Plus
+  Plus,
+  Menu
 } from "lucide-react"
 import Link from "next/link"
 import AddProductModal from "@/components/add-product-modal"
@@ -36,6 +38,9 @@ import CartItemsList from "@/components/cart-items-list"
 import ChatConversations from "@/components/chat-conversations"
 import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
 import Navbar from "@/components/navbar"
+import { useIsMobile } from "@/hooks/use-mobile"
+import MobileNavbar from "@/components/mobile/mobile-navbar"
+import "./mobile-profile.css"
 
 interface UserData {
   name: string
@@ -63,6 +68,10 @@ interface UserProduct {
 }
 
 export default function PersonalInfoPage() {
+  const isMobile = useIsMobile()
+  const [activeTab, setActiveTab] = useState("personal-info")
+  const [sheetOpen, setSheetOpen] = useState(false)
+  
   // Método para guardar solo datos del usuario (sin imagen)
   const saveUserInfo = async () => {
     setIsSaving(true);
@@ -881,18 +890,303 @@ const handleCloseDeleteModal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F3EF]">
-      <Navbar />
+    <div className={`min-h-screen bg-[#F9F3EF] ${isMobile ? 'mobile-profile-container' : ''}`}>
+      {isMobile ? <MobileNavbar /> : <Navbar />}
       {/* Header con imagen de portada */}
-      <div className="relative h-64 bg-gradient-to-r from-[#1B3C53] to-[#456882]">
+      <div className={`relative ${isMobile ? 'mobile-profile-header' : 'h-64'} bg-gradient-to-r from-[#1B3C53] to-[#456882]`}>
         <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="flex items-end space-x-4">
-             <Avatar className="h-24 w-24 border-4 border-white">
+        <div className={`absolute ${isMobile ? 'bottom-1 left-1 right-1' : 'bottom-4 left-4 right-4'}`}>
+          <div className={`flex items-end ${isMobile ? 'mobile-profile-header-content' : 'space-x-4'} ${isMobile ? 'flex-wrap gap-2' : ''}`}>
+             <Avatar className={`${isMobile ? 'h-16 w-16 border-2' : 'h-24 w-24 border-4'} border-white flex-shrink-0`}>
                           {userInfo?.foto || currentUser?.foto ? (
                             <AvatarImage
                               src={
                                 // Si es base64, úsalo directamente
+                                (userInfo?.foto?.startsWith("data:image")
+                                  ? userInfo.foto
+                                  : userInfo?.foto
+                                  ? `${ApiUrl}/storage/${userInfo.foto}`
+                                  : currentUser?.foto?.startsWith("data:image")
+                                  ? currentUser.foto
+                                  : currentUser?.foto
+                                  ? `${ApiUrl}/storage/${currentUser.foto}`
+                                  : undefined)
+                              }
+                              alt={currentUser?.name || "Usuario"}
+                            />
+                          ) : null}
+
+                          <AvatarFallback className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold bg-[#1B3C53] text-white`}>
+                            {(currentUser?.name && currentUser.name.trim()
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "U")}
+                          </AvatarFallback>
+                        </Avatar>
+            <div className={`flex-1 text-white ${isMobile ? 'min-w-0' : ''}`}>
+              <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold break-words`}>{currentUser.name}</h1>
+              <p className={`${isMobile ? 'text-sm' : 'text-lg'} opacity-90 mt-1`}>Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
+              <div className={`flex items-center ${isMobile ? 'flex-wrap gap-2' : 'space-x-4'} mt-2`}>
+                <div className="flex items-center space-x-1">
+                  <Package className="h-4 w-4 flex-shrink-0" />
+                  <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{userProducts.length} productos</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                  <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>{totalSales} ventas</span>
+                </div>
+              </div>
+            </div>
+            {!isMobile && (
+            <Link href="/profile/rewards">
+              <Button variant="outline" className="bg-white text-[#1B3C53] hover:bg-[#F9F3EF] border-[#E8DDD4]">
+                <Star className="h-4 w-4 mr-2" />
+                Mis Puntos
+              </Button>
+            </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Contenido principal */}
+      <div className={`${isMobile ? 'mobile-profile-content' : 'container mx-auto px-4 py-8'}`}>
+        {isMobile ? (
+          <>
+            {/* Información personal móvil (equivalente al sidebar) */}
+            <Card className="mobile-profile-card mb-4">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <User className="h-5 w-5" />
+                  <span>Información personal</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-[#456882] text-sm">
+                    Actualiza tu información personal y datos de contacto para mantener tu perfil actualizado.
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <Mail className="h-4 w-4 text-[#456882]" />
+                    <span className="text-sm">{currentUser.email}</span>
+                  </div>
+                  {currentUser.phone && (
+                    <div className="flex items-center space-x-3">
+                      <Phone className="h-4 w-4 text-[#456882]" />
+                      <span className="text-sm">{currentUser.phone}</span>
+                    </div>
+                  )}
+                  {currentUser.address && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="h-4 w-4 text-[#456882]" />
+                      <span className="text-sm">{currentUser.address}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-4 w-4 text-[#456882]" />
+                    <span className="text-sm">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-red-600">{userProducts.length}</div>
+                      <div className="text-sm text-gray-500">Productos</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-[#1B3C53]">{totalSales}</div>
+                      <div className="text-sm text-[#456882]">Ventas</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Estadísticas móviles */}
+            <div className="mb-4">
+              <UserStats
+                totalProducts={userProducts.length}
+                totalSales={currentUser.totalSales || 45}
+                rating={currentUser.rating || 4.8}
+                followers={156}
+                following={89}
+                activeProducts={userProducts.filter(p => p.status === 'active').length}
+                soldProducts={userProducts.filter(p => p.status === 'sold').length}
+              />
+            </div>
+
+            {/* Tabs móviles con todo el contenido */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {isMobile ? (
+                <>
+                  {/* Botón para abrir el menú deslizante en móvil */}
+                  <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                      <Button 
+                        className="w-full justify-between bg-[#E8DDD4] text-[#1B3C53] hover:bg-[#D6C9BB] h-14 text-base font-semibold mb-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          {activeTab === "personal-info" && <User className="h-5 w-5" />}
+                          {activeTab === "products" && <Package className="h-5 w-5" />}
+                          {activeTab === "favorites" && <Heart className="h-5 w-5" />}
+                          {activeTab === "cart" && <ShoppingCart className="h-5 w-5" />}
+                          {activeTab === "conversations" && <MessageCircle className="h-5 w-5" />}
+                          <span>
+                            {activeTab === "personal-info" && "Mi Información"}
+                            {activeTab === "products" && "Mis Productos"}
+                            {activeTab === "favorites" && "Favoritos"}
+                            {activeTab === "cart" && "Mi Carrito"}
+                            {activeTab === "conversations" && "Conversaciones"}
+                          </span>
+                        </div>
+                        <Menu className="h-5 w-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[75vh] max-h-[600px] rounded-t-3xl">
+                      <SheetHeader>
+                        <SheetTitle className="text-xl font-bold text-[#1B3C53] mb-2 text-center">Selecciona una opción</SheetTitle>
+                      </SheetHeader>
+                      <div className="space-y-3 mt-6 pb-4">
+                        <Button
+                          variant={activeTab === "personal-info" ? "default" : "outline"}
+                          className={`w-full justify-start h-14 text-base ${
+                            activeTab === "personal-info"
+                              ? "bg-[#1B3C53] text-white hover:bg-[#1B3C53]"
+                              : "bg-white text-[#1B3C53] hover:bg-[#E8DDD4]"
+                          }`}
+                          onClick={() => {
+                            setActiveTab("personal-info")
+                            setSheetOpen(false)
+                          }}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          Mi Información
+                        </Button>
+                        <Button
+                          variant={activeTab === "products" ? "default" : "outline"}
+                          className={`w-full justify-start h-14 text-base ${
+                            activeTab === "products"
+                              ? "bg-[#1B3C53] text-white hover:bg-[#1B3C53]"
+                              : "bg-white text-[#1B3C53] hover:bg-[#E8DDD4]"
+                          }`}
+                          onClick={() => {
+                            setActiveTab("products")
+                            setSheetOpen(false)
+                          }}
+                        >
+                          <Package className="h-5 w-5 mr-3" />
+                          Mis Productos
+                        </Button>
+                        <Button
+                          variant={activeTab === "favorites" ? "default" : "outline"}
+                          className={`w-full justify-start h-14 text-base ${
+                            activeTab === "favorites"
+                              ? "bg-[#1B3C53] text-white hover:bg-[#1B3C53]"
+                              : "bg-white text-[#1B3C53] hover:bg-[#E8DDD4]"
+                          }`}
+                          onClick={() => {
+                            setActiveTab("favorites")
+                            setSheetOpen(false)
+                          }}
+                        >
+                          <Heart className="h-5 w-5 mr-3" />
+                          Favoritos
+                          {favoriteProducts.length > 0 && (
+                            <Badge className="ml-auto bg-red-500 text-white">
+                              {favoriteProducts.length}
+                            </Badge>
+                          )}
+                        </Button>
+                        <Button
+                          variant={activeTab === "cart" ? "default" : "outline"}
+                          className={`w-full justify-start h-14 text-base ${
+                            activeTab === "cart"
+                              ? "bg-[#1B3C53] text-white hover:bg-[#1B3C53]"
+                              : "bg-white text-[#1B3C53] hover:bg-[#E8DDD4]"
+                          }`}
+                          onClick={() => {
+                            setActiveTab("cart")
+                            setSheetOpen(false)
+                          }}
+                        >
+                          <ShoppingCart className="h-5 w-5 mr-3" />
+                          Mi Carrito
+                          {purchasedProducts.length > 0 && (
+                            <Badge className="ml-auto bg-blue-500 text-white">
+                              {purchasedProducts.length}
+                            </Badge>
+                          )}
+                        </Button>
+                        <Button
+                          variant={activeTab === "conversations" ? "default" : "outline"}
+                          className={`w-full justify-start h-14 text-base ${
+                            activeTab === "conversations"
+                              ? "bg-[#1B3C53] text-white hover:bg-[#1B3C53]"
+                              : "bg-white text-[#1B3C53] hover:bg-[#E8DDD4]"
+                          }`}
+                          onClick={() => {
+                            setActiveTab("conversations")
+                            setSheetOpen(false)
+                          }}
+                        >
+                          <MessageCircle className="h-5 w-5 mr-3" />
+                          Conversaciones
+                        </Button>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </>
+              ) : (
+                <TabsList className="grid w-full grid-cols-5 bg-[#E8DDD4]">
+                  <TabsTrigger value="personal-info" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
+                    <User className="h-4 w-4" />
+                    <span>Mi Información</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="products" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
+                    <Package className="h-4 w-4" />
+                    <span>Mis Productos</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="favorites" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
+                    <Heart className="h-4 w-4" />
+                    <span>Favoritos</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="cart" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>Carrito</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="conversations" className="flex items-center space-x-2 data-[state=active]:bg-[#1B3C53] data-[state=active]:text-[#F9F3EF] text-[#1B3C53]">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Conversaciones</span>
+                  </TabsTrigger>
+                </TabsList>
+              )}
+
+              <TabsContent value="personal-info" className="mt-6">
+                <div className="space-y-6">
+                  {/* Foto de perfil */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <User className="h-5 w-5" />
+                        <span>Foto de perfil</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Esta es la foto que verán otros usuarios
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-24 w-24 border-4 border-white">
+                          {userInfo?.foto || currentUser?.foto ? (
+                            <AvatarImage
+                              src={
                                 (userInfo?.foto?.startsWith("data:image")
                                   ? userInfo.foto
                                   : userInfo?.foto
@@ -917,33 +1211,234 @@ const handleCloseDeleteModal = () => {
                               : "U")}
                           </AvatarFallback>
                         </Avatar>
-            <div className="flex-1 text-white">
-              <h1 className="text-3xl font-bold">{currentUser.name}</h1>
-              <p className="text-lg opacity-90">Miembro desde {new Date(currentUser.joinDate || new Date()).toLocaleDateString()}</p>
-              <div className="flex items-center space-x-4 mt-2">
-                
-                <div className="flex items-center space-x-1">
-                  <Package className="h-4 w-4" />
-                  <span className="text-sm">{userProducts.length} productos</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-sm">{totalSales} ventas</span>
-                </div>
-              </div>
-            </div>
-            <Link href="/profile/rewards">
-              <Button variant="outline" className="bg-white text-[#1B3C53] hover:bg-[#F9F3EF] border-[#E8DDD4]">
-                <Star className="h-4 w-4 mr-2" />
-                Mis Puntos
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
 
-      {/* Contenido principal */}
-      <div className="container mx-auto px-4 py-8">
+                        <div>
+                          <Button variant="outline"
+                          onClick={() => {
+                            const fileInput = document.getElementById("fileInput");
+                            if (fileInput) {
+                              fileInput.click();
+                            }
+                          }}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Cambiar foto
+                          </Button>
+                          <input
+                            id="fileInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleChangePhoto}
+                            className="hidden"
+                          />
+                          <p className="text-sm text-[#456882] mt-1">
+                            JPG, PNG hasta 5MB
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Información personal */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <User className="h-5 w-5" />
+                        <span>Información personal</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Actualiza tu información personal
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Nombre completo *</Label>
+                            <Input
+                              id="name"
+                              value={formData.name}
+                              onChange={(e) => handleInputChange('name', e.target.value)}
+                              disabled={!isEditing || isSaving}
+                              placeholder="Tu nombre completo"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Correo electrónico *</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange('email', e.target.value)}
+                              disabled={!isEditing || isSaving}
+                              placeholder="tu@email.com"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Teléfono</Label>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              disabled={!isEditing}
+                              placeholder="+52 55 1234 5678"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="joinDate">Fecha de registro</Label>
+                            <Input
+                              id="joinDate"
+                              type="date"
+                              value={formData.joinDate ? new Date(formData.joinDate).toISOString().split('T')[0] : ''}
+                              onChange={(e) => handleInputChange('joinDate', e.target.value)}
+                              disabled={true}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="address">Dirección</Label>
+                          <Input
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => handleInputChange('address', e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="Tu dirección completa"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Información de la cuenta */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Settings className="h-5 w-5" />
+                        <span>Información de la cuenta</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Datos de tu cuenta de XPmarket
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-[#E8DDD4] rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Mail className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium">Correo electrónico</p>
+                              <p className="text-sm text-gray-600">{currentUser.email}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Cambiar
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-[#E8DDD4] rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Calendar className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium">Miembro desde</p>
+                              <p className="text-sm text-gray-600">
+                                {currentUser.joinDate ? new Date(currentUser.joinDate).toLocaleDateString() : "No disponible"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Botones de acción */}
+                  <div className="flex justify-end space-x-4">
+                    {isEditing ? (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleCancel}
+                          disabled={isSaving}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          onClick={handleSave} 
+                          className="bg-red-600 hover:bg-red-700"
+                          disabled={isSaving}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSaving ? "Guardando..." : "Guardar cambios con imagen"}
+                        </Button>
+                        <Button 
+                          onClick={saveUserInfo} 
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          disabled={isSaving}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {isSaving ? "Guardando..." : "Guardar solo datos"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => setIsEditing(true)} className="bg-[#E63946] hover:bg-[#D62828] text-white">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar información
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="products" className="mt-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mis Productos</h2>
+                  <AddProductModal onProductAdded={() => setRefresh(r => !r)} />
+                </div>
+
+                <UserProductsGrid 
+                  products={userProducts}
+                  onEdit={(productId) => {
+                    console.log('Editar producto:', productId)
+                  }}
+                  onDelete={deleteUserProduct} 
+                  onToggleStatus={(productId, status) => {
+                    console.log('Cambiar estado del producto:', productId, status)
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="favorites" className="mt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mis Favoritos</h2>
+                  <Badge className="bg-[#F9F3EF] text-[#1B3C53] border border-[#E8DDD4] px-4 py-1 font-semibold">
+                    {favoriteProducts.length} {favoriteProducts.length === 1 ? 'producto' : 'productos'}
+                  </Badge>
+                </div>
+                <FavoritesGrid products={favoriteProducts} />
+              </TabsContent>
+
+              <TabsContent value="cart" className="mt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#1B3C53]">Mi Carrito</h2>
+                  <Badge className="bg-[#F9F3EF] text-[#1B3C53] border border-[#E8DDD4] px-4 py-1 font-semibold">
+                    {purchasedProducts.length} {purchasedProducts.length === 1 ? 'producto' : 'productos'}
+                  </Badge>
+                </div>
+                <CartItemsList items={purchasedProducts} />
+              </TabsContent>
+
+              <TabsContent value="conversations" className="mt-6">
+                <h2 className="text-2xl font-bold mb-6 text-[#1B3C53]">Mis Conversaciones</h2>
+                <ChatConversations conversations={conversations} onSendMessage={sendMessage} />
+              </TabsContent>
+            </Tabs>
+          </>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sidebar con información del usuario */}
           <div className="lg:col-span-1">
@@ -1006,8 +1501,6 @@ const handleCloseDeleteModal = () => {
               rating={currentUser.rating || 4.8}
               followers={156}
               following={89}
-              totalViews={userProducts.reduce((sum, p) => sum + p.views, 0)}
-              totalLikes={userProducts.reduce((sum, p) => sum + p.likes, 0)}
               activeProducts={userProducts.filter(p => p.status === 'active').length}
               soldProducts={userProducts.filter(p => p.status === 'sold').length}
             />
@@ -1312,6 +1805,7 @@ const handleCloseDeleteModal = () => {
             </Tabs>
           </div>
         </div>
+        )}
       </div>
 
       {/* Modal de confirmación de eliminación */}

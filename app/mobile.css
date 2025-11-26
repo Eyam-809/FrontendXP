@@ -1,0 +1,280 @@
+/* Estilos específicos para Mobile (max-width: 767px) */
+
+@media (max-width: 767px) {
+  /* Variables CSS específicas para mobile */
+  :root {
+    --mobile-padding: 1rem;
+    --mobile-spacing: 0.75rem;
+    --mobile-font-size-base: 14px;
+    --mobile-font-size-sm: 12px;
+    --mobile-font-size-lg: 16px;
+    --mobile-radius: 0.75rem;
+    --mobile-gap: 1rem;
+  }
+
+  /* Tipografía móvil optimizada */
+  body {
+    font-size: var(--mobile-font-size-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Contenedores móviles */
+  .container {
+    padding-left: var(--mobile-padding);
+    padding-right: var(--mobile-padding);
+    max-width: 100%;
+  }
+
+  /* Estilos móviles aplicados automáticamente dentro de esta media query */
+
+  /* Mejoras de touch para móvil */
+  button,
+  a,
+  [role="button"],
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Scroll suave en móvil */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Optimización de imágenes en móvil */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Espaciado entre elementos en móvil */
+  .space-y-mobile > * + * {
+    margin-top: var(--mobile-spacing);
+  }
+
+  .space-x-mobile > * + * {
+    margin-left: var(--mobile-spacing);
+  }
+
+  /* Grids y layouts móviles */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cards móviles optimizadas */
+  .mobile-card {
+    border-radius: var(--mobile-radius);
+    padding: var(--mobile-padding);
+  }
+
+  /* Texto truncado en móvil */
+  .mobile-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Botones móviles optimizados */
+  .mobile-button {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: var(--mobile-font-size-base);
+    border-radius: var(--mobile-radius);
+  }
+
+  /* Inputs móviles optimizados */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px; /* Previene zoom en iOS */
+    padding: 0.75rem;
+    border-radius: var(--mobile-radius);
+  }
+
+  /* Modals y dialogs móviles */
+  .mobile-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: var(--mobile-radius) var(--mobile-radius) 0 0;
+  }
+
+  /* Navegación móvil */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+
+  /* Asegurar que todos los componentes móviles sean responsivos */
+  .mobile-product-grid-section,
+  .mobile-product-detail,
+  .mobile-page {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  /* Mejorar visibilidad de todos los botones móviles */
+  button.mobile-product-cart-button,
+  button.mobile-add-to-cart-button,
+  button.mobile-resubmit-button,
+  .mobile-quantity-button,
+  .mobile-back-button,
+  .mobile-favorite-button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(27, 60, 83, 0.1);
+  }
+
+  /* Grid responsivo mejorado para productos móviles */
+  .mobile-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Adaptaciones para el Profile en móvil */
+  .mobile-profile-container .container {
+    padding: 0;
+  }
+
+  .mobile-profile-container .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-profile-container .lg\\:col-span-1,
+  .mobile-profile-container .lg\\:col-span-2 {
+    grid-column: span 1;
+  }
+
+  .mobile-profile-container .h-64 {
+    height: 200px;
+  }
+
+  .mobile-profile-container .h-24 {
+    height: 4rem;
+    width: 4rem;
+  }
+
+  .mobile-profile-container .text-3xl {
+    font-size: 1.5rem;
+  }
+
+  .mobile-profile-container .text-lg {
+    font-size: 0.875rem;
+  }
+
+  .mobile-profile-container .TabsList {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-profile-container .TabsList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-profile-container .TabsTrigger {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+    min-width: auto;
+  }
+
+  .mobile-profile-container .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-profile-container .space-y-6 {
+    gap: 1rem;
+  }
+
+  .mobile-profile-container .py-8 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .mobile-profile-container .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .mobile-profile-container .gap-8 {
+    gap: 1rem;
+  }
+
+  /* Espaciado responsivo */
+  .mobile-product-grid-section,
+  .mobile-product-content {
+    padding-left: var(--mobile-padding);
+    padding-right: var(--mobile-padding);
+  }
+
+  /* Tipografía responsiva */
+  .mobile-product-title,
+  .mobile-product-grid-title {
+    font-size: clamp(1.125rem, 4vw, 1.5rem);
+  }
+
+  .mobile-product-name {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+  }
+
+  /* Botones responsivos */
+  .mobile-product-cart-button,
+  .mobile-add-to-cart-button {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem);
+  }
+
+  /* Precios responsivos */
+  .mobile-product-price {
+    font-size: clamp(0.875rem, 4vw, 1rem);
+  }
+
+  .mobile-product-price-section .mobile-product-price {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+}
+
+/* Estilos para pantallas muy pequeñas (menos de 375px) */
+@media (max-width: 374px) {
+  :root {
+    --mobile-padding: 0.75rem;
+    --mobile-spacing: 0.5rem;
+    --mobile-font-size-base: 13px;
+  }
+
+  .mobile-product-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .mobile-product-card {
+    max-width: 100%;
+  }
+}
+
+/* Estilos para pantallas medianas móviles (375px - 480px) */
+@media (min-width: 375px) and (max-width: 480px) {
+  .mobile-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+

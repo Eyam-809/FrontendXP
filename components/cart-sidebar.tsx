@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
 import { useState } from "react"
 import { useNotification } from "@/components/ui/notification"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useRouter } from "next/navigation"
 
 export default function CartSidebar() {
   const { state, dispatch } = useApp()
-  const [showCheckout, setShowCheckout] = useState(false)
-  
+  const isMobile = useIsMobile()
+  const router = useRouter()
 
   const updateQuantity = (id: number, quantity: number) => {
     dispatch({ type: "UPDATE_CART_QUANTITY", payload: { id, quantity } })
@@ -28,8 +30,8 @@ export default function CartSidebar() {
   }
 
   const handleCheckout = () => {
-    setShowCheckout(true)
     dispatch({ type: "TOGGLE_CART" })
+    router.push("/checkout")
   }
 
   return (
@@ -41,37 +43,61 @@ export default function CartSidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className={`fixed inset-0 z-50 ${
+                isMobile ? "bg-black/30" : "bg-black/50"
+              }`}
               onClick={() => dispatch({ type: "TOGGLE_CART" })}
             />
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              className="fixed right-0 top-0 h-full w-full sm:w-80 md:w-96 bg-background shadow-xl z-50 overflow-y-auto"
+              className={`fixed right-0 top-0 h-full bg-[#F9F3EF] shadow-2xl z-50 overflow-y-auto ${
+                isMobile ? "w-[85%] max-w-sm" : "w-full sm:w-80 md:w-96"
+              }`}
             >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4 bg-secondary p-3 rounded-lg">
-                  <h2 className="text-lg font-bold flex items-center text-card-foreground">
-                    <ShoppingBag className="mr-2 text-primary" />
-                    Carrito ({state.cart.reduce((sum, item) => sum + item.quantity, 0)})
-                  </h2>
+              {/* Header fijo */}
+              <div className={`sticky top-0 z-10 bg-gradient-to-r from-[#1B3C53] to-[#456882] shadow-lg ${
+                isMobile ? "p-4" : "p-5"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <ShoppingBag className={`${isMobile ? "h-6 w-6" : "h-7 w-7"} text-white`} />
+                    <div>
+                      <h2 className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-white`}>
+                        Mi Carrito
+                      </h2>
+                      <p className={`${isMobile ? "text-xs" : "text-sm"} text-white/90`}>
+                        {state.cart.reduce((sum, item) => sum + item.quantity, 0)} {state.cart.reduce((sum, item) => sum + item.quantity, 0) === 1 ? 'artículo' : 'artículos'}
+                      </p>
+                    </div>
+                  </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={() => dispatch({ type: "TOGGLE_CART" })}
-                    className="hover:bg-accent text-muted-foreground hover:text-card-foreground"
+                    className={`${isMobile ? "h-10 w-10" : "h-11 w-11"} hover:bg-white/30 text-white hover:text-white rounded-full border border-white/30`}
                   >
-                    <X className="h-5 w-5" />
+                    <X className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
                   </Button>
                 </div>
+              </div>
+
+              <div className={isMobile ? "p-3 pb-24" : "p-4 pb-24"}>
 
                 {state.cart.length === 0 ? (
-                  <div className="text-center py-8 bg-secondary rounded-lg">
-                    <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                    <p className="text-card-foreground font-medium mb-3">Tu carrito está vacío</p>
+                  <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-[#E8DDD4] mt-4">
+                    <div className="bg-[#E8DDD4] rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                      <ShoppingBag className="h-10 w-10 text-[#456882]" />
+                    </div>
+                    <p className={`${isMobile ? "text-base" : "text-lg"} font-semibold text-[#1B3C53] mb-2`}>
+                      Tu carrito está vacío
+                    </p>
+                    <p className={`${isMobile ? "text-sm" : "text-base"} text-[#456882] mb-6`}>
+                      Agrega productos para comenzar
+                    </p>
                     <Button 
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground" 
+                      className={`${isMobile ? "h-12 text-base" : "h-14 text-lg"} bg-[#1B3C53] hover:bg-[#456882] text-white font-semibold w-full rounded-lg shadow-md`}
                       onClick={() => dispatch({ type: "TOGGLE_CART" })}
                     >
                       Continuar Comprando
@@ -79,74 +105,87 @@ export default function CartSidebar() {
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 mb-4">
+                    <div className={`space-y-3 ${isMobile ? "mt-3" : "mt-4"} mb-4`}>
                       {state.cart.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-3 p-3 border border-border rounded-lg bg-card shadow-sm">
+                        <div key={item.id} className={`flex items-start ${isMobile ? "gap-2 p-3" : "gap-3 p-4"} bg-white rounded-xl shadow-sm border border-[#E8DDD4]`}>
                           <img
                             src={item.image || "/placeholder.svg"}
                             alt={item.name}
-                            className="w-12 h-12 object-contain rounded border border-border"
+                            className={`${isMobile ? "w-16 h-16" : "w-20 h-20"} object-contain rounded-lg border border-[#E8DDD4] flex-shrink-0`}
                           />
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm text-card-foreground truncate">{item.name}</h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="font-bold text-primary">${Number(item.price).toFixed(2)}</span>
+                            <h3 className={`${isMobile ? "text-sm" : "text-base"} font-bold text-[#1B3C53] mb-2 line-clamp-2`}>
+                              {item.name}
+                            </h3>
+                            <div className="flex items-center justify-between mt-3">
+                              <span className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#456882]`}>
+                                ${Number(item.price).toFixed(2)}
+                              </span>
+                              <div className="flex items-center space-x-1 bg-[#E8DDD4] rounded-lg p-1.5 border border-[#D4C4B5]">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`${isMobile ? "h-9 w-9" : "h-10 w-10"} hover:bg-[#1B3C53] hover:text-white rounded-md transition-all`}
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <Minus className={`${isMobile ? "h-4 w-4" : "h-5 w-5"} ${item.quantity <= 1 ? "text-gray-400" : "text-[#1B3C53]"}`} />
+                                </Button>
+                                <span className={`${isMobile ? "w-10 text-base" : "w-12 text-lg"} text-center font-bold text-[#1B3C53]`}>
+                                  {item.quantity}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`${isMobile ? "h-9 w-9" : "h-10 w-10"} hover:bg-[#1B3C53] hover:text-white rounded-md transition-all`}
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                >
+                                  <Plus className={`${isMobile ? "h-4 w-4" : "h-5 w-5"} text-[#1B3C53]`} />
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 border-border hover:bg-accent"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            >
-                              <Minus className="h-3 w-3 text-muted-foreground" />
-                            </Button>
-                            <span className="w-6 text-center text-sm font-medium text-card-foreground">{item.quantity}</span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 border-border hover:bg-accent"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            >
-                              <Plus className="h-3 w-3 text-muted-foreground" />
-                            </Button>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className={`${isMobile ? "h-8 w-8" : "h-10 w-10"} text-red-500 hover:text-white hover:bg-red-500 rounded-lg flex-shrink-0`}
                             onClick={() => removeItem(item.id)}
                           >
-                            <X className="h-3 w-3" />
+                            <X className={`${isMobile ? "h-4 w-4" : "h-5 w-5"}`} />
                           </Button>
                         </div>
                       ))}
                     </div>
-
-                    <div className="border-t border-border pt-3 bg-secondary p-3 rounded-lg">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-base font-semibold text-card-foreground">Total:</span>
-                        <span className="text-lg font-bold text-primary">${getTotalPrice().toFixed(2)}</span>
-                      </div>
-                      <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                        onClick={handleCheckout}
-                      >
-                        Proceder al Pago
-                      </Button>
-                    </div>
                   </>
                 )}
               </div>
+
+              {/* Footer fijo con total y botón de pago */}
+              {state.cart.length > 0 && (
+                <div className={`fixed bottom-0 right-0 ${isMobile ? "w-[85%] max-w-sm" : "w-full sm:w-80 md:w-96"} bg-white border-t-4 border-[#1B3C53] shadow-2xl z-10`}>
+                  <div className={`${isMobile ? "p-4" : "p-5"} space-y-4 bg-gradient-to-b from-white to-[#F9F3EF]`}>
+                    <div className="flex justify-between items-center bg-[#E8DDD4] rounded-lg p-3 border border-[#D4C4B5]">
+                      <span className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#1B3C53]`}>
+                        Total:
+                      </span>
+                      <span className={`${isMobile ? "text-2xl" : "text-3xl"} font-extrabold text-[#1B3C53]`}>
+                        ${getTotalPrice().toFixed(2)}
+                      </span>
+                    </div>
+                    <Button
+                      className={`${isMobile ? "h-14 text-base" : "h-16 text-lg"} w-full bg-gradient-to-r from-[#1B3C53] via-[#456882] to-[#1B3C53] hover:from-[#456882] hover:via-[#1B3C53] hover:to-[#456882] text-white font-extrabold rounded-xl shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border-2 border-[#1B3C53]`}
+                      onClick={handleCheckout}
+                    >
+                      Proceder al Pago
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {showCheckout && (
-        <CheckoutModal isOpen={showCheckout} onClose={() => setShowCheckout(false)} total={getTotalPrice()} />
-      )}
     </>
   )
 }

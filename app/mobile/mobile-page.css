@@ -1,0 +1,21 @@
+/* Mobile Page Styles */
+.mobile-page {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-main {
+  flex: 1;
+  width: 100%;
+  padding-bottom: 1rem;
+}
+
+/* Override some global styles for mobile */
+@media (max-width: 767px) {
+  .mobile-page {
+    padding-bottom: 0;
+  }
+}
+

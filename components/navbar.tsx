@@ -211,7 +211,7 @@ export default function Navbar() {
               </SheetContent>
             </Sheet>
             <Link href="/" className="flex items-center" onClick={handleResetFilters}>
-              <img src="/logonuevo.png" alt="XpMarket Logo" className="h-16 w-auto ml-2 md:h-32 md:ml-0 transition-all duration-200" />
+              <img src="/logonuevo.png" alt="XpMarket Logo" className="h-20 w-auto ml-2 md:h-40 md:ml-0 transition-all duration-200" />
             </Link>
           </div>
 

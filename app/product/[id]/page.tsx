@@ -28,6 +28,8 @@ import { useApp } from "@/contexts/app-context"
 import type { Product } from "@/contexts/app-context"
 import { ApiUrl } from "@/lib/config"
 import { useNotification } from "@/components/ui/notification"
+import { useIsMobile } from "@/hooks/use-mobile"
+import MobileProductDetail from "@/components/mobile/mobile-product-detail"
 
 const translateCategory = (category: string) => {
   const translations: Record<string, string> = {
@@ -68,6 +70,7 @@ export default function ProductPage() {
   const router = useRouter()
   const { state, dispatch } = useApp()
   const { showNotification } = useNotification()
+  const isMobile = useIsMobile()
   const [product, setProduct] = useState<ExtendedProduct | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [mediaIndex, setMediaIndex] = useState(0)
@@ -264,6 +267,11 @@ export default function ProductPage() {
         </div>
       </div>
     )
+  }
+
+  // Si es mobile, usar la vista móvil
+  if (isMobile) {
+    return <MobileProductDetail product={product} />
   }
 
   const price = Number(product.price ?? 0)
