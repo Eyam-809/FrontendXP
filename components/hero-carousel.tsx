@@ -83,7 +83,7 @@ export default function HeroCarousel() {
             <div className="absolute inset-0 w-full h-full flex items-center justify-center">
               <img
                 src={item.image}
-                alt={item.title}
+                alt={`Carousel item ${item.id}`}
                 className="w-full h-full object-cover object-center"
               />
               {/* Overlay sutil para armonía con el diseño */}
@@ -98,7 +98,7 @@ export default function HeroCarousel() {
         onClick={prevSlide}
         variant="ghost"
         size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm rounded-full h-10 w-10 z-10"
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-[#456882]/80 backdrop-blur-sm rounded-full h-10 w-10 z-10 text-white hover:text-white"
       >
         <ChevronLeft className="h-6 w-6" />
         <span className="sr-only">Diapositiva anterior</span>
@@ -108,7 +108,7 @@ export default function HeroCarousel() {
         onClick={nextSlide}
         variant="ghost"
         size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm rounded-full h-10 w-10 z-10"
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-[#456882]/80 backdrop-blur-sm rounded-full h-10 w-10 z-10 text-white hover:text-white"
       >
         <ChevronRight className="h-6 w-6" />
         <span className="sr-only">Siguiente diapositiva</span>

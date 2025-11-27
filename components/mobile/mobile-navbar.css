@@ -28,6 +28,11 @@
   color: hsl(var(--primary-foreground)); /* Blanco para contrastar con fondo azul */
 }
 
+.mobile-menu-button:hover {
+  color: #456882; /* Azul claro al hacer hover */
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .mobile-navbar-logo {
   display: flex;
   align-items: center;
@@ -104,8 +109,13 @@
   min-height: 44px;
 }
 
-.mobile-nav-action:active {
+.mobile-nav-action:hover {
+  color: #456882; /* Azul claro al hacer hover */
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-action:active {
+  background-color: rgba(255, 255, 255, 0.2);
   transform: scale(0.95);
 }
 

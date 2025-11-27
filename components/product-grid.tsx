@@ -166,7 +166,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
                     <Button 
                       size="sm" 
                       variant="secondary"
-                      className="bg-white/95 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200"
+                      className="bg-white/95 hover:bg-[#456882] hover:text-white shadow-lg backdrop-blur-sm border border-gray-200 hover:border-[#456882]"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
@@ -187,7 +187,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className={`absolute top-3 right-3 bg-white/95 hover:bg-white shadow-lg backdrop-blur-sm border border-gray-200 ${isFavorite ? "text-red-600" : "text-gray-600"} hover:text-red-600`}
+                    className={`absolute top-3 right-3 bg-white/95 hover:bg-[#456882] shadow-lg backdrop-blur-sm border border-gray-200 hover:border-[#456882] ${isFavorite ? "text-red-600 hover:text-white" : "text-gray-600 hover:text-white"}`}
                     onClick={(e) => toggleFavorite(product, e)}
                   >
                     <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />

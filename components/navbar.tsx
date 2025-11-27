@@ -188,21 +188,21 @@ export default function Navbar() {
           <div className="flex items-center">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-[#F9F3EF]">
+                <Button variant="ghost" size="icon" className="md:hidden text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="bg-[#1B3C53] p-0 w-1/2 max-w-xs">
                 <nav className="flex flex-col gap-2 text-[#F9F3EF] px-4 py-6">
-                  <Link href="/" className="text-base md:text-lg font-medium hover:text-[#D2C1B6] transition-colors py-2">
+                  <Link href="/" className="text-base md:text-lg font-medium hover:text-[#456882] transition-colors py-2">
                     Inicio
                   </Link>
                   {categories.map((category) => (
                     <button
                       key={category.name}
                       onClick={() => handleCategoryClick(category.name)}
-                      className="text-base md:text-lg font-medium hover:text-[#D2C1B6] transition-colors text-left py-2"
+                      className="text-base md:text-lg font-medium hover:text-[#456882] transition-colors text-left py-2"
                     >
                       {translateCategory(category.name)}
                     </button>
@@ -241,7 +241,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden md:flex text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors"
+                  className="hidden md:flex text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors"
                 >
                   <Bell className="h-5 w-5" />
                   <span className="sr-only">Notificaciones</span>
@@ -252,7 +252,7 @@ export default function Navbar() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors"
+                      className="text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors"
                     >
                       <Globe className="h-5 w-5" />
                       <span className="sr-only">Chat Global</span>
@@ -263,7 +263,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors relative"
+                  className="text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors relative"
                   onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
                 >
                   <Heart className="h-5 w-5" />
@@ -278,7 +278,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors relative"
+                  className="text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors relative"
                   onClick={() => dispatch({ type: "TOGGLE_CART" })}
                 >
                   <ShoppingCart className="h-5 w-5" />
@@ -292,7 +292,7 @@ export default function Navbar() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#456882] transition-colors h-auto p-2">
+                    <Button variant="ghost" className="text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors h-auto p-2">
                       <div className="flex items-center space-x-2">
                         <Avatar className="h-8 w-8">
                           {userFoto ? (
@@ -424,7 +424,7 @@ export default function Navbar() {
               </>
             ) : (
               <Link href="/login">
-                <Button variant="ghost" size="icon" className="text-[#F9F3EF] hover:text-[#D2C1B6] transition-colors">
+                <Button variant="ghost" size="icon" className="text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors">
                   <User className="h-5 w-5" />
                   <span className="sr-only">Cuenta</span>
                 </Button>

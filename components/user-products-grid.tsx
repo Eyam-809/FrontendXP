@@ -124,7 +124,7 @@ const getStatusText = (statusId: number | undefined) => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                  className="absolute top-2 right-2 bg-white/80 hover:bg-[#456882] hover:text-white"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>

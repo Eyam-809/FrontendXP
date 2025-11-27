@@ -56,14 +56,14 @@ export default function FavoritesSidebar() {
                     </p>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
-                  className={`${isMobile ? "h-10 w-10" : "h-11 w-11"} hover:bg-white/20 text-white hover:text-white rounded-full`}
-                >
-                  <X className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
-                </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => dispatch({ type: "TOGGLE_FAVORITES" })}
+                    className={`${isMobile ? "h-10 w-10" : "h-11 w-11"} hover:bg-[#456882]/20 text-white hover:text-[#456882] rounded-full`}
+                  >
+                    <X className={`${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
+                  </Button>
               </div>
             </div>
 
