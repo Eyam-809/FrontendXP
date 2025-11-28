@@ -1,61 +1,102 @@
-"use client";
+"use client"
 
-import React, { useEffect, useRef } from "react";
-import { embedDashboard } from "@superset-ui/embedded-sdk";
+import React, { useEffect, useRef, useState } from "react"
+import { embedDashboard } from "@superset-ui/embedded-sdk"
+import { ApiUrl, SupersetUrl } from "@/lib/config"
+import { Buffer } from "buffer"
 
-interface Props {
-  dashboardId: string; // UUID completo del dashboard
+if (typeof window !== "undefined") {
+  ;(window as any).Buffer = (window as any).Buffer || Buffer
 }
 
-export default function Superset({ dashboardId }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+interface SupersetProps {
+  dashboardId: string
+  height?: number
+}
+
+const Superset: React.FC<SupersetProps> = ({ dashboardId, height = 800 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      if (!containerRef.current) return;
+    let cancelled = false
+
+    const fetchGuestToken = async (): Promise<string> => {
+      const res = await fetch(`${ApiUrl}/api/superset/guest-token`, {
+        credentials: "include",
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        console.error("Error desde Laravel al pedir guest_token:", text)
+        throw new Error(text || "No se pudo obtener el guest token")
+      }
+
+      const data = await res.json()
+      return data.token
+    }
+
+    const doEmbed = async () => {
+      if (!containerRef.current) return
+
+      setLoading(true)
+      setError(null)
 
       try {
         await embedDashboard({
           id: dashboardId,
-          supersetDomain: "http://localhost:8088",
-
-          fetchGuestToken: async () => {
-            const response = await fetch(
-              "http://localhost:8000/api/superset/token",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify({
-                  dashboard_id: dashboardId,
-                }),
-              }
-            );
-
-            const { token } = await response.json();
-            return token;
-          },
-
+          supersetDomain: SupersetUrl,   // 👈 ya usamos la constante
           mountPoint: containerRef.current,
+          fetchGuestToken,
           dashboardUiConfig: {
             hideTitle: false,
+            hideTab: false,
             hideChartControls: true,
           },
-        });
-      } catch (error) {
-        console.error("Error al cargar el dashboard:", error);
+          iframeSandboxExtras: [
+            "allow-same-origin",
+            "allow-forms",
+            "allow-scripts",
+            "allow-popups",
+          ],
+        })
+      } catch (err: any) {
+        if (cancelled) return
+        console.error("Error embebiendo dashboard de Superset:", err)
+        setError(err?.message || "Error al cargar el dashboard de Superset")
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    };
+    }
 
-    loadDashboard();
-  }, [dashboardId]);
+    doEmbed()
+
+    return () => {
+      cancelled = true
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ""
+      }
+    }
+  }, [dashboardId])
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: "100%", height: "1500px", borderRadius: "10px" }}
-    />
-  );
+    <div className="mt-8">
+      {loading && <div>Cargando dashboard de Superset...</div>}
+
+      {error && (
+        <div className="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        style={{ width: "100%", height }}
+        id="superset-dashboard"
+      />
+    </div>
+  )
 }
+
+export default Superset
