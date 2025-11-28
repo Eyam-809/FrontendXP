@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import "./mobile.css"
+import "./web.css"
 import { AppProvider } from "@/contexts/app-context"
 import { NotificationProvider } from "@/components/ui/notification"
 

@@ -1,0 +1,130 @@
+/* Estilos específicos para Web (min-width: 768px) */
+
+@media (min-width: 768px) {
+  /* Variables CSS específicas para web */
+  :root {
+    --web-padding: 2rem;
+    --web-spacing: 1.5rem;
+    --web-font-size-base: 16px;
+    --web-font-size-sm: 14px;
+    --web-font-size-lg: 18px;
+    --web-radius: 1rem;
+    --web-gap: 1.5rem;
+  }
+
+  /* Tipografía web optimizada */
+  body {
+    font-size: var(--web-font-size-base);
+    line-height: 1.6;
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Contenedores web */
+  .container {
+    padding-left: var(--web-padding);
+    padding-right: var(--web-padding);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Estilos web aplicados automáticamente dentro de esta media query */
+
+  /* Scrollbar personalizado para web */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Selección de texto mejorada para web */
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Focus mejorado para web */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Cards web optimizadas */
+  .web-card {
+    border-radius: var(--web-radius);
+    padding: var(--web-padding);
+    transition: all 0.3s ease;
+  }
+
+  /* Grids web optimizados */
+  .web-grid-responsive {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  /* Animaciones suaves para web */
+  @keyframes web-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .web-animate-fade-in {
+    animation: web-fade-in 0.3s ease-out;
+  }
+
+  /* Optimizaciones para pantallas grandes */
+  @media (min-width: 1024px) {
+    :root {
+      --web-padding: 3rem;
+      --web-spacing: 2rem;
+      --web-gap: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container {
+      max-width: 1280px;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    :root {
+      --web-padding: 4rem;
+      --web-spacing: 2.5rem;
+      --web-gap: 2.5rem;
+    }
+
+    .container {
+      max-width: 1400px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .container {
+      max-width: 1600px;
+    }
+  }
+}
+

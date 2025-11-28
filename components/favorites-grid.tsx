@@ -61,10 +61,10 @@ export default function FavoritesGrid({ products }: FavoritesGridProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+              className="absolute top-2 right-2 bg-white/80 hover:bg-[#456882] hover:text-white"
               onClick={() => removeFromFavorites(product.id)}
             >
-              <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+              <Heart className="h-4 w-4 fill-red-500 text-red-500 hover:fill-white hover:text-white" />
             </Button>
 
             {/* Overlay con información rápida */}

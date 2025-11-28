@@ -1,0 +1,674 @@
+/* Mobile Profile Styles */
+@media (max-width: 767px) {
+  .mobile-profile-container {
+    min-height: 100vh;
+    background: hsl(var(--background));
+    overflow-x: hidden;
+  }
+
+  /* Header móvil mejorado */
+  .mobile-profile-header {
+    position: relative;
+    height: 220px;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--muted-foreground)) 100%);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  .mobile-profile-header-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .mobile-profile-header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .mobile-profile-avatar-wrapper {
+    flex-shrink: 0;
+  }
+
+  .mobile-profile-avatar {
+    width: 5rem;
+    height: 5rem;
+    min-width: 5rem;
+    min-height: 5rem;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobile-profile-info {
+    flex: 1;
+    min-width: 0;
+    color: white;
+  }
+
+  .mobile-profile-name {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+  }
+
+  .mobile-profile-meta {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-profile-stats {
+    display: flex;
+    gap: 0.75rem;
+    font-size: clamp(0.625rem, 3vw, 0.75rem);
+    flex-wrap: wrap;
+  }
+
+  .mobile-profile-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  /* Tabs móviles mejorados */
+  .mobile-profile-tabs-list {
+    display: flex;
+    gap: 0.5rem;
+    min-width: max-content;
+    padding: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: hsl(var(--secondary));
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-profile-tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-profile-tabs-list button {
+    white-space: nowrap;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  /* Contenido móvil */
+  .mobile-profile-content {
+    padding: 1rem;
+    padding-bottom: 5rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .mobile-profile-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(27, 60, 83, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ajustes para Cards en móvil */
+  .mobile-profile-container [class*="Card"] {
+    margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .mobile-profile-container [class*="CardHeader"] {
+    padding: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .mobile-profile-container [class*="CardContent"] {
+    padding: 1rem;
+  }
+
+  .mobile-profile-container [class*="CardTitle"] {
+    font-size: clamp(1rem, 4vw, 1.125rem);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .mobile-profile-container [class*="CardDescription"] {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    margin-top: 0.5rem;
+  }
+
+  /* Ajustes para formularios en móvil */
+  .mobile-profile-container input,
+  .mobile-profile-container textarea,
+  .mobile-profile-container select {
+    font-size: 16px !important; /* Previene zoom en iOS */
+    min-height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--border));
+  }
+
+  .mobile-profile-container input:focus,
+  .mobile-profile-container textarea:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  .mobile-profile-container label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--card-foreground));
+  }
+
+  /* Ajustes para botones en móvil */
+  .mobile-profile-container button:not([class*="icon"]) {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+
+  .mobile-profile-container button[class*="icon"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+
+  /* Botones de acción destacados */
+  .mobile-profile-container button[class*="bg-red"],
+  .mobile-profile-container button[class*="bg-blue"],
+  .mobile-profile-container button[class*="bg-\\[#E63946\\]"] {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-profile-container button:active {
+    transform: scale(0.98);
+  }
+
+  /* Grid de productos en móvil */
+  .mobile-profile-container .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .mobile-profile-container .md\\:grid-cols-2,
+  .mobile-profile-container [class*="grid-cols-2"] {
+    grid-template-columns: 1fr;
+  }
+
+  /* Grids de estadísticas */
+  .mobile-profile-container [class*="grid-cols-2"]:not([class*="product"]) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  /* Tabs en móvil */
+  .mobile-profile-container [class*="TabsList"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .mobile-profile-container [class*="TabsList"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-profile-container [class*="TabsTrigger"] {
+    white-space: nowrap;
+    min-width: auto;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Espaciado en móvil */
+  .mobile-profile-container .space-y-6 > * + * {
+    margin-top: 1.25rem;
+  }
+
+  .mobile-profile-container .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  .mobile-profile-container .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .mobile-profile-container .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+
+  /* Avatar en móvil */
+  .mobile-profile-container .h-24,
+  .mobile-profile-container [class*="h-24"] {
+    height: 4rem !important;
+    width: 4rem !important;
+    min-width: 4rem;
+    min-height: 4rem;
+  }
+
+  /* Títulos en móvil */
+  .mobile-profile-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .mobile-profile-container h2 {
+    font-size: 1.25rem;
+  }
+
+  .mobile-profile-container .text-3xl {
+    font-size: 1.5rem;
+  }
+
+  .mobile-profile-container .text-2xl {
+    font-size: 1.25rem;
+  }
+
+  .mobile-profile-container .text-lg {
+    font-size: 0.875rem;
+  }
+
+  .mobile-profile-container .text-sm {
+    font-size: 0.75rem;
+  }
+
+  .mobile-profile-container .text-xs {
+    font-size: 0.625rem;
+  }
+
+  /* Mejoras de legibilidad */
+  .mobile-profile-container p,
+  .mobile-profile-container span {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Scroll suave */
+  .mobile-profile-container {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ocultar elementos que no son necesarios en móvil */
+  .mobile-profile-container .hidden.md\\:flex,
+  .mobile-profile-container .hidden.lg\\:flex {
+    display: none !important;
+  }
+
+  /* Asegurar que los badges sean visibles */
+  .mobile-profile-container [class*="Badge"] {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    min-height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobile-profile-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: hsl(var(--card-foreground));
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-profile-form-group {
+    margin-bottom: 1rem;
+  }
+
+  .mobile-profile-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--card-foreground));
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-profile-input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    min-height: 44px;
+  }
+
+  .mobile-profile-input:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  .mobile-profile-button {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    min-height: 48px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .mobile-profile-button-primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 4px 8px rgba(27, 60, 83, 0.2);
+  }
+
+  .mobile-profile-button-primary:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px rgba(27, 60, 83, 0.2);
+  }
+
+  .mobile-profile-button-secondary {
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .mobile-profile-button-secondary:active {
+    background: hsl(var(--muted));
+  }
+
+  /* Grid de productos móvil */
+  .mobile-profile-products-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  /* Productos favoritos y carrito móvil */
+  .mobile-profile-section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: hsl(var(--card-foreground));
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-profile-badge {
+    background: hsl(var(--muted));
+    color: hsl(var(--card-foreground));
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* Ocultar elementos de desktop */
+  .mobile-profile-hide {
+    display: none !important;
+  }
+
+  /* Header mejorado para móvil */
+  .mobile-profile-container .relative.h-64 {
+    height: 220px;
+  }
+
+  .mobile-profile-container .relative.h-64 .absolute {
+    bottom: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .mobile-profile-container .relative.h-64 h1 {
+    font-size: clamp(1.25rem, 6vw, 1.5rem);
+    line-height: 1.3;
+  }
+
+  .mobile-profile-container .relative.h-64 .text-lg {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+  }
+
+  .mobile-profile-container .relative.h-64 .text-sm {
+    font-size: clamp(0.625rem, 3vw, 0.75rem);
+  }
+
+  /* Botón de puntos en móvil */
+  .mobile-profile-container .relative.h-64 button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 36px;
+  }
+
+  /* Mejorar visualización de UserStats en móvil */
+  .mobile-profile-container [class*="space-y-6"] > * {
+    margin-bottom: 1rem;
+  }
+
+  /* Mejorar grids de estadísticas */
+  .mobile-profile-container [class*="grid-cols-2"] {
+    gap: 0.75rem;
+  }
+
+  /* Mejorar iconos en móvil */
+  .mobile-profile-container svg {
+    flex-shrink: 0;
+  }
+
+  /* Mejorar flex en móvil */
+  .mobile-profile-container .flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .mobile-profile-container .flex.items-end {
+    flex-wrap: wrap;
+  }
+
+  /* Mejorar botones en grupos */
+  .mobile-profile-container .flex.justify-end {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mobile-profile-container .flex.justify-end button {
+    width: 100%;
+  }
+
+  /* Mejorar inputs en grid */
+  .mobile-profile-container .grid.grid-cols-1 input,
+  .mobile-profile-container .grid.grid-cols-1 textarea {
+    width: 100%;
+  }
+
+  /* Mejorar visualización de información de cuenta */
+  .mobile-profile-container .flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .mobile-profile-container .flex.items-center.justify-between button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Mejorar secciones con título y badge */
+  .mobile-profile-container .flex.items-center.justify-between.mb-6 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .mobile-profile-container .flex.items-center.justify-between.mb-6 h2 {
+    width: 100%;
+  }
+
+  /* Mejorar visualización de tabs content */
+  .mobile-profile-container [class*="TabsContent"] {
+    margin-top: 1rem;
+    padding: 0;
+  }
+
+  /* Mejorar visualización de formularios */
+  .mobile-profile-container .space-y-4 input,
+  .mobile-profile-container .space-y-4 textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Mejorar visualización de avatar en foto de perfil */
+  .mobile-profile-container .flex.items-center.space-x-4 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .mobile-profile-container .flex.items-center.space-x-4 > div {
+    width: 100%;
+  }
+
+  /* Scroll mejorado para contenido largo */
+  .mobile-profile-container main,
+  .mobile-profile-container [class*="TabsContent"] {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Mejorar visualización de texto largo */
+  .mobile-profile-container p,
+  .mobile-profile-container span {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+
+  /* Mejorar visualización de estadísticas en cards */
+  .mobile-profile-container .text-center {
+    padding: 0.5rem;
+  }
+
+  /* Mejorar iconos en stats */
+  .mobile-profile-container .inline-flex.items-center.justify-center {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .mobile-profile-container .inline-flex.items-center.justify-center svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* Ajustar tamaños de texto en stats */
+  .mobile-profile-container .text-2xl {
+    font-size: 1.25rem;
+  }
+
+  /* Mejorar espacios en UserStats */
+  .mobile-profile-container [class*="space-y-6"] > *:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+
+  /* Mejorar flex items en cuenta info */
+  .mobile-profile-container .flex.items-center.space-x-3 {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Ajustar botones en grupos de acción */
+  .mobile-profile-container .flex.justify-end.space-x-4 {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mobile-profile-container .flex.justify-end.space-x-4 button {
+    width: 100%;
+  }
+
+  /* Asegurar padding adecuado */
+  .mobile-profile-container [class*="p-3"] {
+    padding: 0.75rem;
+  }
+
+  /* Mejorar visualización de información en cards de cuenta */
+  .mobile-profile-container .flex.items-center.justify-between.p-3 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .mobile-profile-container .flex.items-center.justify-between.p-3 button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  /* Estilos para el botón de selección de tabs en móvil */
+  .mobile-profile-container button[class*="justify-between"][class*="bg-\\[#E8DDD4\\]"] {
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(27, 60, 83, 0.1);
+    transition: all 0.2s;
+  }
+
+  .mobile-profile-container button[class*="justify-between"][class*="bg-\\[#E8DDD4\\]"]:active {
+    transform: scale(0.98);
+  }
+
+  /* Estilos para el Sheet deslizante */
+  .mobile-profile-container [class*="SheetContent"][class*="bottom"] {
+    padding: 1.5rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .mobile-profile-container [class*="SheetContent"] button[class*="justify-start"] {
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .mobile-profile-container [class*="SheetContent"] button[class*="justify-start"]:active {
+    transform: scale(0.98);
+  }
+
+  /* Asegurar que los badges se vean bien en el Sheet */
+  .mobile-profile-container [class*="SheetContent"] [class*="Badge"] {
+    margin-left: auto;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+

@@ -8,7 +8,7 @@ import { ApiUrl } from "@/lib/config"
 import Navbar from "@/components/navbar"
 import { useApp } from "@/contexts/app-context"
 import { useRouter } from "next/navigation"
-import { Package, XCircle, Eye, Clock } from "lucide-react"
+import { Package, XCircle, Eye, Clock, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { useNotification } from "@/components/ui/notification"
 
@@ -37,6 +37,40 @@ export default function ProductosRechazadosPage() {
   const { showNotification } = useNotification()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [resubmittingIds, setResubmittingIds] = useState<Set<number>>(new Set())
+
+  // Función para reenviar producto a validación
+  const resubmitToValidation = async (productId: number) => {
+    setResubmittingIds(prev => new Set(prev).add(productId))
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${ApiUrl}/api/products/${productId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ status_id: 1 })
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al reenviar producto a validación")
+      }
+
+      showNotification("Producto reenviado a validación exitosamente", "success")
+      // Actualizar la lista removiendo el producto reenviado
+      setProducts(prev => prev.filter(p => p.id !== productId))
+    } catch (error) {
+      console.error("Error al reenviar producto:", error)
+      showNotification("Error al reenviar el producto a validación", "error")
+    } finally {
+      setResubmittingIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(productId)
+        return newSet
+      })
+    }
+  }
 
   // Cargar productos con status_id: 3 (Rechazados)
   useEffect(() => {
@@ -155,6 +189,14 @@ export default function ProductosRechazadosPage() {
                         Ver Detalles
                       </Button>
                     </Link>
+                    <Button
+                      onClick={() => resubmitToValidation(product.id)}
+                      disabled={resubmittingIds.has(product.id)}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      <RotateCcw className={`h-4 w-4 mr-2 ${resubmittingIds.has(product.id) ? 'animate-spin' : ''}`} />
+                      {resubmittingIds.has(product.id) ? 'Enviando...' : 'Volver a Validar'}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

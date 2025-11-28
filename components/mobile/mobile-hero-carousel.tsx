@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
+import "./mobile-hero-carousel.css"
 
 const carouselItems = [
   {
@@ -20,7 +21,7 @@ const carouselItems = [
   },
 ]
 
-export default function HeroCarousel() {
+export default function MobileHeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
 
@@ -44,7 +45,7 @@ export default function HeroCarousel() {
   const variants = {
     enter: (direction: number) => {
       return {
-        x: direction > 0 ? 1000 : -1000,
+        x: direction > 0 ? 500 : -500,
         opacity: 0,
       }
     },
@@ -54,7 +55,7 @@ export default function HeroCarousel() {
     },
     exit: (direction: number) => {
       return {
-        x: direction < 0 ? 1000 : -1000,
+        x: direction < 0 ? 500 : -500,
         opacity: 0,
       }
     },
@@ -63,8 +64,8 @@ export default function HeroCarousel() {
   const item = carouselItems[currentIndex]
 
   return (
-    <div className="relative overflow-hidden rounded-xl my-6 shadow-xl">
-      <div className="relative h-[300px] md:h-[400px] w-full">
+    <div className="mobile-carousel-container">
+      <div className="mobile-carousel-wrapper">
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={currentIndex}
@@ -77,19 +78,17 @@ export default function HeroCarousel() {
               x: { type: "spring", stiffness: 300, damping: 30 },
               opacity: { duration: 0.2 },
             }}
-            className="absolute inset-0 w-full h-full"
+            className="mobile-carousel-slide"
           >
-            {/* Background Image */}
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-              <img
-                src={item.image}
-                alt={`Carousel item ${item.id}`}
-                className="w-full h-full object-cover object-center"
-              />
-              {/* Overlay sutil para armonía con el diseño */}
-              <div className="absolute inset-0 bg-black/5"></div>
-            </div>
-            
+            <img
+              src={item.image}
+              alt={`Carousel ${item.id}`}
+              className="mobile-carousel-image"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder-carousel.png'
+              }}
+            />
+            <div className="mobile-carousel-overlay"></div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -98,23 +97,23 @@ export default function HeroCarousel() {
         onClick={prevSlide}
         variant="ghost"
         size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-[#456882]/80 backdrop-blur-sm rounded-full h-10 w-10 z-10 text-white hover:text-white"
+        className="mobile-carousel-button mobile-carousel-button-prev"
+        aria-label="Diapositiva anterior"
       >
-        <ChevronLeft className="h-6 w-6" />
-        <span className="sr-only">Diapositiva anterior</span>
+        <ChevronLeft className="h-5 w-5" />
       </Button>
 
       <Button
         onClick={nextSlide}
         variant="ghost"
         size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-[#456882]/80 backdrop-blur-sm rounded-full h-10 w-10 z-10 text-white hover:text-white"
+        className="mobile-carousel-button mobile-carousel-button-next"
+        aria-label="Siguiente diapositiva"
       >
-        <ChevronRight className="h-6 w-6" />
-        <span className="sr-only">Siguiente diapositiva</span>
+        <ChevronRight className="h-5 w-5" />
       </Button>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+      <div className="mobile-carousel-indicators">
         {carouselItems.map((_, index) => (
           <button
             key={index}
@@ -122,13 +121,12 @@ export default function HeroCarousel() {
               setDirection(index > currentIndex ? 1 : -1)
               setCurrentIndex(index)
             }}
-            className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? "w-6 bg-white" : "bg-white/50"}`}
-            aria-label={`Go to slide ${index + 1}`}
-          >
-            <span className="sr-only">Ir a la diapositiva {index + 1}</span>
-          </button>
+            className={`mobile-carousel-indicator ${index === currentIndex ? "active" : ""}`}
+            aria-label={`Ir a la diapositiva ${index + 1}`}
+          />
         ))}
       </div>
     </div>
   )
 }
+

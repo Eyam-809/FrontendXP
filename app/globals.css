@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos base compartidos para todas las plataformas */
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -9,6 +10,99 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Utilidades móviles */
+  .mobile-padding {
+    padding: var(--mobile-padding, 1rem);
+  }
+
+  .mobile-margin {
+    margin: var(--mobile-spacing, 0.75rem);
+  }
+
+  .mobile-text-sm {
+    font-size: var(--mobile-font-size-base, 12px);
+    line-height: 1.4;
+  }
+
+  .mobile-text-base {
+    font-size: var(--mobile-font-size-base, 14px);
+    line-height: 1.5;
+  }
+
+  .mobile-text-lg {
+    font-size: var(--mobile-font-size-lg, 16px);
+    line-height: 1.5;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  .mobile-stack {
+    flex-direction: column;
+  }
+
+  /* Utilidades web */
+  .web-padding {
+    padding: var(--web-padding, 2rem);
+  }
+
+  .web-margin {
+    margin: var(--web-spacing, 1.5rem);
+  }
+
+  .web-text-sm {
+    font-size: var(--web-font-size-sm, 14px);
+    line-height: 1.5;
+  }
+
+  .web-text-base {
+    font-size: var(--web-font-size-base, 16px);
+    line-height: 1.6;
+  }
+
+  .web-text-lg {
+    font-size: var(--web-font-size-lg, 18px);
+    line-height: 1.6;
+  }
+
+  .web-hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .web-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .web-hover-scale {
+    transition: transform 0.2s ease;
+  }
+
+  .web-hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .web-hover-opacity {
+    transition: opacity 0.2s ease;
+  }
+
+  .web-hover-opacity:hover {
+    opacity: 0.8;
+  }
+
+  .web-hover-glow {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .web-hover-glow:hover {
+    box-shadow: 0 0 20px rgba(27, 60, 83, 0.2);
   }
 }
 

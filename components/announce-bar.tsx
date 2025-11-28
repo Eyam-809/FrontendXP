@@ -117,43 +117,44 @@ export default function AnnounceBar() {
   return (
     <>
       <div className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent`}>
-        <div className="container mx-auto px-4 py-2">
+        <div className="container mx-auto px-2 md:px-4 py-1 md:py-2">
           <div className="flex items-center justify-center">
             {/* Anuncios de streaming */}
             <a 
               href={streamingAds[current].href} 
               target="_blank" 
               rel="noopener noreferrer"
-              className={`block bg-gradient-to-r from-[#FF5E00] to-[#FF7A00] border border-[#FFB800] rounded-xl shadow-lg p-3 max-w-4xl w-full hover:shadow-xl transition-all duration-300 hover:scale-105 group`}
+              className={`block bg-gradient-to-r from-[#FF5E00] to-[#FF7A00] border border-[#FFB800] rounded-xl shadow-lg p-2 md:p-3 max-w-4xl w-full hover:shadow-xl transition-all duration-300 hover:scale-105 group`}
             >
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2 md:space-x-6">
                 {/* Imagen de la serie */}
                 <div className="flex-shrink-0">
                   <img
                     src={streamingAds[current].image}
                     alt={streamingAds[current].brand}
-                    className="w-16 h-10 rounded-lg object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                    className="w-12 h-8 md:w-16 md:h-10 rounded-lg object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                   />
                 </div>
                 
                 {/* Contenido del anuncio */}
-                <div className="flex-1">
-                  <h3 className={`font-bold text-base ${streamingAds[current].color} mb-1`}>
+                <div className="flex-1 min-w-0">
+                  <h3 className={`font-bold text-xs md:text-base ${streamingAds[current].color} mb-0.5 md:mb-1 truncate`}>
                     {streamingAds[current].title}
                   </h3>
-                  <p className="text-sm text-white leading-relaxed mb-1">
+                  <p className="text-xs md:text-sm text-white leading-tight md:leading-relaxed mb-0.5 md:mb-1 line-clamp-2">
                     {streamingAds[current].content}
                   </p>
-                  <div className={`text-sm font-medium ${streamingAds[current].color} flex items-center`}>
-                    <span className="mr-2">🎬</span>
-                    DISFRUTA AHORA
+                  <div className={`text-xs md:text-sm font-medium ${streamingAds[current].color} flex items-center`}>
+                    <span className="mr-1 md:mr-2">🎬</span>
+                    <span className="hidden md:inline">DISFRUTA AHORA</span>
+                    <span className="md:hidden">VER</span>
                   </div>
                 </div>
                 
                 {/* Botón de acción */}
-                <div className="flex-shrink-0">
-                  <div className={`${streamingAds[current].bgColor} ${streamingAds[current].borderColor} border-2 rounded-lg px-6 py-2 text-center`}>
-                    <div className={`text-sm font-bold ${streamingAds[current].color}`}>
+                <div className="flex-shrink-0 hidden md:block">
+                  <div className={`${streamingAds[current].bgColor} ${streamingAds[current].borderColor} border-2 rounded-lg px-4 md:px-6 py-1.5 md:py-2 text-center`}>
+                    <div className={`text-xs md:text-sm font-bold ${streamingAds[current].color}`}>
                       VER
                     </div>
                   </div>
