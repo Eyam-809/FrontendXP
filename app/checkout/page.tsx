@@ -32,7 +32,7 @@ export default function CheckoutPage() {
   const { showNotification } = useNotification()
   const isMobile = useIsMobile()
 
-  const [paymentMethod, setPaymentMethod] = useState("card")
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal" | "apple" | "oxxo">("card")
   const [isProcessing, setIsProcessing] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
@@ -89,7 +89,11 @@ export default function CheckoutPage() {
     })
   }
 
-  // === PayPal (mismo flujo que el modal) ===
+  // Origen permitido para postMessage (coincide con donde corre tu front)
+  const FRONTEND_ORIGIN =
+    typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"
+
+  // === PayPal con popup ===
   const handlePayPal = async () => {
     setIsProcessing(true)
 
@@ -131,8 +135,7 @@ export default function CheckoutPage() {
         user_id: userId,
         fecha_pago: new Date().toISOString().split("T")[0],
         total: getTotalPrice(),
-        direccion_envio:
-          paymentMethod === "paypal" ? "PayPal" : formData.address,
+        direccion_envio: "PayPal",
         telefono_contacto: user?.phone || "",
         tipo: productos[0]?.tipo ?? "venta",
         metodo_pago: "paypal",
@@ -146,15 +149,12 @@ export default function CheckoutPage() {
         ...(tokenAuth ? { Authorization: `Bearer ${tokenAuth}` } : {}),
       }
 
-      // Crear compra
-      const createRes = await fetch(
-        `${ApiUrl.replace(/\/$/, "")}/api/compras`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payloadCompra),
-        }
-      )
+      // 1) Crear compra
+      const createRes = await fetch(`${ApiUrl.replace(/\/$/, "")}/api/compras`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payloadCompra),
+      })
 
       const createJson: any = await (async () => {
         try {
@@ -203,6 +203,20 @@ export default function CheckoutPage() {
         id_user: userId,
       }
 
+      // Handler para mensajes desde el popup
+      const registerPopupListener = () => {
+        const handleMessage = (event: MessageEvent) => {
+          if (event.origin !== FRONTEND_ORIGIN) return
+          if (event.data?.type === "PAYPAL_SUCCESS") {
+            window.removeEventListener("message", handleMessage)
+            dispatch({ type: "CLEAR_CART" })
+            showNotification("Pago con PayPal realizado con éxito 🎉", "success")
+            router.push("/")
+          }
+        }
+        window.addEventListener("message", handleMessage)
+      }
+
       for (const url of paypalEndpoints) {
         try {
           console.log("PayPal POST ->", url, body)
@@ -212,23 +226,45 @@ export default function CheckoutPage() {
           })
           console.log("PayPal response", url, resp.status, resp.data)
 
-          if (
-            (resp.status === 200 || resp.status === 201) &&
-            resp.data?.approval_url
-          ) {
+          if ((resp.status === 200 || resp.status === 201) && resp.data?.approval_url) {
             const approval = resp.data.approval_url
             setIsProcessing(false)
-            window.location.href = approval
+
+            const popup = window.open(
+              approval,
+              "paypalCheckout",
+              "width=600,height=800,menubar=no,toolbar=no,status=no"
+            )
+
+            if (!popup) {
+              showNotification("Tu navegador bloqueó la ventana emergente de PayPal", "error")
+              return null
+            }
+
+            registerPopupListener()
             return approval
           }
 
           if (resp.data && typeof resp.data === "object" && resp.data.approval_url) {
             const approval = resp.data.approval_url
             setIsProcessing(false)
-            window.location.href = approval
+
+            const popup = window.open(
+              approval,
+              "paypalCheckout",
+              "width=600,height=800,menubar=no,toolbar=no,status=no"
+            )
+
+            if (!popup) {
+              showNotification("Tu navegador bloqueó la ventana emergente de PayPal", "error")
+              return null
+            }
+
+            registerPopupListener()
             return approval
           }
 
+          // Fallback GET con query params
           const params = new URLSearchParams()
           params.set("compra_id", String(compraId))
           params.set("amount", body.amount.toFixed(2))
@@ -237,34 +273,44 @@ export default function CheckoutPage() {
           params.set("user_id", String(userId))
           params.set("id_user", String(userId))
           if (tokenAuth) params.set("token", tokenAuth)
-          const urlWithParams = `${url}${
-            url.includes("?") ? "&" : "?"
-          }${params.toString()}`
+          const urlWithParams = `${url}${url.includes("?") ? "&" : "?"}${params.toString()}`
 
           try {
             const getRes = await axios.get(urlWithParams, {
               headers,
               validateStatus: () => true,
             })
-            console.log(
-              "PayPal GET response:",
-              urlWithParams,
-              getRes.status,
-              getRes.data
-            )
-            if (
-              (getRes.status === 200 || getRes.status === 201) &&
-              getRes.data?.approval_url
-            ) {
+            console.log("PayPal GET response:", urlWithParams, getRes.status, getRes.data)
+
+            if ((getRes.status === 200 || getRes.status === 201) && getRes.data?.approval_url) {
               setIsProcessing(false)
-              window.location.href = getRes.data.approval_url
+              const popup = window.open(
+                getRes.data.approval_url,
+                "paypalCheckout",
+                "width=600,height=800,menubar=no,toolbar=no,status=no"
+              )
+              if (!popup) {
+                showNotification("Tu navegador bloqueó la ventana emergente de PayPal", "error")
+                return null
+              }
+              registerPopupListener()
               return getRes.data.approval_url
             }
+
             // @ts-ignore
             const finalUrl = getRes.request?.responseURL
             if (finalUrl && /paypal\.com/i.test(finalUrl)) {
               setIsProcessing(false)
-              window.location.href = finalUrl
+              const popup = window.open(
+                finalUrl,
+                "paypalCheckout",
+                "width=600,height=800,menubar=no,toolbar=no,status=no"
+              )
+              if (!popup) {
+                showNotification("Tu navegador bloqueó la ventana emergente de PayPal", "error")
+                return null
+              }
+              registerPopupListener()
               return finalUrl
             }
           } catch (errGet: any) {
@@ -276,10 +322,7 @@ export default function CheckoutPage() {
         }
       }
 
-      showNotification(
-        "No se pudo iniciar PayPal. Revisa ruta backend y CORS.",
-        "error"
-      )
+      showNotification("No se pudo iniciar PayPal. Revisa ruta backend y CORS.", "error")
       setIsProcessing(false)
       return null
     } catch (err: any) {
@@ -595,29 +638,21 @@ export default function CheckoutPage() {
                     <img
                       src={item.image || "/placeholder.svg"}
                       alt={item.name}
-                      className={`${
-                        isMobile ? "w-16 h-16" : "w-20 h-20"
-                      } object-contain rounded-lg border border-[#E8DDD4]`}
+                      className={`${isMobile ? "w-16 h-16" : "w-20 h-20"} object-contain rounded-lg border border-[#E8DDD4]`}
                     />
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`${
-                          isMobile ? "text-sm" : "text-base"
-                        } font-semibold text-[#1B3C53] truncate`}
+                        className={`${isMobile ? "text-sm" : "text-base"} font-semibold text-[#1B3C53] truncate`}
                       >
                         {item.name}
                       </p>
                       <p
-                        className={`${
-                          isMobile ? "text-xs" : "text-sm"
-                        } text-[#456882]`}
+                        className={`${isMobile ? "text-xs" : "text-sm"} text-[#456882]`}
                       >
                         Cantidad: {item.quantity}
                       </p>
                       <p
-                        className={`${
-                          isMobile ? "text-base" : "text-lg"
-                        } font-bold text-[#1B3C53] mt-1`}
+                        className={`${isMobile ? "text-base" : "text-lg"} font-bold text-[#1B3C53] mt-1`}
                       >
                         ${(finalPrice * item.quantity).toFixed(2)}
                       </p>
@@ -628,18 +663,10 @@ export default function CheckoutPage() {
             </div>
             <div className="border-t-2 border-[#E8DDD4] pt-4 bg-gradient-to-r from-[#E8DDD4] to-[#F9F3EF] p-4 rounded-lg">
               <div className="flex justify-between items-center">
-                <span
-                  className={`${
-                    isMobile ? "text-lg" : "text-xl"
-                  } font-bold text-[#1B3C53]`}
-                >
+                <span className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#1B3C53]`}>
                   Total:
                 </span>
-                <span
-                  className={`${
-                    isMobile ? "text-2xl" : "text-3xl"
-                  } font-extrabold text-[#1B3C53]`}
-                >
+                <span className={`${isMobile ? "text-2xl" : "text-3xl"} font-extrabold text-[#1B3C53]`}>
                   ${getTotalPrice().toFixed(2)}
                 </span>
               </div>
@@ -647,25 +674,13 @@ export default function CheckoutPage() {
           </div>
 
           {/* Formulario de pago */}
-          <div
-            className={`${
-              isMobile ? "order-1" : "lg:col-span-2 lg:order-2"
-            } space-y-6`}
-          >
+          <div className={`${isMobile ? "order-1" : "lg:col-span-2 lg:order-2"} space-y-6`}>
             {/* Métodos */}
             <div className="bg-white rounded-xl shadow-lg border border-[#E8DDD4] p-6">
-              <h3
-                className={`${
-                  isMobile ? "text-lg" : "text-xl"
-                } font-bold text-[#1B3C53] mb-4`}
-              >
+              <h3 className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#1B3C53] mb-4`}>
                 Método de Pago
               </h3>
-              <div
-                className={`grid ${
-                  isMobile ? "grid-cols-2" : "grid-cols-4"
-                } gap-3`}
-              >
+              <div className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-4"} gap-3`}>
                 <button
                   onClick={() => setPaymentMethod("card")}
                   className={`p-4 border-2 rounded-xl flex flex-col items-center transition-all ${
@@ -674,12 +689,8 @@ export default function CheckoutPage() {
                       : "border-[#E8DDD4] hover:border-[#456882] text-[#1B3C53] bg-[#F9F3EF]"
                   }`}
                 >
-                  <CreditCard
-                    className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`}
-                  />
-                  <span
-                    className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}
-                  >
+                  <CreditCard className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`} />
+                  <span className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}>
                     Tarjeta
                   </span>
                 </button>
@@ -691,12 +702,8 @@ export default function CheckoutPage() {
                       : "border-[#E8DDD4] hover:border-[#456882] text-[#1B3C53] bg-[#F9F3EF]"
                   }`}
                 >
-                  <Wallet
-                    className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`}
-                  />
-                  <span
-                    className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}
-                  >
+                  <Wallet className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`} />
+                  <span className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}>
                     PayPal
                   </span>
                 </button>
@@ -708,12 +715,8 @@ export default function CheckoutPage() {
                       : "border-[#E8DDD4] hover:border-[#456882] text-[#1B3C53] bg-[#F9F3EF]"
                   }`}
                 >
-                  <Smartphone
-                    className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`}
-                  />
-                  <span
-                    className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}
-                  >
+                  <Smartphone className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`} />
+                  <span className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}>
                     Apple Pay
                   </span>
                 </button>
@@ -725,12 +728,8 @@ export default function CheckoutPage() {
                       : "border-[#E8DDD4] hover:border-[#456882] text-[#1B3C53] bg-[#F9F3EF]"
                   }`}
                 >
-                  <ShoppingBag
-                    className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`}
-                  />
-                  <span
-                    className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}
-                  >
+                  <ShoppingBag className={`${isMobile ? "h-5 w-5" : "h-6 w-6"} mb-2`} />
+                  <span className={`${isMobile ? "text-xs" : "text-sm"} font-semibold`}>
                     Oxxo
                   </span>
                 </button>
@@ -740,20 +739,17 @@ export default function CheckoutPage() {
             {/* Info pago */}
             <div className="bg-white rounded-xl shadow-lg border border-[#E8DDD4] p-6">
               {paymentMethod === "paypal" ? (
-                // ===== Vista PayPal (igual que el modal pero con tu diseño) =====
+                // ===== Vista PayPal =====
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <h3
-                    className={`${
-                      isMobile ? "text-lg" : "text-xl"
-                    } font-bold text-[#1B3C53] mb-2`}
-                  >
+                  <h3 className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#1B3C53] mb-2`}>
                     Pago con PayPal
                   </h3>
                   <p className="text-sm text-[#456882] text-center mb-2">
-                    Serás redirigido a PayPal para completar tu pago de{" "}
+                    Se abrirá una ventana para completar tu pago de{" "}
                     <span className="font-bold">
                       ${getTotalPrice().toFixed(2)}
-                    </span>
+                    </span>{" "}
+                    con PayPal.
                   </p>
                   <Button
                     className={`${isMobile ? "h-14 text-base" : "h-16 text-lg"} w-full bg-[#1B3C53] hover:bg-[#456882] text-white font-extrabold rounded-xl shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]`}
@@ -768,18 +764,14 @@ export default function CheckoutPage() {
                     }}
                     disabled={isProcessing}
                   >
-                    {isProcessing
-                      ? "Redirigiendo a PayPal..."
-                      : "Pagar con PayPal"}
+                    {isProcessing ? "Abriendo PayPal..." : "Pagar con PayPal"}
                   </Button>
                 </div>
               ) : (
                 // ===== Vista normal (tarjeta / oxxo / apple) =====
                 <>
                   <h3
-                    className={`${
-                      isMobile ? "text-lg" : "text-xl"
-                    } font-bold text-[#1B3C53] mb-4`}
+                    className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-[#1B3C53] mb-4`}
                   >
                     Información de Pago
                   </h3>
@@ -802,11 +794,7 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    <div
-                      className={`grid ${
-                        isMobile ? "grid-cols-1" : "grid-cols-2"
-                      } gap-4`}
-                    >
+                    <div className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
                       <div>
                         <Label
                           htmlFor="firstName"
@@ -880,11 +868,7 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    <div
-                      className={`grid ${
-                        isMobile ? "grid-cols-1" : "grid-cols-2"
-                      } gap-4`}
-                    >
+                    <div className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
                       <div>
                         <Label
                           htmlFor="city"

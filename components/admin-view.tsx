@@ -1,167 +1,153 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import Navbar from "@/components/navbar"
 import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import CheckoutModal from "@/components/checkout-modal"
-import { ApiUrl } from "@/lib/config"
-import Superset from "@/components/Superset"
+import { embedDashboard } from "@superset-ui/embedded-sdk"
+import { SupersetUrl, ApiUrl } from "@/lib/config"
+import { Buffer } from "buffer"
+import "@/styles/admin-view.css"
 
-interface AdminStats {
-  total_users?: number
-  total_sales?: number
-  total_products?: number
-  pending_orders?: number
-  [key: string]: any
+// Polyfill para Buffer, necesario para Superset en algunos entornos Next.js
+if (typeof window !== "undefined") {
+  ;(window as any).Buffer = (window as any).Buffer || Buffer
 }
 
 export default function AdminView() {
+  const supersetContainerRef = useRef<HTMLDivElement | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [adminStats, setAdminStats] = useState<AdminStats | null>(null)
-  const [userId, setUserId] = useState<number | null>(null)
+  const [supersetError, setSupersetError] = useState<string | null>(null)
 
   useEffect(() => {
-    const stored =
-      localStorage.getItem("userData") ||
-      localStorage.getItem("user") ||
-      localStorage.getItem("userInfo")
-    const user = stored ? JSON.parse(stored) : null
-    const id = user?.id ? Number(user.id) : null
-    setUserId(id)
+    let cancelled = false
 
-    // Requerimos que exista usuario
-    if (!id) {
-      setError("No se encontró usuario en localStorage.")
-      setLoading(false)
-      return
+    const fetchGuestToken = async () => {
+      // Función para obtener el token de autenticación de invitado desde tu API
+      const res = await fetch(`${ApiUrl}/api/superset/guest-token`, {
+        credentials: "include",
+      })
+
+      if (!res.ok) throw new Error("No se pudo obtener guest token")
+
+      const data = await res.json()
+      return data.token
     }
 
-    // Check: el permiso ahora se basa en plan_id === 3
-    const planIdFromUser = user?.plan_id ?? user?.plan ?? null
-    const planIdFromStorage = localStorage.getItem("plan_id") || localStorage.getItem("selected_plan_id")
-    const planId = planIdFromUser ?? (planIdFromStorage ? Number(planIdFromStorage) : null)
-
-    if (Number(planId) !== 3) {
-      setError("No tienes permisos para ver el dashboard de admin (se requiere plan_id = 3).")
-      setLoading(false)
-      return
-    }
-
-    const fetchAdmin = async () => {
-      setLoading(true)
-      setError(null)
+    const doEmbed = async () => {
       try {
-        const token = localStorage.getItem("token")
-        const tryUrls = [
-          `${ApiUrl}/api/admin/dashboard/${id}`,
-          `${ApiUrl}/api/admin/stats/${id}`,
-          `${ApiUrl}/api/admin/stats`,
-        ]
+        setError(null)
+        setSupersetError(null)
 
-        let data: any = null
-        for (const url of tryUrls) {
-          try {
-            const res = await fetch(url, {
-              headers: {
-                Accept: "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-            })
-            if (!res.ok) continue
-            data = await res.json()
-            console.log("Admin data from", url, data)
-            break
-          } catch (e) {
-            console.warn("Intento admin fetch fallido:", url, e)
-            continue
-          }
-        }
+        if (!supersetContainerRef.current) return
 
-        if (!data) {
-          setError("No se obtuvo información del dashboard desde la API.")
-        } else {
-          // Normalizar respuesta simple a adminStats
-          const stats: AdminStats = {
-            total_users: data.total_users ?? data.users ?? data.users_count ?? data.totalUsers,
-            total_sales: data.total_sales ?? data.sales ?? data.totalSales,
-            total_products: data.total_products ?? data.products ?? data.totalProducts,
-            pending_orders: data.pending_orders ?? data.orders_pending ?? data.pendingOrders,
-            ...data,
-          }
-          setAdminStats(stats)
+        // Incrusta el dashboard de Superset
+        await embedDashboard({
+          id: "f8416863-b8d0-4013-bf37-92d66d027b01", // ID de tu dashboard
+          supersetDomain: SupersetUrl,
+          mountPoint: supersetContainerRef.current,
+          fetchGuestToken,
+          dashboardUiConfig: {
+            hideTitle: true, // Ocultar el título
+            hideTab: true, // Ocultar pestañas
+            hideChartControls: true, // Ocultar controles de cada gráfico
+            filters: { // Ocultar el panel lateral de filtros nativos
+              visible: false,
+              expanded: false,
+            },
+          },
+          iframeSandboxExtras: [
+            "allow-same-origin",
+            "allow-forms",
+            "allow-scripts",
+            "allow-popups",
+          ],
+        })
+
+        if (!cancelled) setLoading(false)
+      } catch (e: any) {
+        if (!cancelled) {
+          console.error(e)
+          setSupersetError(e.message || "Error cargando Superset")
+          setLoading(false)
         }
-      } catch (err: any) {
-        console.error("Error obteniendo admin stats:", err)
-        setError(err?.message || "Error inesperado al obtener dashboard")
-      } finally {
-        setLoading(false)
       }
     }
 
-    fetchAdmin()
+    doEmbed()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#F9F3EF]">
+    // Se eliminó flex-col y min-h-screen
+    <div className="bg-[#F9F3EF]"> 
       <Navbar />
       <CartSidebar />
       <FavoritesSidebar />
       <CheckoutModal onClose={() => {}} />
 
-      <main className="container mx-auto px-6 py-8 max-w-6xl">
-        <h1 className="text-2xl font-semibold mb-6">Admin Dashboard</h1>
+      {/* Contenedor principal: Se eliminó flex-1 y flex-col, se dejó centrado y con padding */}
+      <main className="w-full max-w-7xl mx-auto px-6 py-8">
+        
+        {/* Header descriptivo */}
+        <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-semibold text-[#1B3C53]">
+              Admin Dashboard
+            </h1>
+            <p className="text-sm md:text-base text-slate-600 mt-1">
+              Visualiza el rendimiento financiero y el comportamiento de tus ventas
+              en tiempo real, conectado directamente con Superset.
+            </p>
+          </div>
 
-        {loading && <div>Cargando dashboard...</div>}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-[#1B3C53] px-3 py-1 text-xs font-medium text-white shadow-sm">
+              Analytics
+            </span>
+            <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+              Superset embed
+            </span>
+          </div>
+        </header>
 
-        {!loading && error && (
-          <div className="p-4 bg-yellow-100 text-[#1B3C53] rounded-md">
+        {/* Mensajes de error */}
+        {error && (
+          <div className="p-4 mb-4 rounded-lg bg-red-100 text-red-800 text-sm">
             {error}
           </div>
         )}
 
-        {!loading && !error && adminStats && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-white rounded shadow">
-                <div className="text-sm text-muted-foreground">Usuarios</div>
-                <div className="text-2xl font-bold">{(adminStats.total_users ?? 0).toLocaleString()}</div>
-              </div>
+        {supersetError && (
+          <div className="p-4 mb-4 rounded-lg bg-red-100 text-red-700 text-sm">
+            {supersetError}
+          </div>
+        )}
 
-              <div className="p-4 bg-white rounded shadow">
-                <div className="text-sm text-muted-foreground">Ventas Totales</div>
-                <div className="text-2xl font-bold">{(adminStats.total_sales ?? 0).toLocaleString()}</div>
-              </div>
-
-              <div className="p-4 bg-white rounded shadow">
-                <div className="text-sm text-muted-foreground">Productos</div>
-                <div className="text-2xl font-bold">{(adminStats.total_products ?? 0).toLocaleString()}</div>
-              </div>
-
-              <div className="p-4 bg-white rounded shadow col-span-1 md:col-span-3">
-                <div className="text-sm text-muted-foreground">Pedidos pendientes</div>
-                <div className="text-2xl font-bold">{(adminStats.pending_orders ?? 0).toLocaleString()}</div>
-              </div>
-
-              {/* mostrar cualquier otra clave útil */}
-              {Object.keys(adminStats).map((k) => (
-                ["total_users","total_sales","total_products","pending_orders"].includes(k) ? null : (
-                  <div key={k} className="p-3 bg-card rounded">
-                    <div className="text-xs text-muted-foreground">{k}</div>
-                    <div className="font-medium">{String(adminStats[k])}</div>
-                  </div>
-                )
-              ))}
+        {/* Contenedor del Dashboard con clase para CSS */}
+        <div className="superset-card relative mt-4">
+           {/* Overlay de loading */}
+           {loading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1B3C53] border-t-transparent mb-2" />
+              <p className="text-xs font-medium text-slate-700">
+                Cargando dashboard de Superset...
+              </p>
             </div>
+          )}
 
-            {/* Iframe de Superset */}
-            <Superset dashboardId="f8416863-b8d0-4013-bf37-92d66d027b01" />
-
-          </>
-         )}
+          {/* Contenedor del iframe: w-full h-full para llenar el div de 1250x850px */}
+          <div
+            ref={supersetContainerRef}
+            className="superset-frame"
+          />
+         </div>
       </main>
     </div>
   )
 }
-

@@ -20,65 +20,50 @@ const Superset: React.FC<SupersetProps> = ({ dashboardId, height = 800 }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let cancelled = false
+  let cancelled = false
 
-    const fetchGuestToken = async (): Promise<string> => {
-      const res = await fetch(`${ApiUrl}/api/superset/guest-token`, {
-        credentials: "include",
+  console.log("Montando Superset con dashboardId:", dashboardId)
+
+  const fetchGuestToken = async (): Promise<string> => {
+    console.log("Pidiendo guest token a:", `${ApiUrl}/api/superset/guest-token`)
+    const res = await fetch(`${ApiUrl}/api/superset/guest-token`, {
+      credentials: "include",
+    })
+    // ...
+  }
+
+  const doEmbed = async () => {
+    if (!containerRef.current) {
+      console.warn("No hay containerRef.current para superset")
+      return
+    }
+
+    try {
+      await embedDashboard({
+        id: dashboardId,
+        supersetDomain: SupersetUrl,
+        mountPoint: containerRef.current,
+        fetchGuestToken,
+        // ...
       })
-
-      if (!res.ok) {
-        const text = await res.text()
-        console.error("Error desde Laravel al pedir guest_token:", text)
-        throw new Error(text || "No se pudo obtener el guest token")
-      }
-
-      const data = await res.json()
-      return data.token
+      console.log("Dashboard de Superset embebido correctamente")
+    } catch (err: any) {
+      // ...
+    } finally {
+      if (!cancelled) setLoading(false)
     }
+  }
 
-    const doEmbed = async () => {
-      if (!containerRef.current) return
+  doEmbed()
 
-      setLoading(true)
-      setError(null)
-
-      try {
-        await embedDashboard({
-          id: dashboardId,
-          supersetDomain: SupersetUrl,   // 👈 ya usamos la constante
-          mountPoint: containerRef.current,
-          fetchGuestToken,
-          dashboardUiConfig: {
-            hideTitle: false,
-            hideTab: false,
-            hideChartControls: true,
-          },
-          iframeSandboxExtras: [
-            "allow-same-origin",
-            "allow-forms",
-            "allow-scripts",
-            "allow-popups",
-          ],
-        })
-      } catch (err: any) {
-        if (cancelled) return
-        console.error("Error embebiendo dashboard de Superset:", err)
-        setError(err?.message || "Error al cargar el dashboard de Superset")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  return () => {
+    cancelled = true
+    if (containerRef.current) {
+      containerRef.current.innerHTML = ""
     }
+  }
+}, [dashboardId])
 
-    doEmbed()
-
-    return () => {
-      cancelled = true
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ""
-      }
-    }
-  }, [dashboardId])
 
   return (
     <div className="mt-8">
