@@ -1,5 +1,5 @@
 "use client"
-export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
@@ -10,11 +10,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 export default function VerificationCodePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const method = searchParams.get("method") || "whatsapp"
+
+  // método seguro con estado, por si searchParams no está listo al inicio
+  const [method, setMethod] = useState<"whatsapp" | "call">("whatsapp")
   const [verificationCode, setVerificationCode] = useState("778 - 804")
 
   useEffect(() => {
-    // Generar un código de verificación aleatorio
+    // 🔐 leer el método de la URL de forma segura
+    try {
+      const m = searchParams?.get?.("method")
+      if (m === "whatsapp" || m === "call") {
+        setMethod(m)
+      } else {
+        setMethod("whatsapp")
+      }
+    } catch {
+      setMethod("whatsapp")
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    // Generar un código de verificación aleatorio al montar
     const generateCode = () => {
       const code = Math.floor(100000 + Math.random() * 900000)
       return `${code.toString().slice(0, 3)} - ${code.toString().slice(3)}`
@@ -28,7 +44,6 @@ export default function VerificationCodePage() {
 
   const handleContinue = () => {
     // Aquí puedes agregar la lógica para verificar el código
-    // Por ahora, redirigimos al dashboard
     router.push("/")
   }
 
@@ -44,6 +59,11 @@ export default function VerificationCodePage() {
       return "Código para WhatsApp"
     }
     return "Código para llamada"
+  }
+
+  const regenerateCode = () => {
+    const code = Math.floor(100000 + Math.random() * 900000)
+    setVerificationCode(`${code.toString().slice(0, 3)} - ${code.toString().slice(3)}`)
   }
 
   return (
@@ -74,17 +94,22 @@ export default function VerificationCodePage() {
                 Código para el teléfono nuevo
               </CardTitle>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Ingresa este código de verificación en tu teléfono nuevo. Por favor, no lo compartas con nadie. Si no solicitaste un código, puedes ignorar este mensaje.
+                Ingresa este código de verificación en tu teléfono nuevo. Por favor, no lo compartas con nadie. 
+                Si no solicitaste un código, puedes ignorar este mensaje.
               </p>
             </div>
           </CardHeader>
-          
+
           <CardContent className="p-6 space-y-6">
             <div className="text-center">
-              <div className="text-4xl font-bold text-black mb-4 tracking-wider">
-                {verificationCode}
+              <div className="text-xs font-medium text-gray-500 mb-1 flex items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-500">
+                    {getMethodIcon()}
+                  </span>
+                  {getMethodText()}
+                </span>
               </div>
-            </div>
 
             <div className="space-y-3">
               <Button
@@ -95,14 +120,7 @@ export default function VerificationCodePage() {
               </Button>
 
               <Button
-                onClick={() => {
-                  // Generar nuevo código
-                  const generateCode = () => {
-                    const code = Math.floor(100000 + Math.random() * 900000)
-                    return `${code.toString().slice(0, 3)} - ${code.toString().slice(3)}`
-                  }
-                  setVerificationCode(generateCode())
-                }}
+                onClick={regenerateCode}
                 variant="outline"
                 className="w-full h-12 rounded-xl border-2 hover:bg-gray-50 flex items-center justify-center space-x-3"
               >
