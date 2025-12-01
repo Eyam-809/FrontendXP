@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckSquare, Truck, Package } from "lucide-react"
+import { ApiUrl } from "@/lib/config"
 import Navbar from "@/components/navbar"
 
 interface Producto {
@@ -47,7 +48,7 @@ export default function DatosCuentaPage() {
         const token = localStorage.getItem("token")
 
         // 🔹 Obtener compras
-        const comprasRes = await fetch(`http://localhost:8000/api/compras/usuario/${userId}`, {
+        const comprasRes = await fetch(`${ApiUrl}/api/compras/usuario/${userId}`, {
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -58,7 +59,7 @@ export default function DatosCuentaPage() {
         const comprasData = await comprasRes.json()
 
         // 🔹 Obtener pedidos
-        const pedidosRes = await fetch(`http://localhost:8000/api/pedidos/usuario/${userId}`, {
+        const pedidosRes = await fetch(`${ApiUrl}/api/pedidos/usuario/${userId}`, {
           headers: {
             Accept: "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),

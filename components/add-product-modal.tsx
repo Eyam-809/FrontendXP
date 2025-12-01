@@ -169,7 +169,7 @@ if (!token) throw new Error("No hay token de autenticación")
       if (form.categoria_id) formData.append('categoria_id', form.categoria_id)
       if (form.subcategoria_id) formData.append('subcategoria_id', form.subcategoria_id)
 
-      const response = await fetch("http://localhost:8000/api/products", {
+      const response = await fetch(`${ApiUrl}/api/products`, {
   method: "POST",
   headers: {
     ...(token ? { Authorization: `Bearer ${token}` } : {})

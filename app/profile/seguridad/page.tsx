@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import {ApiUrl } from "@/lib/config"
 import { 
   ArrowLeft, 
   Shield, 
@@ -88,7 +89,7 @@ export default function SeguridadPage() {
         new_password_confirmation: confirmPassword
       }
 
-      const res = await fetch("http://localhost:8000/api/user/change-password", {
+      const res = await fetch(`${ApiUrl}/api/user/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
