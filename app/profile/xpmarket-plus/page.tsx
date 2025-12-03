@@ -165,12 +165,12 @@ export default function XPmarketPlusPage() {
         tipo: "suscripcion",
         metodo_pago: paymentMethod,
         productos,
-        plan_id // <-- campo añadido para que el backend reciba el id del plan
+        plan_id
       }
 
       console.log("Enviando compra suscripción:", payload)
       const token = localStorage.getItem("token")
-      const res = await fetch(`${ApiUrl}/api/compras`, {
+      const res = await fetch(`${ApiUrl}/api/compras/compraplan`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

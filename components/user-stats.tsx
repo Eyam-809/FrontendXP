@@ -206,28 +206,7 @@ export default function UserStats({
         </CardContent>
       </Card>
 
-      {/* Estadísticas sociales */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>Red social</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            {socialStats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 mb-3">
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div className="text-2xl font-bold text-gray-900">{(stat.value ?? 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-500">{stat.title}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Rendimiento */}
       <Card>
@@ -239,16 +218,7 @@ export default function UserStats({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600">Calificación promedio</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold">{rating}</span>
-                <span className="text-sm text-gray-500">/ 5.0</span>
-              </div>
-            </div>
+            
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
