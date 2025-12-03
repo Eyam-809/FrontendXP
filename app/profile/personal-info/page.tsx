@@ -612,23 +612,58 @@ useEffect(() => {
   const file = e.target.files?.[0];
   if (!file) return;
 
+  // Validar tipo de archivo
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    alert("❌ Por favor, selecciona una imagen válida (JPG, PNG, GIF o WEBP)");
+    return;
+  }
+
+  // Validar tamaño de archivo (max 5MB)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    alert("❌ La imagen es demasiado grande. Por favor, selecciona una imagen de menos de 5MB");
+    return;
+  }
+
   const formData = new FormData();
   formData.append("foto", file);
 
   try {
     setIsUploadingAvatar(true);
 
+    // Verificar que hay token de autenticación
+    if (!state.userSession?.token) {
+      alert("❌ No hay sesión activa. Por favor, inicia sesión nuevamente");
+      return;
+    }
+
     const response = await fetch(`${ApiUrl}/api/usuario/foto`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${state.userSession?.token}`,
+        Authorization: `Bearer ${state.userSession.token}`,
       },
       body: formData,
     });
 
-    const data = await response.json();
+    // Verificar si la respuesta tiene contenido antes de parsearla
+    const contentType = response.headers.get("content-type");
+    let data;
+    
+    if (contentType && contentType.includes("application/json")) {
+      const text = await response.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error("Error parseando respuesta JSON:", parseError);
+        data = {};
+      }
+    } else {
+      const text = await response.text();
+      data = text ? { message: text } : {};
+    }
 
-    if (response.ok) {
+    if (response.ok && data && data.foto) {
       // Actualizar contexto
       let newSession = null;
       if (state.userSession) {
@@ -677,16 +712,34 @@ useEffect(() => {
         foto: data.foto,
       } : prev));
 
-      // opcional: notificar al usuario
-      // toast.success("Foto actualizada");
+      alert("✅ Foto actualizada correctamente");
     } else {
-      // toast.error("Error al subir la foto");
-      console.error("Error subiendo foto:", data);
-      alert("❌ Error al subir la foto");
+      // Manejar diferentes tipos de errores
+      const errorMessage = data?.message || data?.error || "Error desconocido al subir la foto";
+      console.error("Error subiendo foto:", {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+      });
+      
+      if (response.status === 401) {
+        alert("❌ Tu sesión ha expirado. Por favor, inicia sesión nuevamente");
+      } else if (response.status === 413) {
+        alert("❌ La imagen es demasiado grande. Por favor, selecciona una imagen más pequeña");
+      } else if (response.status === 422) {
+        alert(`❌ Error de validación: ${errorMessage}`);
+      } else {
+        alert(`❌ Error al subir la foto: ${errorMessage}`);
+      }
     }
-  } catch (error) {
-    console.error(error);
-    alert("❌ Ocurrió un error al subir la foto");
+  } catch (error: any) {
+    console.error("Error en handleChangePhoto:", error);
+    
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      alert("❌ Error de conexión. Por favor, verifica tu conexión a internet e intenta nuevamente");
+    } else {
+      alert(`❌ Ocurrió un error al subir la foto: ${error.message || "Error desconocido"}`);
+    }
   } finally {
     setIsUploadingAvatar(false);
   }

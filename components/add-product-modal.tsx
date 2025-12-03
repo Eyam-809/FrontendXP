@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Upload, X } from "lucide-react"
+import { Plus, Upload, X, DollarSign, RefreshCw, Sparkles } from "lucide-react"
 import { useApp } from "@/contexts/app-context"
 import { ApiUrl } from "@/lib/config"
 import { useNotification } from "@/components/ui/notification"
@@ -35,8 +36,47 @@ export default function AddProductModal({ onProductAdded }: AddProductModalProps
   const [categorias, setCategorias] = useState<{ id: number; nombre: string }[]>([])
   const [subcategorias, setSubcategorias] = useState<{ id: number; nombre: string }[]>([])
   const [modo, setModo] = useState<"venta" | "trueque" | null>(null)
+  const [userPlanId, setUserPlanId] = useState<string | null>(null)
   const token = localStorage.getItem("token")
 if (!token) throw new Error("No hay token de autenticación")
+
+  // Obtener el plan_id del usuario
+  useEffect(() => {
+    const getPlanId = () => {
+      // Intentar obtener del contexto primero
+      const sessionPlanId = state.userSession?.plan_id
+      if (sessionPlanId) {
+        setUserPlanId(String(sessionPlanId))
+        return
+      }
+      
+      // Si no está en el contexto, obtener de localStorage
+      const storedPlanId = localStorage.getItem("plan_id")
+      if (storedPlanId) {
+        setUserPlanId(storedPlanId)
+        return
+      }
+      
+      // También verificar en userData
+      try {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}")
+        if (userData && userData.plan_id) {
+          setUserPlanId(String(userData.plan_id))
+          return
+        }
+      } catch (e) {
+        // Ignorar errores de parsing
+      }
+      
+      // Por defecto, plan 1 (gratuito)
+      setUserPlanId("1")
+    }
+
+    getPlanId()
+  }, [state.userSession])
+
+  // Determinar si el usuario puede ver la opción de trueque
+  const canViewTrueque = userPlanId === "2" || userPlanId === "3"
 
 
   const [form, setForm] = useState<AddProductForm>({
@@ -201,7 +241,7 @@ if (!token) throw new Error("No hay token de autenticación")
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setModo(null) }}>
       <DialogTrigger asChild>
-        <Button className="bg-red-600 hover:bg-red-700">
+        <Button className="bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#1B3C53] hover:to-[#456882] text-white hover:opacity-90">
           <Plus className="h-4 w-4 mr-2" />
           Agregar Producto
         </Button>
@@ -215,21 +255,70 @@ if (!token) throw new Error("No hay token de autenticación")
           </DialogTitle>
         </DialogHeader>
 
-        {/* 🔹 Si aún no se ha seleccionado el modo, muestra los dos botones */}
+        {/* 🔹 Si aún no se ha seleccionado el modo, muestra los botones */}
         {!modo ? (
-          <div className="flex justify-center gap-6 py-6">
-            <Button
-              onClick={() => setModo("venta")}
-              className="bg-green-600 hover:bg-green-700 px-8 py-4 text-lg"
-            >
-              Subir Venta
-            </Button>
-            <Button
-              onClick={() => setModo("trueque")}
-              className="bg-blue-600 hover:bg-blue-700 px-8 py-4 text-lg"
-            >
-              Subir Trueque
-            </Button>
+          <div className="py-8">
+            <div className={`grid gap-6 ${canViewTrueque ? 'grid-cols-1 md:grid-cols-2 max-w-2xl' : 'grid-cols-1 max-w-md'} mx-auto`}>
+              {/* Botón de Venta */}
+              <motion.button
+                onClick={() => setModo("venta")}
+                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1B3C53] to-[#456882] hover:from-[#1B3C53] hover:to-[#456882] p-8 text-left shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#1B3C53] cursor-pointer"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                      <DollarSign className="h-8 w-8 text-white" />
+                    </div>
+                    <Sparkles className="h-6 w-6 text-white/50 group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Subir Venta</h3>
+                  <p className="text-white/90 text-sm mb-4">
+                    Vende tus productos y recibe dinero
+                  </p>
+                  <div className="flex items-center text-white/90 text-sm font-medium">
+                    <span>Continuar</span>
+                    <Plus className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              </motion.button>
+
+              {/* Botón de Trueque - Solo visible si el usuario tiene plan_id 2 o 3 */}
+              {canViewTrueque && (
+                <motion.button
+                  onClick={() => setModo("trueque")}
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#456882] to-[#1B3C53] hover:from-[#456882] hover:to-[#1B3C53] p-8 text-left shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#456882] cursor-pointer"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                        <RefreshCw className="h-8 w-8 text-white" />
+                      </div>
+                      <Sparkles className="h-6 w-6 text-white/50 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Subir Trueque</h3>
+                    <p className="text-white/90 text-sm mb-4">
+                      Intercambia productos sin usar dinero
+                    </p>
+                    <div className="flex items-center text-white/90 text-sm font-medium">
+                      <span>Continuar</span>
+                      <Plus className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                </motion.button>
+              )}
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -430,7 +519,7 @@ if (!token) throw new Error("No hay token de autenticación")
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-gradient-to-r from-[#1B3C53] to-[#456882] hover:from-[#1B3C53] hover:to-[#456882] text-white hover:opacity-90"
               >
                 {isLoading ? "Agregando..." : modo === "venta" ? "Publicar venta" : "Publicar trueque"}
               </Button>
