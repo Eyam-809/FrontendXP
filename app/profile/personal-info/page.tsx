@@ -609,162 +609,93 @@ useEffect(() => {
   }
 
   const handleChangePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  // Validar tipo de archivo
-  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
-    alert("❌ Por favor, selecciona una imagen válida (JPG, PNG, GIF o WEBP)");
-    return;
-  }
-
-  // Validar tamaño de archivo (max 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
-    alert("❌ La imagen es demasiado grande. Por favor, selecciona una imagen de menos de 5MB");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("foto", file);
-
-  try {
-    setIsUploadingAvatar(true);
-
-    // Verificar que hay token de autenticación
-    if (!state.userSession?.token) {
-      alert("❌ No hay sesión activa. Por favor, inicia sesión nuevamente");
-      return;
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      alert("❌ Por favor, selecciona una imagen válida (JPG, PNG, GIF o WEBP)")
+      return
     }
 
-    const response = await fetch(`${ApiUrl}/api/usuario/foto`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${state.userSession.token}`,
-      },
-      body: formData,
-    });
-
-    // Verificar si la respuesta tiene contenido antes de parsearla
-    const contentType = response.headers.get("content-type");
-    let data;
-    
-    if (contentType && contentType.includes("application/json")) {
-      const text = await response.text();
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (parseError) {
-        console.error("Error parseando respuesta JSON:", parseError);
-        data = {};
-      }
-    } else {
-      const text = await response.text();
-      data = text ? { message: text } : {};
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      alert("❌ La imagen es demasiado grande. Por favor, selecciona una imagen de menos de 5MB")
+      return
     }
 
-    if (response.ok && data && data.foto) {
-      // Actualizar contexto
-      let newSession = null;
-      if (state.userSession) {
-        newSession = {
-          token: state.userSession.token,
-          user_id: state.userSession.user_id,
-          plan_id: state.userSession.plan_id,
-          name: state.userSession.name,
-          foto: data.foto,
-        };
-        dispatch({
-          type: "SET_USER_SESSION",
-          payload: newSession,
-        });
-      }
+    const fd = new FormData()
+    fd.append("foto", file)
 
-      // Actualizar userSession en localStorage
-      if (newSession) {
-        localStorage.setItem("userSession", JSON.stringify(newSession));
-      }
-
-      // Actualizar userData.foto en localStorage (si existe)
-      try {
-        const storedUser = JSON.parse(localStorage.getItem("userData") || "{}");
-        if (storedUser && typeof storedUser === "object") {
-          storedUser.foto = data.foto;
-          // mantener también propiedades antiguas (compatibilidad)
-          localStorage.setItem("userData", JSON.stringify(storedUser));
-        }
-      } catch (err) {
-        console.error("Error al actualizar userData en localStorage:", err);
-      }
-
-      // Guardar la foto directamente en localStorage para que el navbar la detecte
-      localStorage.setItem("foto", data.foto);
-      
-      // Disparar un evento personalizado para notificar el cambio
-      window.dispatchEvent(new CustomEvent('fotoUpdated', { detail: { foto: data.foto } }));
-
-      // Actualizar estados locales usados en esta página
-      setUserInfo((prev) => ({ ...prev, foto: data.foto }));
-      setUser((prev) => (prev ? { ...prev, // compatibilidad con distintos nombres
-        // intenta asignar a avatar y foto por si el objeto usa uno u otro campo
-        ...(prev as any),
-        avatar: data.foto,
-        foto: data.foto,
-      } : prev));
-
-      alert("✅ Foto actualizada correctamente");
-    } else {
-      // Manejar diferentes tipos de errores
-      const errorMessage = data?.message || data?.error || "Error desconocido al subir la foto";
-      console.error("Error subiendo foto:", {
-        status: response.status,
-        statusText: response.statusText,
-        data: data,
-      });
-      
-      if (response.status === 401) {
-        alert("❌ Tu sesión ha expirado. Por favor, inicia sesión nuevamente");
-      } else if (response.status === 413) {
-        alert("❌ La imagen es demasiado grande. Por favor, selecciona una imagen más pequeña");
-      } else if (response.status === 422) {
-        alert(`❌ Error de validación: ${errorMessage}`);
-      } else {
-        alert(`❌ Error al subir la foto: ${errorMessage}`);
-      }
-    }
-  } catch (error: any) {
-    console.error("Error en handleChangePhoto:", error);
-    
-    if (error.name === "TypeError" && error.message.includes("fetch")) {
-      alert("❌ Error de conexión. Por favor, verifica tu conexión a internet e intenta nuevamente");
-    } else {
-      alert(`❌ Ocurrió un error al subir la foto: ${error.message || "Error desconocido"}`);
-    }
-  } finally {
-    setIsUploadingAvatar(false);
-  }
-};
-
-
-
-  // Función para recargar productos
-  const reloadUserProducts = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}")
-      
-      if (token && userData.id) {
-        const response = await fetch(`${ApiUrl}/api/products/user/${userData.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        
-        if (response.ok) {
-          const products = await response.json()
-          setUserProducts(products)
-        }
+      setIsUploadingAvatar(true)
+
+      const token = state.userSession?.token || localStorage.getItem("token")
+      if (!token) {
+        alert("❌ No hay sesión activa. Por favor, inicia sesión nuevamente")
+        return
       }
-    } catch (error) {
-      console.error("Error recargando productos:", error)
+
+      const res = await fetch(`${ApiUrl}/api/usuario/foto`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: fd,
+      })
+
+      const contentType = res.headers.get("content-type") || ""
+      let data: any = {}
+
+      if (contentType.includes("application/json")) {
+        data = await res.json().catch(() => ({}))
+      } else {
+        const text = await res.text().catch(() => "")
+        data = text ? { message: text } : {}
+      }
+
+      if (!res.ok) {
+        const msg = data?.message || data?.error || `Error ${res.status}`
+        throw new Error(msg)
+      }
+
+      const foto = data?.foto || data?.url || data?.path
+      if (foto) {
+        // Actualizar contexto y localStorage
+        const newSession = state.userSession
+          ? { ...state.userSession, foto }
+          : null
+
+        if (newSession) {
+          dispatch({ type: "SET_USER_SESSION", payload: newSession })
+          localStorage.setItem("userSession", JSON.stringify(newSession))
+        }
+
+        try {
+          const stored = JSON.parse(localStorage.getItem("userData") || "{}")
+          stored.foto = foto
+          localStorage.setItem("userData", JSON.stringify(stored))
+        } catch (err) {
+          console.warn("No se pudo actualizar userData en localStorage:", err)
+        }
+
+        // Actualizar estado local
+        setUserInfo((prev) => ({ ...prev, foto }))
+        setUser((prev) => (prev ? { ...prev, foto, avatar: foto } : prev))
+
+        // Notificar cambio a otras pestañas/componentes
+        localStorage.setItem("foto", foto)
+        window.dispatchEvent(new CustomEvent("fotoUpdated", { detail: { foto } }))
+
+        alert("✅ Foto actualizada correctamente")
+      } else {
+        alert("❌ Subida completada pero no se devolvió la ruta de la foto")
+      }
+    } catch (error: any) {
+      console.error("Error en handleChangePhoto:", error)
+      alert(`❌ Error al subir la foto: ${error?.message || "Error desconocido"}`)
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
