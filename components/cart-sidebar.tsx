@@ -13,13 +13,37 @@ export default function CartSidebar() {
   const { state, dispatch } = useApp()
   const isMobile = useIsMobile()
   const router = useRouter()
+  const { showNotification } = useNotification()
 
-  const updateQuantity = (id: number, quantity: number) => {
-    dispatch({ type: "UPDATE_CART_QUANTITY", payload: { id, quantity } })
+  const updateQuantity = (id: number, newQuantity: number) => {
+    // Si la cantidad es menor a 1, eliminar el item
+    if (newQuantity < 1) {
+      removeItem(id)
+      return
+    }
+    
+    // Buscar el item en el carrito
+    const cartItem = state.cart.find((item) => item.id === id)
+    if (!cartItem) return
+    
+    // Verificar stock disponible del producto
+    const productStock = cartItem.stock !== undefined ? Number(cartItem.stock) : null
+    
+    if (productStock !== null && newQuantity > productStock) {
+      showNotification(`Has alcanzado el límite de stock disponible para "${cartItem.name}" (${productStock} unidades)`, "warning")
+      // Mantener la cantidad actual sin cambiar
+      return
+    }
+    
+    dispatch({ type: "UPDATE_CART_QUANTITY", payload: { id, quantity: newQuantity } })
   }
 
   const removeItem = (id: number) => {
+    const item = state.cart.find(cartItem => cartItem.id === id)
     dispatch({ type: "REMOVE_FROM_CART", payload: id })
+    if (item) {
+      showNotification(`"${item.name}" fue eliminado del carrito`, "info")
+    }
   }
 
   const getTotalPrice = () => {
@@ -151,8 +175,9 @@ export default function CartSidebar() {
                                   size="icon"
                                   className={`${isMobile ? "h-10 w-10" : "h-9 w-9"} hover:bg-[#1B3C53] hover:text-white rounded-md transition-all`}
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  disabled={item.stock !== undefined && item.quantity >= Number(item.stock)}
                                 >
-                                  <Plus className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} text-[#1B3C53]`} />
+                                  <Plus className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} ${item.stock !== undefined && item.quantity >= Number(item.stock) ? "text-gray-400" : "text-[#1B3C53]"}`} />
                                 </Button>
                               </div>
                             </div>

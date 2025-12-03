@@ -9,6 +9,7 @@ import { useApp } from "@/contexts/app-context"
 import Link from "next/link"
 import CategoryNavbar from "@/components/category-navbar"
 import { ApiUrl } from "@/lib/config"
+import { useNotification } from "@/components/ui/notification"
 
 interface ProductGridProps {
   products?: any[] // opcional, si no se pasa hace fetch de todos
@@ -16,6 +17,7 @@ interface ProductGridProps {
 
 export default function ProductGrid({ products }: ProductGridProps) {
   const { state, dispatch } = useApp()
+  const { showNotification } = useNotification()
   const [productos, setProductos] = useState<any[]>(products || [])
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
   const [loading, setLoading] = useState(!products)
@@ -25,7 +27,26 @@ export default function ProductGrid({ products }: ProductGridProps) {
   const addToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity >= productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    }
+    
     dispatch({ type: "ADD_TO_CART", payload: product })
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
   }
 
   // Añadir/Remover favoritos
@@ -35,8 +56,10 @@ export default function ProductGrid({ products }: ProductGridProps) {
     const isFavorite = state.favorites.some((fav) => fav.id === product.id)
     if (isFavorite) {
       dispatch({ type: "REMOVE_FROM_FAVORITES", payload: product.id })
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
     } else {
       dispatch({ type: "ADD_TO_FAVORITES", payload: product })
+      showNotification(`"${product.name}" fue agregado a favoritos`, "success")
     }
   }
 
@@ -141,16 +164,16 @@ export default function ProductGrid({ products }: ProductGridProps) {
 
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {product.discount > 0 && (
+                  {product.discount > 0 && (
                       <Badge className="bg-red-600 text-white shadow-lg px-3 py-1 font-bold text-xs border-2 border-white/20">
                         -{product.discount}%
                       </Badge>
-                    )}
-                    {product.isNew && (
+                  )}
+                  {product.isNew && (
                       <Badge className="bg-green-600 text-white shadow-lg px-3 py-1 font-bold text-xs border-2 border-white/20">
                         Nuevo
                       </Badge>
-                    )}
+                  )}
                   </div>
 
                   {/* Botones de acción al hacer hover */}
@@ -172,28 +195,28 @@ export default function ProductGrid({ products }: ProductGridProps) {
                         e.stopPropagation()
                       }}
                     >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     <Button 
                       size="sm" 
                       className="bg-[#1B3C53] hover:bg-[#2d5a7a] text-white shadow-lg"
                       onClick={(e) => addToCart(product, e)}
                     >
-                      <ShoppingCart className="h-4 w-4" />
-                    </Button>
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
                   </motion.div>
 
                   {/* Botón de favoritos */}
-                  <Button
-                    size="icon"
-                    variant="ghost"
+                    <Button
+                      size="icon"
+                      variant="ghost"
                     className={`absolute top-3 right-3 bg-white/95 hover:bg-[#456882] shadow-lg backdrop-blur-sm border border-gray-200 hover:border-[#456882] ${isFavorite ? "text-red-600 hover:text-white" : "text-gray-600 hover:text-white"}`}
-                    onClick={(e) => toggleFavorite(product, e)}
-                  >
-                    <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-                    <span className="sr-only">Añadir a favoritos</span>
-                  </Button>
-                </div>
+                      onClick={(e) => toggleFavorite(product, e)}
+                    >
+                      <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
+                      <span className="sr-only">Añadir a favoritos</span>
+                    </Button>
+                  </div>
 
                 <div className="p-5 space-y-3">
                   {/* Subcategoría */}
