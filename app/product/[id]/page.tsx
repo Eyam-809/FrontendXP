@@ -3,7 +3,21 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { Star, Heart, ShoppingCart, ArrowLeft, ArrowRight, Plus, Minus, XCircle, AlertTriangle, CheckCircle, RotateCcw, FileText, X } from "lucide-react"
+import {
+  Star,
+  Heart,
+  ShoppingCart,
+  ArrowLeft,
+  ArrowRight,
+  Plus,
+  Minus,
+  XCircle,
+  AlertTriangle,
+  CheckCircle,
+  RotateCcw,
+  FileText,
+  X
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,7 +71,7 @@ const REJECTION_REASONS = [
 
 interface ExtendedProduct extends Product {
   status_id?: number
-  video?: string
+  video?: string | null
   stock?: number
   rejection_reasons?: {
     predefinedReasons?: string[]
@@ -99,8 +113,11 @@ export default function ProductPage() {
         })
         if (!response.ok) throw new Error("Producto no encontrado")
         const data = await response.json()
+
+        console.log("PRODUCTO DESDE API:", data)
+        console.log("CAMPO VIDEO:", data.video)
+
         setProduct(data)
-        console.log(data)
 
         if (state.products.length === 0) {
           dispatch({ type: "SET_PRODUCTS", payload: [data] })
@@ -319,7 +336,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-     <Navbar />
+      <Navbar />
       <CategoryPanel />
 
       <main className="container mx-auto px-4 py-8">
@@ -337,19 +354,83 @@ export default function ProductPage() {
             {/* Carrusel único: imagen o video en el mismo contenedor */}
             <div className="bg-gray-50 p-4 rounded-xl">
               {(() => {
-                const base = ApiUrl
-                const mediaItems: { type: "image" | "video"; src: string }[] = []
-                const normalize = (s?: string) => {
-                  if (!s) return ""
-                  // si es base64 (empieza con data:image/ o data:video/)
-                  if (s.startsWith("data:image") || s.startsWith("data:video")) return s
-                  return s.startsWith("http") ? s : `${base}${s.startsWith("/") ? "" : "/"}${s}`
+                const base = ApiUrl.replace(/\/$/, "")
+                type MediaItem = { type: "image" | "video"; src: string }
+                const mediaItems: MediaItem[] = []
+
+                const isDataUri = (v?: any) => typeof v === "string" && v.startsWith("data:")
+                const isAbsoluteUrl = (v?: any) => {
+                  if (typeof v !== "string") return false
+                  try { new URL(v); return true } catch { return false }
                 }
 
-                if (product.image) mediaItems.push({ type: "image", src: normalize(product.image) })
-                if (product.video) mediaItems.push({ type: "video", src: normalize(product.video) })
+                const normalize = (v?: any) => {
+                  if (!v && v !== 0) return ""
+                  if (isDataUri(v)) return v
+                  if (isAbsoluteUrl(v)) return String(v)
+                  if (typeof v === "string") return `${base}/${v.replace(/^\//, "")}`
+                  return ""
+                }
 
-                if (mediaItems.length === 0) {
+                const pushMedia = (type: "image" | "video", value: any) => {
+                  if (value === null || value === undefined) return
+                  // array
+                  if (Array.isArray(value)) {
+                    value.forEach((v) => {
+                      const src = normalize(v)
+                      if (src) mediaItems.push({ type, src })
+                    })
+                    return
+                  }
+                  // string: could be json array or single url
+                  if (typeof value === "string") {
+                    const trimmed = value.trim()
+                    if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
+                      try {
+                        const parsed = JSON.parse(trimmed)
+                        if (Array.isArray(parsed)) {
+                          parsed.forEach((v: any) => {
+                            const src = normalize(v)
+                            if (src) mediaItems.push({ type, src })
+                          })
+                          return
+                        }
+                        // object with url
+                        if (typeof parsed === "object" && parsed !== null) {
+                          const src = normalize(parsed.url ?? parsed.src ?? "")
+                          if (src) mediaItems.push({ type, src })
+                          return
+                        }
+                      } catch {
+                        // not JSON, continue
+                      }
+                    }
+                    const src = normalize(value)
+                    if (src) mediaItems.push({ type, src })
+                    return
+                  }
+                  // object with url/src property
+                  if (typeof value === "object" && value !== null) {
+                    const src = normalize((value as any).url ?? (value as any).src ?? "")
+                    if (src) mediaItems.push({ type, src })
+                  }
+                }
+
+                // Try common fields: image, images, video, videos, media
+                pushMedia("image", (product as any).image ?? (product as any).images ?? (product as any).media ?? [])
+                pushMedia("video", (product as any).video ?? (product as any).videos ?? (product as any).media ?? [])
+
+                // Remove duplicates and keep order
+                const seen = new Set<string>()
+                const uniqueMedia = mediaItems.filter((m) => {
+                  if (seen.has(m.src)) return false
+                  seen.add(m.src)
+                  return true
+                })
+
+                console.log("MEDIA ITEMS CARRUSEL:", uniqueMedia)
+
+                if (uniqueMedia.length === 0) {
                   return (
                     <div className="h-[500px] flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl">
                       <span className="text-gray-500 font-medium">Sin imagen ni video</span>
@@ -357,9 +438,9 @@ export default function ProductPage() {
                   )
                 }
 
-                const current = mediaItems[mediaIndex % mediaItems.length]
-                const prev = () => setMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length)
-                const next = () => setMediaIndex((i) => (i + 1) % mediaItems.length)
+                const current = uniqueMedia[mediaIndex % uniqueMedia.length]
+                const prev = () => setMediaIndex((i) => (i - 1 + uniqueMedia.length) % uniqueMedia.length)
+                const next = () => setMediaIndex((i) => (i + 1) % uniqueMedia.length)
 
                 return (
                   <div className="relative">
@@ -373,17 +454,22 @@ export default function ProductPage() {
                         />
                       ) : (
                         <video
+                          key={current.src}
                           src={current.src}
                           controls
+                          preload="metadata"
                           className="w-full h-full object-contain"
                           style={{ maxHeight: "400px" }}
+                          onError={(e) => {
+                            console.error("Error cargando VIDEO DE PRODUCTO:", current.src, e)
+                          }}
                         >
                           Tu navegador no soporta video HTML5.
                         </video>
                       )}
                     </div>
 
-                    {mediaItems.length > 1 && (
+                    {uniqueMedia.length > 1 && (
                       <>
                         <button
                           type="button"
@@ -403,7 +489,7 @@ export default function ProductPage() {
                         </button>
 
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                          {mediaItems.map((_, i) => (
+                          {uniqueMedia.map((_, i) => (
                             <button
                               key={i}
                               onClick={() => setMediaIndex(i)}
@@ -461,7 +547,6 @@ export default function ProductPage() {
             {/* Si el producto está rechazado, mostrar solo razones de rechazo y descripción */}
             {product.status_id === 3 ? (
               <>
-                {/* Sección de razones de rechazo - Arriba de la descripción */}
                 {product.rejection_reasons && (() => {
                   // Manejar diferentes formatos de rejection_reasons
                   let reasons: any = product.rejection_reasons
@@ -479,7 +564,6 @@ export default function ProductPage() {
                   const customReason = reasons.customReason || reasons.custom_reason || ''
                   const allReasons = reasons.allReasons || reasons.all_reasons || []
 
-                  // Priorizar mostrar predefinedReasons si existen, sino allReasons
                   const hasPredefined = Array.isArray(predefinedReasons) && predefinedReasons.length > 0
                   const hasCustom = customReason && typeof customReason === 'string' && customReason.trim()
                   const hasAllReasons = Array.isArray(allReasons) && allReasons.length > 0
@@ -497,7 +581,6 @@ export default function ProductPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="p-6 space-y-4">
-                        {/* Mostrar razones predefinidas (las que se seleccionaron en validaciones) */}
                         {hasPredefined && (
                           <div className="space-y-3">
                             {predefinedReasons.map((reason: string, index: number) => (
@@ -512,7 +595,6 @@ export default function ProductPage() {
                           </div>
                         )}
 
-                        {/* Mostrar allReasons si no hay predefinedReasons pero hay allReasons */}
                         {!hasPredefined && hasAllReasons && (
                           <div className="space-y-3">
                             {allReasons.map((reason: string, index: number) => (
@@ -527,14 +609,12 @@ export default function ProductPage() {
                           </div>
                         )}
 
-                        {/* Motivo personalizado */}
                         {hasCustom && (
                           <div className="p-4 bg-white rounded-lg border-2 border-red-200 shadow-sm">
                             <p className="text-[#1B3C53] leading-relaxed">{customReason}</p>
                           </div>
                         )}
 
-                        {/* Botón para reenviar a validación */}
                         <div className="pt-4 border-t-2 border-red-200">
                           <Button
                             onClick={resubmitToValidation}
@@ -550,7 +630,6 @@ export default function ProductPage() {
                   )
                 })()}
 
-                {/* Descripción del producto */}
                 <div className="bg-gradient-to-br from-[#F9F3EF] to-[#E8DDD4] p-6 rounded-xl border border-[#E8DDD4] shadow-sm mb-6">
                   <h3 className="text-xl font-bold text-[#1B3C53] mb-4 flex items-center gap-2">
                     <span className="w-1 h-6 bg-[#1B3C53] rounded-full"></span>
@@ -559,7 +638,6 @@ export default function ProductPage() {
                   <p className="text-[#456882] leading-relaxed text-base">{product.description}</p>
                 </div>
 
-                {/* Botón principal para volver a validar */}
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className="p-3 bg-blue-600 rounded-full">
@@ -584,7 +662,6 @@ export default function ProductPage() {
               </>
             ) : product.status_id === 1 ? (
               <>
-                {/* Para productos pendientes de validación, mostrar botones de aprobar y rechazar */}
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-primary">${price.toFixed(2)}</span>
                 </div>
@@ -615,7 +692,6 @@ export default function ProductPage() {
               </>
             ) : (
               <>
-                {/* Para productos aprobados (status_id === 2), mostrar precio, cantidad y añadir al carrito */}
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-primary">${price.toFixed(2)}</span>
                 </div>
@@ -689,7 +765,6 @@ export default function ProductPage() {
         </div>
       </main>
 
-      {/* Modal de Rechazo de Producto */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden bg-white shadow-2xl p-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#E8DDD4]">
@@ -710,7 +785,6 @@ export default function ProductPage() {
 
           <div className="px-6 py-4 overflow-y-auto max-h-[calc(85vh-200px)]">
             <div className="grid grid-cols-2 gap-6">
-              {/* Columna izquierda: Razones predefinidas */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-[#1B3C53]" />
@@ -750,7 +824,6 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Columna derecha: Cuadro de texto para razones adicionales */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-[#1B3C53]" />
@@ -775,7 +848,6 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Botones de acción */}
           <DialogFooter className="flex gap-3 px-6 py-4 border-t border-[#E8DDD4] bg-gradient-to-r from-[#F9F3EF] to-white">
             <Button
               onClick={closeRejectDialog}
