@@ -92,7 +92,9 @@ export default function DatosCuentaPage() {
   }
 
   // 📦 Clasificar productos
-  const pendientes = productos.filter((p) => p.estado === "pendiente")
+  // Todas las compras (por ejemplo, las 5 más recientes)
+const pendientes = productos.slice(0, 5)
+
 
   // 🚚 Clasificar pedidos
   const entregas = pedidos.filter(
