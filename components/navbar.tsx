@@ -3,10 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
-import { Search, ShoppingCart, Heart, Bell, Menu, Globe } from "lucide-react"
+import { Search, ShoppingCart, Heart, Bell, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useApp } from "@/contexts/app-context"
@@ -21,29 +20,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ApiUrl } from "@/lib/config"
 import { Settings, LogOut, Shield, UserCircle, BarChart3, Package, TrendingUp, Warehouse, User, CreditCard, MapPin, Crown, AlertTriangle, CheckCircle2, CheckCircle, XCircle, ShoppingBag } from "lucide-react"
 import storage from "@/lib/storage"
-
-const categories = [
-  { name: "Electronics", subcategories: ["Smartphones", "Laptops", "Headphones", "Cameras"] },
-  { name: "Fashion", subcategories: ["Men's Clothing", "Women's Clothing", "Shoes", "Accessories"] },
-  { name: "Home", subcategories: ["Kitchen", "Bedroom", "Living Room", "Garden"] },
-  { name: "Sports", subcategories: ["Fitness", "Outdoor", "Team Sports", "Water Sports"] },
-  { name: "Beauty", subcategories: ["Skincare", "Makeup", "Hair Care", "Fragrances"] },
-  { name: "Toys", subcategories: ["Educational", "Action Figures", "Board Games", "Outdoor Toys"] },
-]
-
-const translateCategory = (category: string) => {
-  const translations: Record<string, string> = {
-    Electronics: "Electrónicos",
-    Fashion: "Moda",
-    Home: "Hogar",
-    Sports: "Deportes",
-    Beauty: "Belleza",
-    Toys: "Juguetes",
-  }
-  return translations[category] || category
-}
-
-
 
 export default function Navbar() {
   const { state, dispatch } = useApp()
@@ -175,41 +151,11 @@ export default function Navbar() {
     dispatch({ type: "SET_SEARCH_QUERY", payload: searchInput })
   }
 
-  const handleCategoryClick = (categoryName: string) => {
-    dispatch({ type: "SET_SELECTED_CATEGORY", payload: { id: 0, name: categoryName } })
-    dispatch({ type: "SET_SELECTED_SUBCATEGORY", payload: null })
-    dispatch({ type: "TOGGLE_CATEGORY_PANEL" })
-  }
-
   return (
     <header className="sticky top-0 z-50 w-full bg-[#1B3C53] shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-[#F9F3EF] hover:text-[#456882] hover:bg-white transition-colors">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="bg-[#1B3C53] p-0 w-1/2 max-w-xs">
-                <nav className="flex flex-col gap-2 text-[#F9F3EF] px-4 py-6">
-                  <Link href="/" className="text-base md:text-lg font-medium hover:text-[#456882] transition-colors py-2">
-                    Inicio
-                  </Link>
-                  {categories.map((category) => (
-                    <button
-                      key={category.name}
-                      onClick={() => handleCategoryClick(category.name)}
-                      className="text-base md:text-lg font-medium hover:text-[#456882] transition-colors text-left py-2"
-                    >
-                      {translateCategory(category.name)}
-                    </button>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
             <Link href="/" className="flex items-center" onClick={handleResetFilters}>
               <img src="/logonuevo.png" alt="XpMarket Logo" className="h-20 w-auto ml-2 md:h-40 md:ml-0 transition-all duration-200" />
             </Link>
