@@ -279,6 +279,7 @@ export default function ChatConversations({ conversations = [], onSendMessage, o
     }
   }
 
+  {/* Cargar mensajes cuando cambia la conversación activa */}
   if (localConversations.length === 0) {
     return (
       <Card>
