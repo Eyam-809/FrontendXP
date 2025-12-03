@@ -1,16 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, ShoppingCart, Heart, Bell, Menu, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Search, ShoppingCart, Heart, Bell, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/contexts/app-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ApiUrl } from "@/lib/config"
 import storage from "@/lib/storage"
 import "./mobile-navbar.css"
 
@@ -18,7 +15,6 @@ export default function MobileNavbar() {
   const { state, dispatch } = useApp()
   const router = useRouter()
   const [searchInput, setSearchInput] = useState("")
-  const [menuOpen, setMenuOpen] = useState(false)
   const [userFoto, setUserFoto] = useState<string | null>(null)
 
   useEffect(() => {
@@ -39,28 +35,8 @@ export default function MobileNavbar() {
   return (
     <nav className="mobile-navbar">
       <div className="mobile-navbar-container">
-        {/* Logo y menú */}
+        {/* Logo */}
         <div className="mobile-navbar-top">
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mobile-menu-button">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="mobile-menu-sheet">
-              <div className="mobile-menu-content">
-                <Link href="/" onClick={() => setMenuOpen(false)} className="mobile-menu-logo">
-                  <img src="/logonuevo.png" alt="XpMarket Logo" className="mobile-menu-logo-image" />
-                </Link>
-                <div className="mobile-menu-links">
-                  <Link href="/" onClick={() => setMenuOpen(false)}>Inicio</Link>
-                  <Link href="/profile/personal-info" onClick={() => setMenuOpen(false)}>Mi Perfil</Link>
-                  <Link href="/profile/productos-vendidos" onClick={() => setMenuOpen(false)}>Mis Productos</Link>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-
           <Link href="/" className="mobile-navbar-logo">
             <img src="/logonuevo.png" alt="XpMarket Logo" className="mobile-navbar-logo-image" />
           </Link>

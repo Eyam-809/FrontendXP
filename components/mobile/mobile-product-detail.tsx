@@ -13,6 +13,7 @@ import MobileNavbar from "./mobile-navbar"
 import CartSidebar from "@/components/cart-sidebar"
 import FavoritesSidebar from "@/components/favorites-sidebar"
 import Footer from "@/components/footer"
+import { useNotification } from "@/components/ui/notification"
 import "./mobile-product-detail.css"
 
 interface MobileProductDetailProps {
@@ -22,6 +23,7 @@ interface MobileProductDetailProps {
 export default function MobileProductDetail({ product }: MobileProductDetailProps) {
   const router = useRouter()
   const { state, dispatch } = useApp()
+  const { showNotification } = useNotification()
   const [quantity, setQuantity] = useState(1)
   const [mediaIndex, setMediaIndex] = useState(0)
   const [isResubmitting, setIsResubmitting] = useState(false)
@@ -44,13 +46,40 @@ export default function MobileProductDetail({ product }: MobileProductDetailProp
   const toggleFavorite = () => {
     if (isFavorite) {
       dispatch({ type: "REMOVE_FROM_FAVORITES", payload: product.id })
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
     } else {
       dispatch({ type: "ADD_TO_FAVORITES", payload: product })
+      showNotification(`"${product.name}" fue agregado a favoritos`, "success")
     }
   }
 
   const addToCart = () => {
-    dispatch({ type: "ADD_TO_CART", payload: { ...product, quantity } })
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    const requestedQuantity = quantity
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity + requestedQuantity > productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    } else if (productStock !== null && requestedQuantity > productStock) {
+      showNotification(`No hay suficiente stock disponible para "${product.name}" (${productStock} unidades disponibles)`, "warning")
+      return
+    }
+    
+    // Agregar la cantidad especificada
+    for (let i = 0; i < requestedQuantity; i++) {
+      dispatch({ type: "ADD_TO_CART", payload: product })
+    }
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
   }
 
   const resubmitToValidation = async () => {

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { useApp } from "@/contexts/app-context"
 import Link from "next/link"
 import { ApiUrl } from "@/lib/config"
+import { useNotification } from "@/components/ui/notification"
 import "./mobile-product-grid.css"
 
 interface MobileProductGridProps {
@@ -15,13 +16,33 @@ interface MobileProductGridProps {
 
 export default function MobileProductGrid({ products }: MobileProductGridProps) {
   const { state, dispatch } = useApp()
+  const { showNotification } = useNotification()
   const [productos, setProductos] = useState<any[]>(products || [])
   const [loading, setLoading] = useState(!products)
 
   const addToCart = (product: any, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity >= productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    }
+    
     dispatch({ type: "ADD_TO_CART", payload: product })
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
   }
 
   const toggleFavorite = (product: any, e: React.MouseEvent) => {
@@ -30,8 +51,10 @@ export default function MobileProductGrid({ products }: MobileProductGridProps) 
     const isFavorite = state.favorites.some((fav) => fav.id === product.id)
     if (isFavorite) {
       dispatch({ type: "REMOVE_FROM_FAVORITES", payload: product.id })
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
     } else {
       dispatch({ type: "ADD_TO_FAVORITES", payload: product })
+      showNotification(`"${product.name}" fue agregado a favoritos`, "success")
     }
   }
 

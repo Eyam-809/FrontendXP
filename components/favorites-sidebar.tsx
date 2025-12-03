@@ -5,17 +5,41 @@ import { X, Heart, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/app-context"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useNotification } from "@/components/ui/notification"
 
 export default function FavoritesSidebar() {
   const { state, dispatch } = useApp()
   const isMobile = useIsMobile()
+  const { showNotification } = useNotification()
 
   const removeFromFavorites = (id: number) => {
+    const product = state.favorites.find(item => item.id === id)
     dispatch({ type: "REMOVE_FROM_FAVORITES", payload: id })
+    if (product) {
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
+    }
   }
 
   const addToCart = (product: any) => {
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity >= productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    }
+    
     dispatch({ type: "ADD_TO_CART", payload: product })
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
     // No abrir el sidebar del carrito automáticamente
   }
 

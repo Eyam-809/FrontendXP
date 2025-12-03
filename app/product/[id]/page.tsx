@@ -58,6 +58,7 @@ const REJECTION_REASONS = [
 interface ExtendedProduct extends Product {
   status_id?: number
   video?: string
+  stock?: number
   rejection_reasons?: {
     predefinedReasons?: string[]
     customReason?: string
@@ -278,16 +279,41 @@ export default function ProductPage() {
   const isFavorite = state.favorites.some((fav) => fav.id === product.id)
 
   const addToCart = () => {
-    for (let i = 0; i < quantity; i++) {
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    const requestedQuantity = quantity
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity + requestedQuantity > productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    } else if (productStock !== null && requestedQuantity > productStock) {
+      showNotification(`No hay suficiente stock disponible para "${product.name}" (${productStock} unidades disponibles)`, "warning")
+      return
+    }
+    
+    // Agregar la cantidad especificada
+    for (let i = 0; i < requestedQuantity; i++) {
       dispatch({ type: "ADD_TO_CART", payload: product })
     }
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
   }
 
   const toggleFavorite = () => {
     if (isFavorite) {
       dispatch({ type: "REMOVE_FROM_FAVORITES", payload: product.id })
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
     } else {
       dispatch({ type: "ADD_TO_FAVORITES", payload: product })
+      showNotification(`"${product.name}" fue agregado a favoritos`, "success")
     }
   }
 
@@ -651,21 +677,11 @@ export default function ProductPage() {
                   <span className="text-[#456882] font-medium">Categoría:</span>
                   <span className="text-[#1B3C53] font-semibold">{translateCategory(product.category) || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-[#456882] font-medium">Disponibilidad:</span>
-                  <Badge className={product.inStock ? "bg-green-600 text-white font-semibold" : "bg-red-600 text-white font-semibold"}>
-                    {product.inStock ? "En Stock" : "Agotado"}
-                  </Badge>
-                </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-[#456882] font-medium">Vendedor:</span>
-                  <Link 
-                    href={`/user/${product.id}`}
-                    className="text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 font-semibold transition-colors"
-                  >
-                    Usuario
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <span className="text-[#456882] font-medium">Disponibilidad:</span>
+                  <Badge className={(product.stock !== undefined && product.stock > 0) ? "bg-green-600 text-white font-semibold" : "bg-red-600 text-white font-semibold"}>
+                    {(product.stock !== undefined && product.stock > 0) ? "En Stock" : "Agotado"}
+                  </Badge>
                 </div>
               </div>
             </div>

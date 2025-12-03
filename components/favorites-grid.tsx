@@ -6,20 +6,44 @@ import { Badge } from "@/components/ui/badge"
 import { Heart, Eye, ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
 import { useApp } from "@/contexts/app-context"
+import { useNotification } from "@/components/ui/notification"
 
 interface FavoritesGridProps {
   products: any[]
 }
 
 export default function FavoritesGrid({ products }: FavoritesGridProps) {
-  const { dispatch } = useApp()
+  const { dispatch, state } = useApp()
+  const { showNotification } = useNotification()
 
   const removeFromFavorites = (productId: number) => {
+    const product = state.favorites.find(item => item.id === productId)
     dispatch({ type: "REMOVE_FROM_FAVORITES", payload: productId })
+    if (product) {
+      showNotification(`"${product.name}" fue eliminado de favoritos`, "info")
+    }
   }
 
   const addToCart = (product: any) => {
+    // Verificar stock disponible
+    const productStock = product.stock !== undefined ? Number(product.stock) : null
+    if (productStock !== null && productStock <= 0) {
+      showNotification(`"${product.name}" no está disponible en stock`, "error")
+      return
+    }
+    
+    // Verificar si el producto ya está en el carrito y su cantidad
+    const existingItem = state.cart.find((item) => item.id === product.id)
+    if (existingItem && productStock !== null) {
+      const currentQuantity = existingItem.quantity || 0
+      if (currentQuantity >= productStock) {
+        showNotification(`Has alcanzado el límite de stock disponible para "${product.name}" (${productStock} unidades)`, "warning")
+        return
+      }
+    }
+    
     dispatch({ type: "ADD_TO_CART", payload: product })
+    showNotification(`"${product.name}" fue agregado al carrito`, "success")
   }
 
   if (products.length === 0) {
